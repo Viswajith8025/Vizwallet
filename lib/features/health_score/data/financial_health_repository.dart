@@ -21,6 +21,12 @@ class FinancialHealthRepository {
   final Ref _ref;
   final _historyStore = HealthScoreHistoryStore();
 
+  Future<FinancialHealthReport> buildHealthReport(String cycleKey) async {
+    final db = await _ref.read(databaseProvider.future);
+    final salaryDay = (await db.settingsDao.getSettings()).salaryDay;
+    return _build(cycleKey, salaryDay);
+  }
+
   Stream<FinancialHealthReport> watchHealth(String cycleKey) async* {
     final db = await _ref.read(databaseProvider.future);
     final salaryDay =

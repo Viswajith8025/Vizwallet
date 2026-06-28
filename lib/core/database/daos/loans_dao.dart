@@ -36,4 +36,47 @@ class LoansDao extends DatabaseAccessor<AppDatabase> with _$LoansDaoMixin {
           ..where((t) => t.expectedReturnAt.isSmallerThanValue(now)))
         .get();
   }
+
+  Future<int> insertLoan(LoansTableCompanion loan) {
+    return into(loansTable).insert(loan);
+  }
+
+  Future<void> softDeleteLoan(int id) {
+    final now = DateTime.now().toUtc();
+    return (update(loansTable)..where((t) => t.id.equals(id))).write(
+      LoansTableCompanion(
+        isDeleted: const Value(true),
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  Future<void> restoreSoftDeletedLoan(int id) {
+    final now = DateTime.now().toUtc();
+    return (update(loansTable)..where((t) => t.id.equals(id))).write(
+      LoansTableCompanion(
+        isDeleted: const Value(false),
+        deletedAt: const Value(null),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  Stream<List<LoansTableData>> watchDeletedLoans() {
+    return (select(loansTable)
+          ..where((t) => t.isDeleted.equals(true))
+          ..orderBy([(t) => OrderingTerm.desc(t.deletedAt)]))
+        .watch();
+  }
+
+  Future<bool> permanentDeleteLoan(int id) {
+    return (delete(loansTable)..where((t) => t.id.equals(id)))
+        .go()
+        .then((count) => count > 0);
+  }
+
+  Future<LoansTableData?> getLoanById(int id) {
+    return (select(loansTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
 }

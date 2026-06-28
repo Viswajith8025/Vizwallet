@@ -84,7 +84,7 @@ abstract final class FinancialHealthEngine {
     if (input.savingsBucketTouched) score = (score * 0.85).round();
 
     final summary = input.savingsRate >= 0.2
-        ? 'Strong savings habit this cycle'
+        ? 'Strong savings habit this month'
         : input.savingsRate >= 0.1
             ? 'Room to grow your savings rate'
             : 'Small steps toward saving add up';
@@ -105,8 +105,8 @@ abstract final class FinancialHealthEngine {
       category: HealthCategory.budgeting,
       score: score.clamp(0, 100),
       summary: input.bucketsOverBudget == 0
-          ? 'Buckets are within plan'
-          : '${input.bucketsOverBudget} categor${input.bucketsOverBudget == 1 ? 'y' : 'ies'} need a gentle reset',
+          ? 'Spending groups are on track'
+          : '${input.bucketsOverBudget} spending group${input.bucketsOverBudget == 1 ? '' : 's'} need attention',
     );
   }
 
@@ -193,7 +193,7 @@ abstract final class FinancialHealthEngine {
       return 'Solid foundation — a few wins away from excellent';
     }
     if (score >= 50) {
-      return 'You\'re building momentum — every cycle counts';
+      return 'You\'re building momentum — every month counts';
     }
     return 'Fresh start energy — small changes make a real difference';
   }
@@ -229,7 +229,7 @@ abstract final class FinancialHealthEngine {
         recs.add(
           HealthRecommendation(
             message:
-                'Saving ${formatPaise(targetExtra)} more this cycle could bring your score to $projected.',
+                'Saving ${formatPaise(targetExtra)} more this month could bring your score to $projected.',
             potentialGain: projected - overallScore,
             category: HealthCategory.saving,
           ),
@@ -243,7 +243,7 @@ abstract final class FinancialHealthEngine {
       recs.add(
         HealthRecommendation(
           message:
-              'Staying within budget on ${input.bucketsOverBudget} active categor${input.bucketsOverBudget == 1 ? 'y' : 'ies'} would lift budgeting health.',
+              'Staying within your plan on ${input.bucketsOverBudget} spending group${input.bucketsOverBudget == 1 ? '' : 's'} would improve this score.',
           potentialGain: 4,
           category: HealthCategory.budgeting,
         ),

@@ -118,5 +118,20 @@ void main() {
       expect(report.repeatedExpenses, isNotEmpty);
       expect(report.repeatedExpenses.first.title, 'Coffee');
     });
+
+    test('cycleBoundsUtc returns timezone-independent UTC instants', () {
+      // Cycle 2026-06-17 (salary day 17) spans 17 Jun – 16 Jul IST.
+      // 17 Jun 00:00 IST == 16 Jun 18:30 UTC; the exclusive end is
+      // 17 Jul 00:00 IST == 16 Jul 18:30 UTC. These must be exact regardless
+      // of the device timezone (regression test for the double-offset bug).
+      final bounds = SpendingTrendsEngine.cycleBoundsUtc(
+        '2026-06-17',
+        salaryDay: 17,
+      );
+      expect(bounds.startUtc.isUtc, isTrue);
+      expect(bounds.endUtc.isUtc, isTrue);
+      expect(bounds.startUtc, DateTime.utc(2026, 6, 16, 18, 30));
+      expect(bounds.endUtc, DateTime.utc(2026, 7, 16, 18, 30));
+    });
   });
 }

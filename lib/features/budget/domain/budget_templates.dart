@@ -104,3 +104,20 @@ class BucketAllocationInput {
   final int rolloverPaise;
   final int sortOrder;
 }
+
+/// Minimal category info for building per-category budget lines.
+class CategoryBudgetSeed {
+  const CategoryBudgetSeed({
+    required this.id,
+    required this.slug,
+    required this.name,
+    required this.sortOrder,
+    required this.countsTowardSpending,
+  });
+
+  final int id;
+  final String slug;
+  final String name;
+  final int sortOrder;
+  final bool countsTowardSpending;
+}

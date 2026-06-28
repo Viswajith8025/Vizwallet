@@ -7,4 +7,6 @@ mixin _$SubscriptionsDaoMixin on DatabaseAccessor<AppDatabase> {
   $CategoriesTableTable get categoriesTable => attachedDatabase.categoriesTable;
   $SubscriptionsTableTable get subscriptionsTable =>
       attachedDatabase.subscriptionsTable;
+  $SubscriptionPaymentsTableTable get subscriptionPaymentsTable =>
+      attachedDatabase.subscriptionPaymentsTable;
 }

@@ -29,6 +29,41 @@ abstract final class BudgetEngine {
     }).toList();
   }
 
+  /// One budget bucket per expense category.
+  static List<BucketAllocationInput> fromCategories({
+    required List<CategoryBudgetSeed> categories,
+    required int salaryPaise,
+    Map<int, int> amountByCategoryId = const {},
+    Map<String, int> avgSpendBySlug = const {},
+  }) {
+    final rows = categories.toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    return rows.asMap().entries.map((entry) {
+      final index = entry.key;
+      final category = entry.value;
+      final saved = amountByCategoryId[category.id];
+      final average = avgSpendBySlug[category.slug] ?? 0;
+      final allocated = saved ?? (average > 0 ? average : 0);
+      final bucketType = category.slug == 'investment'
+          ? BucketType.investment
+          : category.countsTowardSpending
+              ? BucketType.spending
+              : BucketType.reserve;
+
+      return BucketAllocationInput(
+        bucketKey: category.slug,
+        displayName: category.name,
+        categoryId: category.id,
+        bucketType: bucketType,
+        allocatedPaise: allocated,
+        allocatedPercent:
+            salaryPaise > 0 ? allocated / salaryPaise * 100 : null,
+        sortOrder: category.sortOrder != 0 ? category.sortOrder : index,
+      );
+    }).toList();
+  }
+
   static List<BucketAllocationInput> fromManualAmounts({
     required List<BucketAllocationInput> inputs,
     required int salaryPaise,

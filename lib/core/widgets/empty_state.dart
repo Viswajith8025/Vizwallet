@@ -119,7 +119,7 @@ abstract final class EmptyStates {
         icon: Icons.receipt_long_outlined,
         title: 'No expenses yet',
         message:
-            'Start tracking your money today.\nYour first expense takes seconds.',
+            'Add the money you spend, one entry at a time.\nStart with your latest purchase.',
         accentColor: BrandColors.secondary,
         action: FilledButton.icon(
           onPressed: onAdd,
@@ -130,23 +130,37 @@ abstract final class EmptyStates {
     );
   }
 
-  static Widget subscriptions() {
-    return const EmptyState(
+  static Widget subscriptions({VoidCallback? onAdd}) {
+    return EmptyState(
       icon: Icons.subscriptions_outlined,
       title: 'No subscriptions yet',
       message:
-          'Track Spotify, Netflix, recharge plans, and more.\nNever miss a renewal.',
+          'Add monthly payments like Netflix, Spotify, internet, or recharge plans.\nVizwallet will track what is coming.',
       accentColor: BrandColors.accent,
+      action: onAdd == null
+          ? null
+          : FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: const Text('Add subscription'),
+            ),
     );
   }
 
-  static Widget loans() {
-    return const EmptyState(
+  static Widget loans({VoidCallback? onAdd}) {
+    return EmptyState(
       icon: Icons.handshake_outlined,
       title: 'No borrowed money',
       message:
-          'Record money you borrowed or lent.\nStay on top of repayments.',
+          'Track money you borrowed from someone or lent to someone.\nYou will always know what is pending.',
       accentColor: BrandColors.primaryLight,
+      action: onAdd == null
+          ? null
+          : FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: const Text('Add loan'),
+            ),
     );
   }
 }

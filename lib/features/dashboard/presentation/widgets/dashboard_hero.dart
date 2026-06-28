@@ -69,27 +69,48 @@ class DashboardHero extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              _HeroStat(
-                label: 'Cycle spent',
-                value: _formatCompact(summary.spentPaise),
-                icon: Icons.trending_down_rounded,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              _HeroStat(
-                label: 'Days to salary',
-                value: '${summary.daysToSalary}',
-                icon: Icons.calendar_today_outlined,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              _HeroStat(
-                label: 'Savings',
-                value: '${summary.savingsPercent.round()}%',
-                icon: Icons.savings_outlined,
-                valueColor: BrandColors.secondary,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stats = [
+                _HeroStat(
+                  label: 'Cycle spent',
+                  value: _formatCompact(summary.spentPaise),
+                  icon: Icons.trending_down_rounded,
+                ),
+                _HeroStat(
+                  label: 'Days to salary',
+                  value: '${summary.daysToSalary}',
+                  icon: Icons.calendar_today_outlined,
+                ),
+                _HeroStat(
+                  label: 'Savings',
+                  value: '${summary.savingsPercent.round()}%',
+                  icon: Icons.savings_outlined,
+                  valueColor: BrandColors.secondary,
+                ),
+              ];
+
+              if (constraints.maxWidth < 340) {
+                return Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: stats
+                      .map(
+                        (stat) => SizedBox(
+                          width: (constraints.maxWidth - AppSpacing.sm) / 2,
+                          child: stat,
+                        ),
+                      )
+                      .toList(),
+                );
+              }
+
+              return Row(
+                children: stats
+                    .map((stat) => Expanded(child: stat))
+                    .toList(),
+              );
+            },
           ),
         ],
       ),

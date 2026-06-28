@@ -5,6 +5,7 @@ import 'package:rupee_track/core/branding/brand_colors.dart';
 import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/monthly_report/data/monthly_report_repository.dart';
+import 'package:rupee_track/features/monthly_report/presentation/widgets/ai_monthly_review_view.dart';
 import 'package:rupee_track/features/monthly_report/domain/monthly_closing_report.dart';
 
 class MonthlyReportSummaryCard extends ConsumerWidget {
@@ -51,7 +52,7 @@ class MonthlyReportSummaryCard extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Monthly Closing Report',
+                          'AI Monthly Review',
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
@@ -89,7 +90,17 @@ class MonthlyReportSummaryCard extends ConsumerWidget {
                         ),
                     ],
                   ),
-                  if (report.goalsAchieved.isNotEmpty) ...[
+                  if (report.aiReview?.insights.isNotEmpty == true) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      report.aiReview!.insights.first,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ] else if (report.goalsAchieved.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Text(
                       '${report.goalsAchieved.length} goal${report.goalsAchieved.length == 1 ? '' : 's'} achieved',
@@ -142,9 +153,14 @@ class _MiniMetric extends StatelessWidget {
 }
 
 class MonthlyReportDetailView extends StatelessWidget {
-  const MonthlyReportDetailView({required this.report, super.key});
+  const MonthlyReportDetailView({
+    required this.report,
+    this.reviewCaptureKey,
+    super.key,
+  });
 
   final MonthlyClosingReport report;
+  final GlobalKey? reviewCaptureKey;
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +169,18 @@ class MonthlyReportDetailView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       children: [
+        RepaintBoundary(
+          key: reviewCaptureKey,
+          child: AiMonthlyReviewView(report: report),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Full statement',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
         _StatementHeader(report: report),
         const SizedBox(height: 20),
         _MetricGrid(report: report),
@@ -234,7 +262,7 @@ class MonthlyReportDetailView extends StatelessWidget {
           _SectionCard(
             title: 'Budget performance',
             subtitle:
-                '${report.budgetOnTrackPercent.toStringAsFixed(0)}% buckets on track',
+                '${report.budgetOnTrackPercent.toStringAsFixed(0)}% of spending groups on track',
             child: Column(
               children: report.budgetBuckets.map((b) {
                 return Padding(
@@ -275,7 +303,7 @@ class MonthlyReportDetailView extends StatelessWidget {
         _SectionCard(
           title: 'Subscriptions',
           child: Text(
-            '${formatPaise(report.subscriptions.cycleSpendPaise)} this cycle · '
+            '${formatPaise(report.subscriptions.cycleSpendPaise)} this month · '
             '${report.subscriptions.activeCount} active · '
             '${report.subscriptions.salarySharePercent.toStringAsFixed(1)}% of income',
           ),
@@ -315,7 +343,7 @@ class MonthlyReportDetailView extends StatelessWidget {
                 ),
                 if (report.healthTrendDelta != 0)
                   Text(
-                    '${report.healthTrendDelta >= 0 ? '+' : ''}${report.healthTrendDelta} vs last cycle',
+                    '${report.healthTrendDelta >= 0 ? '+' : ''}${report.healthTrendDelta} vs last month',
                   ),
                 if (report.healthMotivation.isNotEmpty) ...[
                   const SizedBox(height: 8),

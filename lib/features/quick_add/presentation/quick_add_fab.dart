@@ -47,15 +47,15 @@ class _QuickAddFabState extends ConsumerState<QuickAddFab>
       scale: _pulse,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.fab + 4),
+          borderRadius: BorderRadius.circular(AppRadius.fab),
           boxShadow: AppShadows.fab(isDark),
         ),
-        child: FloatingActionButton.large(
+        child: FloatingActionButton(
           elevation: 0,
           highlightElevation: 0,
           onPressed: _open,
           tooltip: 'Quick Add',
-          child: const Icon(Icons.add_rounded, size: 30),
+          child: const Icon(Icons.add_rounded, size: 26),
         ),
       ),
     );

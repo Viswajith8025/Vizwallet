@@ -58,37 +58,41 @@ class BudgetRepository {
     String? aiNotes,
   }) async {
     final db = await _ref.read(databaseProvider.future);
-    await db.salaryDao.upsertSalary(
-      monthKey: monthKey,
-      amountPaise: salaryPaise,
-      receivedAt: DateTime.now().toUtc(),
-    );
+    // Salary, plan, and buckets must be saved as a single unit — a partial
+    // write would leave the budget out of sync with the salary it was based on.
+    await db.transaction(() async {
+      await db.salaryDao.upsertSalary(
+        monthKey: monthKey,
+        amountPaise: salaryPaise,
+        receivedAt: DateTime.now().toUtc(),
+      );
 
-    final planId = await db.budgetDao.upsertPlan(
-      monthKey: monthKey,
-      salaryPaise: salaryPaise,
-      allocationMode: mode.storageKey,
-      rolloverEnabled: rolloverEnabled,
-      aiNotes: aiNotes,
-    );
+      final planId = await db.budgetDao.upsertPlan(
+        monthKey: monthKey,
+        salaryPaise: salaryPaise,
+        allocationMode: mode.storageKey,
+        rolloverEnabled: rolloverEnabled,
+        aiNotes: aiNotes,
+      );
 
-    final companions = allocations
-        .map(
-          (a) => BudgetBucketsTableCompanion.insert(
-            planId: planId,
-            bucketKey: a.bucketKey,
-            displayName: a.displayName,
-            categoryId: Value(a.categoryId),
-            bucketType: Value(a.bucketType.storageKey),
-            allocatedPaise: a.allocatedPaise,
-            allocatedPercent: Value(a.allocatedPercent),
-            rolloverPaise: Value(a.rolloverPaise),
-            sortOrder: Value(a.sortOrder),
-          ),
-        )
-        .toList();
+      final companions = allocations
+          .map(
+            (a) => BudgetBucketsTableCompanion.insert(
+              planId: planId,
+              bucketKey: a.bucketKey,
+              displayName: a.displayName,
+              categoryId: Value(a.categoryId),
+              bucketType: Value(a.bucketType.storageKey),
+              allocatedPaise: a.allocatedPaise,
+              allocatedPercent: Value(a.allocatedPercent),
+              rolloverPaise: Value(a.rolloverPaise),
+              sortOrder: Value(a.sortOrder),
+            ),
+          )
+          .toList();
 
-    await db.budgetDao.replaceBuckets(planId: planId, buckets: companions);
+      await db.budgetDao.replaceBuckets(planId: planId, buckets: companions);
+    });
   }
 
   Future<List<BucketAllocationInput>> buildAllocationsForMode({
@@ -106,6 +110,14 @@ class BudgetRepository {
           categorySlugToId: slugToId,
         ),
       AllocationMode.manual => manualInputs ?? [],
+      AllocationMode.perCategory => await buildCategoryAllocations(
+          monthKey: monthKey,
+          salaryPaise: salaryPaise,
+          amountByCategoryId: {
+            for (final row in manualInputs ?? [])
+              if (row.categoryId != null) row.categoryId!: row.allocatedPaise,
+          },
+        ),
       AllocationMode.aiSuggested => await _aiAllocations(
           db: db,
           salaryPaise: salaryPaise,
@@ -133,6 +145,90 @@ class BudgetRepository {
     }
 
     return allocations;
+  }
+
+  Future<List<BucketAllocationInput>> buildCategoryAllocations({
+    required String monthKey,
+    required int salaryPaise,
+    Map<int, int> amountByCategoryId = const {},
+  }) async {
+    final db = await _ref.read(databaseProvider.future);
+    final categories = await db.categoriesDao.getActiveCategories();
+    final seeds = categories
+        .map(
+          (c) => CategoryBudgetSeed(
+            id: c.id,
+            slug: c.slug,
+            name: c.name,
+            sortOrder: c.sortOrder,
+            countsTowardSpending: c.countsTowardSpending,
+          ),
+        )
+        .toList();
+
+    final mergedAmounts = Map<int, int>.from(amountByCategoryId);
+    if (mergedAmounts.isEmpty) {
+      final existing = await getPlanStatus(monthKey);
+      for (final bucket in existing?.buckets ?? []) {
+        final categoryId = bucket.categoryId;
+        if (categoryId != null) {
+          mergedAmounts[categoryId] = bucket.allocatedPaise;
+        }
+      }
+    }
+
+    final settings = await db.settingsDao.getSettings();
+    final months = recentCycleKeys(salaryDay: settings.salaryDay, count: 3);
+    final avgSpend = await db.expensesDao.averageSpendByCategorySlug(months);
+
+    return BudgetEngine.fromCategories(
+      categories: seeds,
+      salaryPaise: salaryPaise,
+      amountByCategoryId: mergedAmounts,
+      avgSpendBySlug: avgSpend,
+    );
+  }
+
+  Future<void> saveCategoryBudgets({
+    required String monthKey,
+    required int salaryPaise,
+    required Map<int, int> amountByCategoryId,
+    required bool rolloverEnabled,
+  }) async {
+    var allocations = await buildCategoryAllocations(
+      monthKey: monthKey,
+      salaryPaise: salaryPaise,
+      amountByCategoryId: amountByCategoryId,
+    );
+
+    if (rolloverEnabled) {
+      final settings = await (await _ref.read(databaseProvider.future))
+          .settingsDao
+          .getSettings();
+      final previousKey = previousCycleKey(
+        monthKey,
+        salaryDay: settings.salaryDay,
+      );
+      final previous = await getPlanStatus(previousKey);
+      if (previous != null) {
+        final remaining = {
+          for (final b in previous.buckets)
+            b.bucketKey: b.remainingPaise.clamp(0, 1 << 31),
+        };
+        allocations = BudgetEngine.applyRollover(
+          allocations: allocations,
+          previousRemainingByBucketKey: remaining,
+        );
+      }
+    }
+
+    await saveBudgetPlan(
+      monthKey: monthKey,
+      salaryPaise: salaryPaise,
+      mode: AllocationMode.perCategory,
+      rolloverEnabled: rolloverEnabled,
+      allocations: allocations,
+    );
   }
 
   Future<List<BucketAllocationInput>> _aiAllocations({
@@ -170,6 +266,10 @@ class BudgetRepository {
     final buckets = await db.budgetDao.getBucketsForPlan(plan.id);
     final spentByCategory = await db.expensesDao.sumByCategoryForMonth(monthKey);
     final daysRemaining = daysRemainingInCycle(salaryDay: salaryDay);
+    final categories = await db.categoriesDao.getActiveCategories();
+    final colorByBucketKey = {
+      for (final category in categories) category.slug: category.colorValue,
+    };
 
     final allocations = buckets
         .map(
@@ -190,6 +290,7 @@ class BudgetRepository {
       allocations: allocations,
       spentByCategoryId: spentByCategory,
       daysRemaining: daysRemaining,
+      colorByBucketKey: colorByBucketKey,
     );
 
     final planStatus = BudgetPlanStatus(

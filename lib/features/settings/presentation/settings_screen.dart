@@ -85,6 +85,12 @@ class SettingsScreen extends ConsumerWidget {
           const CloudAccountPanel(),
           const SizedBox(height: AppSpacing.lg),
           PremiumMenuTile(
+            icon: Icons.help_outline_rounded,
+            title: 'Help & support',
+            subtitle: 'Clear doubts with quick answers',
+            onTap: () => context.push(AppRoutes.helpSupport),
+          ),
+          PremiumMenuTile(
             icon: Icons.info_outline_rounded,
             title: 'About ${AppConstants.appName}',
             subtitle: 'Version, mission & brand',

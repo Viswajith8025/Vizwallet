@@ -79,19 +79,25 @@ class BudgetDao extends DatabaseAccessor<AppDatabase> with _$BudgetDaoMixin {
     required int planId,
     required List<BudgetBucketsTableCompanion> buckets,
   }) async {
-    await (delete(budgetBucketsTable)..where((t) => t.planId.equals(planId)))
-        .go();
-    await batch((b) {
-      b.insertAll(budgetBucketsTable, buckets);
+    // Atomic: a crash between delete and insert must not leave a plan with
+    // zero buckets.
+    await transaction(() async {
+      await (delete(budgetBucketsTable)..where((t) => t.planId.equals(planId)))
+          .go();
+      await batch((b) {
+        b.insertAll(budgetBucketsTable, buckets);
+      });
     });
   }
 
   Future<void> deletePlanForMonth(String monthKey) async {
     final plan = await getPlanForMonth(monthKey);
     if (plan == null) return;
-    await (delete(budgetBucketsTable)..where((t) => t.planId.equals(plan.id)))
-        .go();
-    await (delete(budgetPlansTable)..where((t) => t.monthKey.equals(monthKey)))
-        .go();
+    await transaction(() async {
+      await (delete(budgetBucketsTable)..where((t) => t.planId.equals(plan.id)))
+          .go();
+      await (delete(budgetPlansTable)..where((t) => t.monthKey.equals(monthKey)))
+          .go();
+    });
   }
 }

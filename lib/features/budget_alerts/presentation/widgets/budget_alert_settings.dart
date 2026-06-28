@@ -29,7 +29,7 @@ class _BudgetAlertSettingsState extends ConsumerState<BudgetAlertSettings> {
           leading: Icon(Icons.notifications_outlined),
           title: Text('Budget alerts'),
           subtitle: Text(
-            'Informative nudges at 50%, 75%, 90%, and 100% — never spam.',
+            'Friendly warnings when you use 50%, 75%, 90%, or 100% of a spending group.',
           ),
         ),
         Padding(
@@ -58,7 +58,7 @@ class _BudgetAlertSettingsState extends ConsumerState<BudgetAlertSettings> {
         SwitchListTile(
           secondary: const Icon(Icons.phone_android),
           title: const Text('In-app alerts'),
-          subtitle: const Text('Gentle snackbars when a threshold is crossed'),
+          subtitle: const Text('Show a small message inside the app'),
           value: prefs.inAppEnabled,
           onChanged: (v) => _update(prefs.copyWith(inAppEnabled: v)),
         ),

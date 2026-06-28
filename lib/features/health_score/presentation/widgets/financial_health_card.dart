@@ -6,6 +6,8 @@ import 'package:rupee_track/core/branding/brand_colors.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/router/routes.dart';
+import 'package:rupee_track/core/widgets/error_state.dart';
+import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 import 'package:rupee_track/features/health_score/data/financial_health_repository.dart';
 import 'package:rupee_track/features/health_score/domain/financial_health_models.dart';
 
@@ -39,10 +41,16 @@ class FinancialHealthScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Financial health')),
+      appBar: AppBar(
+        title: const Text('Financial health'),
+        actions: const [ThemeToggleButton()],
+      ),
       body: healthAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorState(
+          message: 'We couldn\'t load your financial health score.',
+          onRetry: () => ref.invalidate(financialHealthProvider(cycleKey)),
+        ),
         data: (report) => RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(financialHealthProvider(cycleKey));

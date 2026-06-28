@@ -1,8 +1,14 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/constants/app_constants.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
+import 'package:rupee_track/core/widgets/error_state.dart';
+import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 import 'package:rupee_track/features/monthly_report/data/monthly_report_exporter.dart';
 import 'package:rupee_track/features/monthly_report/data/monthly_report_repository.dart';
 import 'package:rupee_track/features/monthly_report/domain/monthly_closing_report.dart';
@@ -21,6 +27,7 @@ class MonthlyReportScreen extends ConsumerStatefulWidget {
 class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
   String? _selectedCycleKey;
   bool _exporting = false;
+  final _reviewCaptureKey = GlobalKey();
 
   Future<void> _export(
     MonthlyClosingReport report,
@@ -37,7 +44,9 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Export failed: $e')),
+        const SnackBar(
+          content: Text('Could not export the report. Please try again.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -59,7 +68,7 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Closing Report'),
+        title: const Text('AI Monthly Review'),
         actions: [
           PopupMenuButton<String>(
             enabled: !_exporting,
@@ -106,11 +115,14 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
                   );
                 case 'print':
                   await _export(report, exporter.printPdf, 'Print');
+                case 'image':
+                  await _exportImage(report);
               }
             },
             itemBuilder: (context) => const [
               PopupMenuItem(value: 'pdf', child: Text('Export PDF')),
               PopupMenuItem(value: 'csv', child: Text('Export CSV')),
+              PopupMenuItem(value: 'image', child: Text('Share summary image')),
               PopupMenuItem(value: 'json', child: Text('Export JSON')),
               PopupMenuItem(value: 'print', child: Text('Print')),
             ],
@@ -125,18 +137,22 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
                   )
                 : const Icon(Icons.ios_share),
           ),
+          const ThemeToggleButton(),
         ],
       ),
       body: reportAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorState(
+          message: 'We couldn\'t load this closing report.',
+          onRetry: () => ref.invalidate(monthlyClosingReportProvider(cycleKey)),
+        ),
         data: (report) {
           if (report == null) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Closing report will be available after this salary cycle ends.',
+                  'Your AI Monthly Review will be ready when this salary cycle ends.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
@@ -166,11 +182,53 @@ class _MonthlyReportScreenState extends ConsumerState<MonthlyReportScreen> {
                     },
                   ),
                 ),
-              Expanded(child: MonthlyReportDetailView(report: report)),
+              Expanded(
+                child: MonthlyReportDetailView(
+                  report: report,
+                  reviewCaptureKey: _reviewCaptureKey,
+                ),
+              ),
             ],
           );
         },
       ),
     );
+  }
+
+  Future<void> _exportImage(MonthlyClosingReport report) async {
+    setState(() => _exporting = true);
+    try {
+      final bytes = await _captureReviewImage();
+      if (bytes == null) throw StateError('capture failed');
+      final exporter = ref.read(monthlyReportExporterProvider);
+      final file = await exporter.exportPng(report, bytes);
+      await exporter.shareFile(
+        file,
+        subject: '${AppConstants.appName} Monthly Review',
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Summary image exported')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not export image. Scroll to top and try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  Future<Uint8List?> _captureReviewImage() async {
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    final boundary = _reviewCaptureKey.currentContext?.findRenderObject()
+        as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final image = await boundary.toImage(pixelRatio: 3);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    return byteData?.buffer.asUint8List();
   }
 }

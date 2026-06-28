@@ -14,6 +14,8 @@ windows/flutter/ephemeral/
 **/local.properties
 **/.cxx/
 **/*.iml
+android/key.properties
+**/*.jks
 
 # IDE
 .idea/

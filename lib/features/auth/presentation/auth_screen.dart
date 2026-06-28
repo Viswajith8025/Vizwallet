@@ -22,68 +22,26 @@ class AuthScreen extends HookConsumerWidget {
     final isLoading = useState(false);
     final obscurePassword = useState(true);
 
-    Future<void> showPasswordHint() async {
-      final email = emailController.text.trim();
-      if (email.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Enter your email first.')),
-        );
-        return;
+    String friendlyAuthError(Object error) {
+      final message = error.toString();
+      final lower = message.toLowerCase();
+
+      if (lower.contains('email signups are disabled') ||
+          lower.contains('signup is disabled') ||
+          lower.contains('signups are disabled')) {
+        return 'New account creation is temporarily unavailable. Please try again later.';
+      }
+      if (lower.contains('invalid login credentials')) {
+        return 'Incorrect email or password.';
+      }
+      if (lower.contains('email not confirmed')) {
+        return 'This account needs activation before you can sign in.';
+      }
+      if (lower.contains('network') || lower.contains('socket')) {
+        return 'Could not reach the account service. Check your internet and try again.';
       }
 
-      isLoading.value = true;
-      try {
-        final hint =
-            await ref.read(authRepositoryProvider).fetchPasswordHint(email);
-        if (!context.mounted) return;
-
-        if (hint == null) {
-          await showDialog<void>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('No hint found'),
-              content: Text(
-                'No password hint is saved for $email. '
-                'Try another email or create a new account.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-          return;
-        }
-
-        await showDialog<void>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            icon: Icon(
-              Icons.lightbulb_outline_rounded,
-              color: Theme.of(ctx).colorScheme.primary,
-              size: 32,
-            ),
-            title: const Text('Your password hint'),
-            content: Text(
-              hint,
-              style: Theme.of(ctx).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    height: 1.45,
-                  ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Got it'),
-              ),
-            ],
-          ),
-        );
-      } finally {
-        isLoading.value = false;
-      }
+      return 'Account service error. Please try again.';
     }
 
     Future<void> submit() async {
@@ -147,12 +105,8 @@ class AuthScreen extends HookConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          final message = e.toString();
-          final friendly = message.contains('Invalid login credentials')
-              ? 'Incorrect email or password.'
-              : message;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(friendly)),
+            SnackBar(content: Text(friendlyAuthError(e))),
           );
         }
       } finally {
@@ -165,7 +119,7 @@ class AuthScreen extends HookConsumerWidget {
     return Scaffold(
       appBar: PremiumAppBar(
         title: isSignUp.value ? 'Create account' : 'Sign in',
-        subtitle: '${AppConstants.appName} cloud account',
+        subtitle: 'Your ${AppConstants.appName} account',
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -179,8 +133,8 @@ class AuthScreen extends HookConsumerWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             isSignUp.value
-                ? 'Create an account to save your profile. Data sync across devices is coming soon.'
-                : 'Sign in with the email and password you used when signing up.',
+                ? 'Create an account to save your profile and stay signed in.'
+                : 'Use the same email and password you chose when signing up.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.45,
@@ -250,11 +204,12 @@ class AuthScreen extends HookConsumerWidget {
           ],
           if (!isSignUp.value) ...[
             const SizedBox(height: AppSpacing.sm),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: isLoading.value ? null : showPasswordHint,
-                child: const Text('Forgot password? Show hint'),
+            Text(
+              'Forgot your password? Use the hint you saved when you signed up — '
+              'you can view it in Settings after signing in.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.45,
               ),
             ),
           ],

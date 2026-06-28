@@ -36,6 +36,19 @@ class BudgetBucketCard extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  if (bucket.colorValue != null) ...[
+                    CircleAvatar(
+                      radius: 8,
+                      backgroundColor: Color(bucket.colorValue!)
+                          .withValues(alpha: 0.18),
+                      child: Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: Color(bucket.colorValue!),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                   Expanded(
                     child: Text(
                       bucket.displayName,
@@ -72,15 +85,15 @@ class BudgetBucketCard extends StatelessWidget {
               Row(
                 children: [
                   _Metric(
-                    label: 'Budget',
+                    label: 'Planned',
                     value: formatPaise(bucket.totalBudgetPaise),
                   ),
                   _Metric(
-                    label: 'Spent',
+                    label: 'Used',
                     value: formatPaise(bucket.spentPaise),
                   ),
                   _Metric(
-                    label: 'Left',
+                    label: 'Money left',
                     value: formatPaise(bucket.remainingPaise),
                     highlight: bucket.remainingPaise < 0,
                   ),
@@ -97,7 +110,7 @@ class BudgetBucketCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '${formatPaise(bucket.dailyAllowancePaise)}/day · ${bucket.daysRemaining}d left',
+                    '${formatPaise(bucket.dailyAllowancePaise)} per day · ${bucket.daysRemaining} days left',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -107,7 +120,7 @@ class BudgetBucketCard extends StatelessWidget {
               if (bucket.rolloverPaise > 0) ...[
                 const SizedBox(height: 6),
                 Text(
-                  'Includes ${formatPaise(bucket.rolloverPaise)} rollover',
+                  'Includes ${formatPaise(bucket.rolloverPaise)} left from last month',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.tertiary,
                   ),

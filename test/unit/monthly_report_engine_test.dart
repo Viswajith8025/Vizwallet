@@ -65,6 +65,7 @@ void main() {
         savingsChangePercent: null,
         incomeChangePercent: null,
       ),
+      aiReview: null,
     );
 
     final restored = MonthlyClosingReport.fromJson(report.toJson());

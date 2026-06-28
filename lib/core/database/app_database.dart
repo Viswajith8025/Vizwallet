@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:rupee_track/core/constants/app_constants.dart';
 import 'package:rupee_track/core/constants/category_defaults.dart';
+import 'package:rupee_track/core/database/daos/activity_log_dao.dart';
 import 'package:rupee_track/core/database/daos/budget_dao.dart';
 import 'package:rupee_track/core/database/daos/categories_dao.dart';
 import 'package:rupee_track/core/database/daos/expenses_dao.dart';
@@ -16,6 +17,7 @@ import 'package:rupee_track/core/database/daos/settings_dao.dart';
 import 'package:rupee_track/core/database/daos/subscriptions_dao.dart';
 import 'package:rupee_track/core/database/tables.dart';
 import 'package:rupee_track/core/database/daos/income_sources_dao.dart';
+import 'package:rupee_track/core/database/daos/savings_goals_dao.dart';
 import 'package:rupee_track/core/database/daos/tagging_rules_dao.dart';
 import 'package:rupee_track/core/salary_cycle/salary_cycle_engine.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
@@ -36,7 +38,9 @@ part 'app_database.g.dart';
     BudgetPlansTable,
     BudgetBucketsTable,
     IncomeSourcesTable,
+    SavingsGoalsTable,
     TaggingRulesTable,
+    ActivityLogTable,
   ],
   daos: [
     ExpensesDao,
@@ -47,19 +51,24 @@ part 'app_database.g.dart';
     LoansDao,
     BudgetDao,
     IncomeSourcesDao,
+    SavingsGoalsDao,
     TaggingRulesDao,
+    ActivityLogDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
+          await _createIndexes();
+          await _addSearchIndexes();
+          await _createActivityIndexes();
           await _seedDefaults();
           await _seedTaggingRules();
         },
@@ -83,8 +92,89 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(taggingRulesTable);
             await _seedTaggingRules();
           }
+          if (from < 5) {
+            await _createIndexes();
+          }
+          if (from < 6) {
+            await m.addColumn(subscriptionsTable, subscriptionsTable.status);
+            await m.addColumn(
+              subscriptionsTable,
+              subscriptionsTable.usageFrequency,
+            );
+            await customStatement(
+              "UPDATE subscriptions_table SET status = CASE "
+              "WHEN is_active = 1 THEN 'active' ELSE 'cancelled' END",
+            );
+          }
+          if (from < 7) {
+            await m.createTable(savingsGoalsTable);
+          }
+          if (from < 8) {
+            await _addSearchIndexes();
+          }
+          if (from < 9) {
+            await m.createTable(activityLogTable);
+            await m.addColumn(
+              appSettingsTable,
+              appSettingsTable.recycleBinRetentionDays,
+            );
+            await m.addColumn(expensesTable, expensesTable.deletedAt);
+            await m.addColumn(loansTable, loansTable.deletedAt);
+            await m.addColumn(categoriesTable, categoriesTable.deletedAt);
+            await _createActivityIndexes();
+          }
+        },
+        beforeOpen: (details) async {
+          // Enforce foreign-key constraints (SQLite leaves these off by default).
+          await customStatement('PRAGMA foreign_keys = ON');
         },
       );
+
+  /// Indexes for the hottest query paths (expense lists & monthly aggregates).
+  Future<void> _createIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_month_deleted '
+      'ON expenses_table (month_key, is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_occurred_at '
+      'ON expenses_table (occurred_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_category '
+      'ON expenses_table (category_id)',
+    );
+  }
+
+  Future<void> _addSearchIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_title '
+      'ON expenses_table (title)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_payment_method '
+      'ON expenses_table (payment_method)',
+    );
+  }
+
+  Future<void> _createActivityIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_activity_occurred_at '
+      'ON activity_log_table (occurred_at DESC)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_activity_module_action '
+      'ON activity_log_table (module, action)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_deleted_at '
+      'ON expenses_table (is_deleted, deleted_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_loans_deleted_at '
+      'ON loans_table (is_deleted, deleted_at)',
+    );
+  }
 
   Future<void> _migrateToSalaryCycleKeys(int salaryDay) async {
     final expenses = await select(expensesTable).get();

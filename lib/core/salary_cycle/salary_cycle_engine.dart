@@ -250,7 +250,11 @@ abstract final class SalaryCycleEngine {
     required int moneyLeftPaise,
     required int daysRemaining,
   }) {
-    if (daysRemaining <= 0) return moneyLeftPaise;
+    // Outside/after the cycle there is no "per-day" allowance to give.
+    // Returning the full balance here would mislead the user into thinking
+    // they can spend everything today (matches bucket allowance semantics).
+    if (daysRemaining <= 0) return 0;
+    if (moneyLeftPaise <= 0) return 0;
     return (moneyLeftPaise / daysRemaining).floor();
   }
 

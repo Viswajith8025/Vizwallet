@@ -103,5 +103,32 @@ void main() {
         30000,
       );
     });
+
+    test('daily spending allowance is 0 when no days remain', () {
+      expect(
+        SalaryCycleEngine.dailySpendingAllowance(
+          moneyLeftPaise: 300000,
+          daysRemaining: 0,
+        ),
+        0,
+      );
+      expect(
+        SalaryCycleEngine.dailySpendingAllowance(
+          moneyLeftPaise: 300000,
+          daysRemaining: -3,
+        ),
+        0,
+      );
+    });
+
+    test('daily spending allowance is 0 when overspent', () {
+      expect(
+        SalaryCycleEngine.dailySpendingAllowance(
+          moneyLeftPaise: -5000,
+          daysRemaining: 10,
+        ),
+        0,
+      );
+    });
   });
 }

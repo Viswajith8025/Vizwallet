@@ -48,19 +48,21 @@ class AuthRepository {
 
   Future<void> signOut() => _client.auth.signOut();
 
-  /// Fetches the user's password hint (requires SQL migration + RPC).
-  Future<String?> fetchPasswordHint(String email) async {
-    final trimmed = email.trim();
-    if (trimmed.isEmpty) return null;
+  /// Returns the signed-in user's password hint (server requires auth + email match).
+  Future<String?> fetchPasswordHintForCurrentUser() async {
+    final email = currentUser?.email?.trim();
+    if (email == null || email.isEmpty) return null;
 
     try {
       final result = await _client.rpc(
         'get_password_hint',
-        params: {'p_email': trimmed},
+        params: {'p_email': email},
       );
       if (result == null) return null;
       final hint = result.toString().trim();
       return hint.isEmpty ? null : hint;
+    } on PostgrestException {
+      return null;
     } catch (_) {
       return null;
     }
@@ -70,6 +72,8 @@ class AuthRepository {
     try {
       await _client.from('profiles').select('id').limit(1);
       return true;
+    } on PostgrestException {
+      return false;
     } catch (_) {
       return false;
     }

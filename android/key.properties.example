@@ -1,0 +1,13 @@
+# Copy this file to `key.properties` (same folder) and fill in real values.
+# `key.properties` is gitignored — never commit your keystore or passwords.
+#
+# Generate a keystore (one time) with:
+#   keytool -genkey -v -keystore vizwallet-release.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias vizwallet
+#
+# Then point storeFile at that .jks (absolute path or path relative to android/).
+
+storePassword=changeme
+keyPassword=changeme
+keyAlias=vizwallet
+storeFile=vizwallet-release.jks

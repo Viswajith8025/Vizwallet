@@ -27,9 +27,9 @@ class _SalaryCycleSettingsState extends ConsumerState<SalaryCycleSettings> {
         title: Text('Salary cycle'),
         subtitle: Text('Loading…'),
       ),
-      error: (e, _) => ListTile(
-        title: const Text('Salary cycle'),
-        subtitle: Text('Error: $e'),
+      error: (e, _) => const ListTile(
+        title: Text('Salary cycle'),
+        subtitle: Text('Could not load salary settings.'),
       ),
       data: (settings) {
         final day = _pendingDay ?? settings.salaryDay;
@@ -47,7 +47,7 @@ class _SalaryCycleSettingsState extends ConsumerState<SalaryCycleSettings> {
               leading: Icon(Icons.event_repeat),
               title: Text('Salary cycle'),
               subtitle: Text(
-                'Your financial month runs from salary date to the day before next salary.',
+                'Your month runs from one salary date to the day before the next.',
               ),
             ),
             Padding(
@@ -84,7 +84,7 @@ class _SalaryCycleSettingsState extends ConsumerState<SalaryCycleSettings> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Current cycle', style: theme.textTheme.labelLarge),
+                      Text('This month', style: theme.textTheme.labelLarge),
                       const SizedBox(height: 4),
                       Text(
                         previewLabel,
@@ -96,7 +96,7 @@ class _SalaryCycleSettingsState extends ConsumerState<SalaryCycleSettings> {
                       Text(
                         'Next salary: ${nextSalary.day} '
                         '${_shortMonth(nextSalary.month)} · '
-                        '$daysLeft days left in cycle',
+                        '$daysLeft days left this month',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

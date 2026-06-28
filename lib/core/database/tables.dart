@@ -13,6 +13,8 @@ class AppSettingsTable extends Table {
   IntColumn get majorPurchaseThresholdPaise =>
       integer().withDefault(const Constant(500000))();
   IntColumn get salaryDay => integer().withDefault(const Constant(1))();
+  IntColumn get recycleBinRetentionDays =>
+      integer().withDefault(const Constant(30))();
   BoolColumn get pinEnabled => boolean().withDefault(const Constant(false))();
   TextColumn get pinHash => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -43,6 +45,7 @@ class CategoriesTable extends Table {
       boolean().withDefault(const Constant(true))();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 }
 
 class ExpensesTable extends Table {
@@ -60,6 +63,7 @@ class ExpensesTable extends Table {
   IntColumn get loanPaymentId => integer().nullable()();
   TextColumn get autoLabels => text().withDefault(const Constant('[]'))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -75,6 +79,8 @@ class SubscriptionsTable extends Table {
   DateTimeColumn get nextRenewalAt => dateTime().nullable()();
   TextColumn get paymentMethod => text().withDefault(const Constant('Auto Debit'))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  TextColumn get usageFrequency => text().nullable()();
   TextColumn get notes => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -105,6 +111,7 @@ class LoansTable extends Table {
   TextColumn get status => text().withDefault(const Constant('pending'))();
   TextColumn get notes => text().nullable()();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -165,6 +172,21 @@ class IncomeSourcesTable extends Table {
 }
 
 /// Learned and built-in merchant/keyword → category + tag rules.
+class SavingsGoalsTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  IntColumn get targetPaise => integer()();
+  IntColumn get savedPaise => integer().withDefault(const Constant(0))();
+  IntColumn get monthlyContributionPaise =>
+      integer().withDefault(const Constant(0))();
+  BoolColumn get isWishlist => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get targetDate => dateTime().nullable()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// Learned and built-in merchant/keyword → category + tag rules.
 class TaggingRulesTable extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get pattern => text()();
@@ -181,4 +203,21 @@ class TaggingRulesTable extends Table {
   List<Set<Column<Object>>> get uniqueKeys => [
         {pattern, matchField},
       ];
+}
+
+/// Immutable audit trail — append-only; never updated except isUndone flag.
+class ActivityLogTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get action => text()();
+  TextColumn get module => text()();
+  IntColumn get entityId => integer().nullable()();
+  TextColumn get entityLabel => text().withDefault(const Constant(''))();
+  TextColumn get oldValueJson => text().nullable()();
+  TextColumn get newValueJson => text().nullable()();
+  TextColumn get reason => text().nullable()();
+  TextColumn get severity => text().withDefault(const Constant('info'))();
+  TextColumn get performedBy => text().withDefault(const Constant('user'))();
+  BoolColumn get isUndoable => boolean().withDefault(const Constant(false))();
+  BoolColumn get isUndone => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get occurredAt => dateTime().withDefault(currentDateAndTime)();
 }

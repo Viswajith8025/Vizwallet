@@ -53,4 +53,14 @@ class SalaryDao extends DatabaseAccessor<AppDatabase> with _$SalaryDaoMixin {
       );
     }
   }
+
+  Future<List<MonthlySalaryTableData>> listSalariesInRange({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) {
+    return (select(monthlySalaryTable)
+          ..where((t) => t.receivedAt.isBiggerOrEqualValue(startUtc))
+          ..where((t) => t.receivedAt.isSmallerThanValue(endUtc)))
+        .get();
+  }
 }

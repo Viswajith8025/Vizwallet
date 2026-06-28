@@ -6,6 +6,7 @@ import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
+import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 import 'package:rupee_track/features/budget/data/budget_repository.dart';
 import 'package:rupee_track/features/budget/domain/allocation_mode.dart';
 import 'package:rupee_track/features/budget/domain/budget_templates.dart';
@@ -52,11 +53,12 @@ class BudgetSetupScreen extends HookConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Smart Budget Planner'),
+        title: const Text('Set up your budget'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
+        actions: const [ThemeToggleButton()],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -67,7 +69,7 @@ class BudgetSetupScreen extends HookConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Distribute your salary into spending buckets. Expenses auto-deduct from linked categories.',
+            'Tell Vizwallet how you want to divide your salary. We will track each expense against the right spending group.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -84,7 +86,10 @@ class BudgetSetupScreen extends HookConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Text('Allocation method', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'How should we split your salary?',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
             ...AllocationMode.values.map(
               (m) => Padding(
@@ -98,8 +103,10 @@ class BudgetSetupScreen extends HookConsumerWidget {
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Rollover unused budget'),
-              subtitle: const Text('Add remaining balance to next salary cycle'),
+              title: const Text('Carry forward money left over'),
+              subtitle: const Text(
+                'If you do not spend a group fully, add the leftover to next month.',
+              ),
               value: rollover.value,
               onChanged: (v) => rollover.value = v,
             ),
@@ -113,6 +120,12 @@ class BudgetSetupScreen extends HookConsumerWidget {
                   );
                   return;
                 }
+                if (mode.value == AllocationMode.perCategory) {
+                  if (context.mounted) {
+                    context.push(AppRoutes.categoryBudget);
+                  }
+                  return;
+                }
                 await loadAllocations();
                 step.value = 1;
               },
@@ -123,14 +136,14 @@ class BudgetSetupScreen extends HookConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Review allocations',
+                    'Check your salary split',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 if (mode.value == AllocationMode.aiSuggested)
                   TextButton(
                     onPressed: isLoadingAlloc.value ? null : loadAllocations,
-                    child: const Text('Regenerate'),
+                    child: const Text('Suggest again'),
                   ),
               ],
             ),
@@ -208,7 +221,7 @@ class BudgetSetupScreen extends HookConsumerWidget {
                               isSaving.value = false;
                             }
                           },
-                    child: Text(isSaving.value ? 'Saving...' : 'Save plan'),
+                    child: Text(isSaving.value ? 'Saving...' : 'Save my budget'),
                   ),
                 ),
               ],
@@ -232,14 +245,19 @@ class _ModeCard extends StatelessWidget {
   final VoidCallback onTap;
 
   String get _subtitle => switch (mode) {
-        AllocationMode.manual => 'Set exact rupee amount per bucket',
-        AllocationMode.percentage => 'Use % splits — recommended default',
-        AllocationMode.aiSuggested => 'Based on your spending history',
+        AllocationMode.manual => 'You choose the exact rupee amount for each group.',
+        AllocationMode.percentage =>
+          'Beginner-friendly: divide salary using simple percentages.',
+        AllocationMode.perCategory =>
+          'Set a separate monthly limit for each category.',
+        AllocationMode.aiSuggested =>
+          'Vizwallet suggests a split from your spending habits.',
       };
 
   IconData get _icon => switch (mode) {
         AllocationMode.manual => Icons.edit_outlined,
         AllocationMode.percentage => Icons.pie_chart_outline,
+        AllocationMode.perCategory => Icons.category_outlined,
         AllocationMode.aiSuggested => Icons.auto_awesome,
       };
 
@@ -291,15 +309,15 @@ class _AllocationTile extends StatelessWidget {
                 children: [
                   Text(allocation.displayName),
                   Text(
-                    '$percent%${allocation.rolloverPaise > 0 ? ' · +${formatPaise(allocation.rolloverPaise)} rollover' : ''}',
+                    '$percent%${allocation.rolloverPaise > 0 ? ' · +${formatPaise(allocation.rolloverPaise)} from last month' : ''}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
             if (editable)
-              SizedBox(
-                width: 100,
+              Flexible(
+                flex: 2,
                 child: TextFormField(
                   initialValue:
                       paiseToRupees(allocation.allocatedPaise).round().toString(),
@@ -351,7 +369,7 @@ class _TotalRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('Total allocated', style: theme.textTheme.titleSmall),
+        Text('Total planned', style: theme.textTheme.titleSmall),
         Text(
           '${formatPaise(allocated)} / ${formatPaise(salaryPaise)}',
           style: theme.textTheme.titleSmall?.copyWith(

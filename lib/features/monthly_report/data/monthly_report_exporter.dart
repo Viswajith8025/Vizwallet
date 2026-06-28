@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -73,6 +74,17 @@ class MonthlyReportExporter {
       rows.add(['Goal missed', g.title, g.detail]);
     }
 
+    final review = report.aiReview;
+    if (review != null) {
+      rows.add(['AI Review', 'Headline', review.headline]);
+      for (final insight in review.insights) {
+        rows.add(['AI Insight', '', insight]);
+      }
+      for (final rec in review.recommendations) {
+        rows.add(['AI Recommendation', rec.title, rec.detail]);
+      }
+    }
+
     final buffer = StringBuffer();
     for (final row in rows) {
       buffer.writeln(row.map(_csvEscape).join(','));
@@ -81,6 +93,13 @@ class MonthlyReportExporter {
     final dir = await _exportDir();
     final file = File(p.join(dir.path, _fileName(report, 'csv')));
     await file.writeAsString(buffer.toString());
+    return file;
+  }
+
+  Future<File> exportPng(MonthlyClosingReport report, Uint8List bytes) async {
+    final dir = await _exportDir();
+    final file = File(p.join(dir.path, _fileName(report, 'png')));
+    await file.writeAsBytes(bytes);
     return file;
   }
 
@@ -101,6 +120,18 @@ class MonthlyReportExporter {
           _pdfHeader(report, generated),
           pw.SizedBox(height: 20),
           _pdfSummaryGrid(report),
+          if (report.aiReview != null) ...[
+            pw.SizedBox(height: 24),
+            _pdfSectionTitle('AI Monthly Review'),
+            _pdfText(report.aiReview!.headline),
+            _pdfText(report.aiReview!.subheadline),
+            ...report.aiReview!.insights.map(_pdfBullet),
+            pw.SizedBox(height: 12),
+            _pdfSectionTitle('Recommendations'),
+            ...report.aiReview!.recommendations.map(
+              (r) => _pdfBullet('${r.title}: ${r.detail}'),
+            ),
+          ],
           pw.SizedBox(height: 24),
           _pdfSectionTitle('Cycle comparison'),
           _pdfComparison(report),
@@ -116,14 +147,14 @@ class MonthlyReportExporter {
             pw.SizedBox(height: 20),
             _pdfSectionTitle('Budget performance'),
             _pdfText(
-              '${report.budgetOnTrackPercent.toStringAsFixed(0)}% of buckets on track',
+              '${report.budgetOnTrackPercent.toStringAsFixed(0)}% of spending groups on track',
             ),
             ...report.budgetBuckets.map(_pdfBucketRow),
           ],
           pw.SizedBox(height: 20),
           _pdfSectionTitle('Subscriptions & loans'),
           _pdfText(
-            'Subscriptions: ${formatPaise(report.subscriptions.cycleSpendPaise)} this cycle · '
+            'Subscriptions: ${formatPaise(report.subscriptions.cycleSpendPaise)} this month · '
             '${report.subscriptions.activeCount} active',
           ),
           _pdfText(
@@ -224,7 +255,7 @@ class MonthlyReportExporter {
           ),
           pw.SizedBox(height: 8),
           pw.Text(
-            'Monthly Closing Report',
+            'AI Monthly Review',
             style: pw.TextStyle(
               color: PdfColors.white,
               fontSize: 22,

@@ -15,6 +15,19 @@ class SafeSpendRepository {
 
   final Ref _ref;
 
+  Future<SafeSpendSnapshot> computeForCycle(String cycleKey) async {
+    final db = await _ref.read(databaseProvider.future);
+    final settings = await db.settingsDao.getSettings();
+    final salaryDay = settings.salaryDay;
+    final salary = await db.salaryDao.getSalaryForMonth(cycleKey);
+    return _compute(
+      db: db,
+      cycleKey: cycleKey,
+      salaryDay: salaryDay,
+      salaryPaise: salary?.amountPaise ?? 0,
+    );
+  }
+
   /// Recomputes after every expense or salary change in the cycle.
   Stream<SafeSpendSnapshot> watchSafeSpend(String cycleKey) async* {
     final db = await _ref.read(databaseProvider.future);

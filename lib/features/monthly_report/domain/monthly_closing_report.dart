@@ -1,3 +1,5 @@
+import 'package:rupee_track/features/monthly_report/domain/ai_monthly_review.dart';
+
 class MonthlyClosingReport {
   const MonthlyClosingReport({
     required this.cycleKey,
@@ -24,6 +26,7 @@ class MonthlyClosingReport {
     required this.budgetBuckets,
     required this.budgetOnTrackPercent,
     required this.comparison,
+    this.aiReview,
   });
 
   final String cycleKey;
@@ -50,6 +53,7 @@ class MonthlyClosingReport {
   final List<BudgetBucketLine> budgetBuckets;
   final double budgetOnTrackPercent;
   final CycleComparison comparison;
+  final AiMonthlyReview? aiReview;
 
   Map<String, dynamic> toJson() => {
         'cycleKey': cycleKey,
@@ -76,6 +80,7 @@ class MonthlyClosingReport {
         'budgetBuckets': budgetBuckets.map((e) => e.toJson()).toList(),
         'budgetOnTrackPercent': budgetOnTrackPercent,
         'comparison': comparison.toJson(),
+        if (aiReview != null) 'aiReview': aiReview!.toJson(),
       };
 
   factory MonthlyClosingReport.fromJson(Map<String, dynamic> json) {
@@ -122,6 +127,11 @@ class MonthlyClosingReport {
       comparison: CycleComparison.fromJson(
         json['comparison'] as Map<String, dynamic>,
       ),
+      aiReview: json['aiReview'] != null
+          ? AiMonthlyReview.fromJson(
+              json['aiReview'] as Map<String, dynamic>,
+            )
+          : null,
     );
   }
 }

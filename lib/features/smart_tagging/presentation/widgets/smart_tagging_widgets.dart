@@ -7,10 +7,14 @@ import 'package:rupee_track/features/smart_tagging/domain/classification_models.
 class ClassificationSuggestionBanner extends ConsumerWidget {
   const ClassificationSuggestionBanner({
     required this.title,
+    this.onSave,
+    this.canSave = false,
     super.key,
   });
 
   final String title;
+  final VoidCallback? onSave;
+  final bool canSave;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,6 +47,18 @@ class ClassificationSuggestionBanner extends ConsumerWidget {
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
+                if (onSave != null && canSave) ...[
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: onSave,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('Save'),
+                  ),
+                ],
               ],
             ),
           ),
@@ -54,10 +70,10 @@ class ClassificationSuggestionBanner extends ConsumerWidget {
   String _message(TransactionClassification c) {
     final parts = <String>[];
     if (c.suggestedCategoryName != null) {
-      parts.add('Suggested: ${c.suggestedCategoryName}');
+      parts.add('Will save as ${c.suggestedCategoryName}');
     }
     if (c.tags.isNotEmpty) {
-      parts.add('Tags: ${c.tags.join(', ')}');
+      parts.add('Labels: ${c.tags.join(', ')}');
     }
     if (c.primaryReason != null) {
       parts.add(c.primaryReason!);
@@ -81,7 +97,12 @@ class SpendingByTagsSection extends ConsumerWidget {
         height: 80,
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
-      error: (e, _) => Text('Tags error: $e'),
+      error: (e, _) => Text(
+        'Could not load spending tags.',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.error,
+        ),
+      ),
       data: (rows) {
         if (rows.isEmpty) {
           return const SizedBox.shrink();
@@ -92,14 +113,14 @@ class SpendingByTagsSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Spending by tags',
+              'Spending by labels',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Grouped by smart tags across this cycle',
+              'Grouped by labels for this month',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

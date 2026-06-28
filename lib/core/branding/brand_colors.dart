@@ -19,10 +19,10 @@ abstract final class BrandColors {
   static const errorContainer = Color(0xFFFEE2E2);
 
   // Light mode surfaces
-  static const backgroundLight = Color(0xFFFAFBFC);
-  static const surfaceLight = Color(0xFFFFFFFF);
-  static const cardLight = Color(0xFFFFFFFF);
-  static const cardBorderLight = Color(0xFFE8ECF1);
+  static const backgroundLight = Color(0xFFEFF3F7);
+  static const surfaceLight = Color(0xFFF8FAFC);
+  static const cardLight = Color(0xFFFDFEFF);
+  static const cardBorderLight = Color(0xFFD8E0EA);
   static const onBackgroundLight = Color(0xFF0F172A);
   static const onSurfaceVariantLight = Color(0xFF64748B);
   static const dividerLight = Color(0xFFF1F5F9);
@@ -40,15 +40,15 @@ abstract final class BrandColors {
     brightness: Brightness.light,
     primary: primary,
     onPrimary: Colors.white,
-    primaryContainer: Color(0xFFE8EEF8),
+    primaryContainer: Color(0xFFDDE7F5),
     onPrimaryContainer: Color(0xFF0F1D38),
     secondary: secondary,
     onSecondary: Colors.white,
-    secondaryContainer: Color(0xFFD1FAE5),
+    secondaryContainer: Color(0xFFC9F3DF),
     onSecondaryContainer: Color(0xFF064E3B),
     tertiary: accent,
     onTertiary: Color(0xFF083344),
-    tertiaryContainer: Color(0xFFCFFAFE),
+    tertiaryContainer: Color(0xFFC7EEF6),
     onTertiaryContainer: Color(0xFF164E63),
     error: error,
     onError: Colors.white,
@@ -58,8 +58,8 @@ abstract final class BrandColors {
     onSurface: onBackgroundLight,
     onSurfaceVariant: onSurfaceVariantLight,
     outline: cardBorderLight,
-    outlineVariant: dividerLight,
-    shadow: Colors.black12,
+    outlineVariant: Color(0xFFE2E8F0),
+    shadow: Color(0x1F0F172A),
     scrim: Colors.black54,
     inverseSurface: surfaceDark,
     onInverseSurface: onBackgroundDark,

@@ -6,6 +6,8 @@ import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/core/widgets/empty_state.dart';
+import 'package:rupee_track/core/widgets/error_state.dart';
+import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 import 'package:rupee_track/features/budget/data/budget_repository.dart';
 import 'package:rupee_track/features/budget/domain/allocation_mode.dart';
 import 'package:rupee_track/features/budget/presentation/widgets/budget_bucket_card.dart';
@@ -22,29 +24,49 @@ class BudgetPlannerScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Budget Planner'),
+        title: const Text('Budget planner'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.category_outlined),
+            tooltip: 'Category budgets',
+            onPressed: () => context.push(AppRoutes.categoryBudget),
+          ),
           IconButton(
             icon: const Icon(Icons.tune),
             tooltip: 'Edit plan',
             onPressed: () => context.push(AppRoutes.budgetSetup),
           ),
+          const ThemeToggleButton(),
         ],
       ),
       body: planAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorState(
+          message: 'We couldn\'t load your budget plan.',
+          onRetry: () => ref.invalidate(budgetPlanStatusProvider(cycleKey)),
+        ),
         data: (plan) {
           if (plan == null) {
             return EmptyState(
               title: 'No budget plan yet',
               message:
-                  'Set your salary and allocate spending buckets for ${formatCycleLabel(cycleKey, salaryDay: salaryDay)}.',
+                  'Add your salary, then set a monthly limit for each category like Food, Travel, and Bills.',
               icon: Icons.pie_chart_outline,
-              action: FilledButton.icon(
-                onPressed: () => context.push(AppRoutes.budgetSetup),
-                icon: const Icon(Icons.add),
-                label: const Text('Create budget plan'),
+              action: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FilledButton.icon(
+                    onPressed: () => context.push(AppRoutes.categoryBudget),
+                    icon: const Icon(Icons.category_outlined),
+                    label: const Text('Set category budgets'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => context.push(AppRoutes.budgetSetup),
+                    icon: const Icon(Icons.tune),
+                    label: const Text('Use budget wizard'),
+                  ),
+                ],
               ),
             );
           }
@@ -75,7 +97,7 @@ class BudgetPlannerScreen extends ConsumerWidget {
                         ),
                         if (plan.rolloverEnabled)
                           Text(
-                            'Rollover enabled',
+                            'Leftover money carries forward',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.tertiary,
                             ),
@@ -86,7 +108,7 @@ class BudgetPlannerScreen extends ConsumerWidget {
                 ),
                 if (plan.insights.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  Text('Insights', style: theme.textTheme.titleMedium),
+                  Text('Things to notice', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   ...plan.insights.map(
                     (insight) => Card(
@@ -103,7 +125,12 @@ class BudgetPlannerScreen extends ConsumerWidget {
                   ),
                 ],
                 const SizedBox(height: 16),
-                Text('Spending buckets', style: theme.textTheme.titleMedium),
+                Text(
+                  plan.allocationMode == AllocationMode.perCategory
+                      ? 'Category budgets'
+                      : 'Spending groups',
+                  style: theme.textTheme.titleMedium,
+                ),
                 const SizedBox(height: 8),
                 ...plan.buckets.map(
                   (b) => Padding(

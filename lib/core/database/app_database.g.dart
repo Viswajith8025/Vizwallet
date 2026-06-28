@@ -73,6 +73,14 @@ class $AppSettingsTableTable extends AppSettingsTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(1));
+  static const VerificationMeta _recycleBinRetentionDaysMeta =
+      const VerificationMeta('recycleBinRetentionDays');
+  @override
+  late final GeneratedColumn<int> recycleBinRetentionDays =
+      GeneratedColumn<int>('recycle_bin_retention_days', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(30));
   static const VerificationMeta _pinEnabledMeta =
       const VerificationMeta('pinEnabled');
   @override
@@ -115,6 +123,7 @@ class $AppSettingsTableTable extends AppSettingsTable
         veryLargeExpenseThresholdPaise,
         majorPurchaseThresholdPaise,
         salaryDay,
+        recycleBinRetentionDays,
         pinEnabled,
         pinHash,
         createdAt,
@@ -176,6 +185,13 @@ class $AppSettingsTableTable extends AppSettingsTable
       context.handle(_salaryDayMeta,
           salaryDay.isAcceptableOrUnknown(data['salary_day']!, _salaryDayMeta));
     }
+    if (data.containsKey('recycle_bin_retention_days')) {
+      context.handle(
+          _recycleBinRetentionDaysMeta,
+          recycleBinRetentionDays.isAcceptableOrUnknown(
+              data['recycle_bin_retention_days']!,
+              _recycleBinRetentionDaysMeta));
+    }
     if (data.containsKey('pin_enabled')) {
       context.handle(
           _pinEnabledMeta,
@@ -223,6 +239,9 @@ class $AppSettingsTableTable extends AppSettingsTable
           data['${effectivePrefix}major_purchase_threshold_paise'])!,
       salaryDay: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}salary_day'])!,
+      recycleBinRetentionDays: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}recycle_bin_retention_days'])!,
       pinEnabled: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}pin_enabled'])!,
       pinHash: attachedDatabase.typeMapping
@@ -250,6 +269,7 @@ class AppSettingsTableData extends DataClass
   final int veryLargeExpenseThresholdPaise;
   final int majorPurchaseThresholdPaise;
   final int salaryDay;
+  final int recycleBinRetentionDays;
   final bool pinEnabled;
   final String? pinHash;
   final DateTime createdAt;
@@ -263,6 +283,7 @@ class AppSettingsTableData extends DataClass
       required this.veryLargeExpenseThresholdPaise,
       required this.majorPurchaseThresholdPaise,
       required this.salaryDay,
+      required this.recycleBinRetentionDays,
       required this.pinEnabled,
       this.pinHash,
       required this.createdAt,
@@ -282,6 +303,7 @@ class AppSettingsTableData extends DataClass
     map['major_purchase_threshold_paise'] =
         Variable<int>(majorPurchaseThresholdPaise);
     map['salary_day'] = Variable<int>(salaryDay);
+    map['recycle_bin_retention_days'] = Variable<int>(recycleBinRetentionDays);
     map['pin_enabled'] = Variable<bool>(pinEnabled);
     if (!nullToAbsent || pinHash != null) {
       map['pin_hash'] = Variable<String>(pinHash);
@@ -301,6 +323,7 @@ class AppSettingsTableData extends DataClass
       veryLargeExpenseThresholdPaise: Value(veryLargeExpenseThresholdPaise),
       majorPurchaseThresholdPaise: Value(majorPurchaseThresholdPaise),
       salaryDay: Value(salaryDay),
+      recycleBinRetentionDays: Value(recycleBinRetentionDays),
       pinEnabled: Value(pinEnabled),
       pinHash: pinHash == null && nullToAbsent
           ? const Value.absent()
@@ -326,6 +349,8 @@ class AppSettingsTableData extends DataClass
       majorPurchaseThresholdPaise:
           serializer.fromJson<int>(json['majorPurchaseThresholdPaise']),
       salaryDay: serializer.fromJson<int>(json['salaryDay']),
+      recycleBinRetentionDays:
+          serializer.fromJson<int>(json['recycleBinRetentionDays']),
       pinEnabled: serializer.fromJson<bool>(json['pinEnabled']),
       pinHash: serializer.fromJson<String?>(json['pinHash']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -348,6 +373,8 @@ class AppSettingsTableData extends DataClass
       'majorPurchaseThresholdPaise':
           serializer.toJson<int>(majorPurchaseThresholdPaise),
       'salaryDay': serializer.toJson<int>(salaryDay),
+      'recycleBinRetentionDays':
+          serializer.toJson<int>(recycleBinRetentionDays),
       'pinEnabled': serializer.toJson<bool>(pinEnabled),
       'pinHash': serializer.toJson<String?>(pinHash),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -364,6 +391,7 @@ class AppSettingsTableData extends DataClass
           int? veryLargeExpenseThresholdPaise,
           int? majorPurchaseThresholdPaise,
           int? salaryDay,
+          int? recycleBinRetentionDays,
           bool? pinEnabled,
           Value<String?> pinHash = const Value.absent(),
           DateTime? createdAt,
@@ -381,6 +409,8 @@ class AppSettingsTableData extends DataClass
         majorPurchaseThresholdPaise:
             majorPurchaseThresholdPaise ?? this.majorPurchaseThresholdPaise,
         salaryDay: salaryDay ?? this.salaryDay,
+        recycleBinRetentionDays:
+            recycleBinRetentionDays ?? this.recycleBinRetentionDays,
         pinEnabled: pinEnabled ?? this.pinEnabled,
         pinHash: pinHash.present ? pinHash.value : this.pinHash,
         createdAt: createdAt ?? this.createdAt,
@@ -407,6 +437,9 @@ class AppSettingsTableData extends DataClass
           ? data.majorPurchaseThresholdPaise.value
           : this.majorPurchaseThresholdPaise,
       salaryDay: data.salaryDay.present ? data.salaryDay.value : this.salaryDay,
+      recycleBinRetentionDays: data.recycleBinRetentionDays.present
+          ? data.recycleBinRetentionDays.value
+          : this.recycleBinRetentionDays,
       pinEnabled:
           data.pinEnabled.present ? data.pinEnabled.value : this.pinEnabled,
       pinHash: data.pinHash.present ? data.pinHash.value : this.pinHash,
@@ -427,6 +460,7 @@ class AppSettingsTableData extends DataClass
               'veryLargeExpenseThresholdPaise: $veryLargeExpenseThresholdPaise, ')
           ..write('majorPurchaseThresholdPaise: $majorPurchaseThresholdPaise, ')
           ..write('salaryDay: $salaryDay, ')
+          ..write('recycleBinRetentionDays: $recycleBinRetentionDays, ')
           ..write('pinEnabled: $pinEnabled, ')
           ..write('pinHash: $pinHash, ')
           ..write('createdAt: $createdAt, ')
@@ -445,6 +479,7 @@ class AppSettingsTableData extends DataClass
       veryLargeExpenseThresholdPaise,
       majorPurchaseThresholdPaise,
       salaryDay,
+      recycleBinRetentionDays,
       pinEnabled,
       pinHash,
       createdAt,
@@ -463,6 +498,7 @@ class AppSettingsTableData extends DataClass
           other.majorPurchaseThresholdPaise ==
               this.majorPurchaseThresholdPaise &&
           other.salaryDay == this.salaryDay &&
+          other.recycleBinRetentionDays == this.recycleBinRetentionDays &&
           other.pinEnabled == this.pinEnabled &&
           other.pinHash == this.pinHash &&
           other.createdAt == this.createdAt &&
@@ -478,6 +514,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
   final Value<int> veryLargeExpenseThresholdPaise;
   final Value<int> majorPurchaseThresholdPaise;
   final Value<int> salaryDay;
+  final Value<int> recycleBinRetentionDays;
   final Value<bool> pinEnabled;
   final Value<String?> pinHash;
   final Value<DateTime> createdAt;
@@ -491,6 +528,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
     this.veryLargeExpenseThresholdPaise = const Value.absent(),
     this.majorPurchaseThresholdPaise = const Value.absent(),
     this.salaryDay = const Value.absent(),
+    this.recycleBinRetentionDays = const Value.absent(),
     this.pinEnabled = const Value.absent(),
     this.pinHash = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -505,6 +543,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
     this.veryLargeExpenseThresholdPaise = const Value.absent(),
     this.majorPurchaseThresholdPaise = const Value.absent(),
     this.salaryDay = const Value.absent(),
+    this.recycleBinRetentionDays = const Value.absent(),
     this.pinEnabled = const Value.absent(),
     this.pinHash = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -519,6 +558,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
     Expression<int>? veryLargeExpenseThresholdPaise,
     Expression<int>? majorPurchaseThresholdPaise,
     Expression<int>? salaryDay,
+    Expression<int>? recycleBinRetentionDays,
     Expression<bool>? pinEnabled,
     Expression<String>? pinHash,
     Expression<DateTime>? createdAt,
@@ -537,6 +577,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
       if (majorPurchaseThresholdPaise != null)
         'major_purchase_threshold_paise': majorPurchaseThresholdPaise,
       if (salaryDay != null) 'salary_day': salaryDay,
+      if (recycleBinRetentionDays != null)
+        'recycle_bin_retention_days': recycleBinRetentionDays,
       if (pinEnabled != null) 'pin_enabled': pinEnabled,
       if (pinHash != null) 'pin_hash': pinHash,
       if (createdAt != null) 'created_at': createdAt,
@@ -553,6 +595,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
       Value<int>? veryLargeExpenseThresholdPaise,
       Value<int>? majorPurchaseThresholdPaise,
       Value<int>? salaryDay,
+      Value<int>? recycleBinRetentionDays,
       Value<bool>? pinEnabled,
       Value<String?>? pinHash,
       Value<DateTime>? createdAt,
@@ -570,6 +613,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
       majorPurchaseThresholdPaise:
           majorPurchaseThresholdPaise ?? this.majorPurchaseThresholdPaise,
       salaryDay: salaryDay ?? this.salaryDay,
+      recycleBinRetentionDays:
+          recycleBinRetentionDays ?? this.recycleBinRetentionDays,
       pinEnabled: pinEnabled ?? this.pinEnabled,
       pinHash: pinHash ?? this.pinHash,
       createdAt: createdAt ?? this.createdAt,
@@ -608,6 +653,10 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
     if (salaryDay.present) {
       map['salary_day'] = Variable<int>(salaryDay.value);
     }
+    if (recycleBinRetentionDays.present) {
+      map['recycle_bin_retention_days'] =
+          Variable<int>(recycleBinRetentionDays.value);
+    }
     if (pinEnabled.present) {
       map['pin_enabled'] = Variable<bool>(pinEnabled.value);
     }
@@ -635,6 +684,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
               'veryLargeExpenseThresholdPaise: $veryLargeExpenseThresholdPaise, ')
           ..write('majorPurchaseThresholdPaise: $majorPurchaseThresholdPaise, ')
           ..write('salaryDay: $salaryDay, ')
+          ..write('recycleBinRetentionDays: $recycleBinRetentionDays, ')
           ..write('pinEnabled: $pinEnabled, ')
           ..write('pinHash: $pinHash, ')
           ..write('createdAt: $createdAt, ')
@@ -1108,6 +1158,12 @@ class $CategoriesTableTable extends CategoriesTable
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1118,7 +1174,8 @@ class $CategoriesTableTable extends CategoriesTable
         isSystem,
         countsTowardSpending,
         sortOrder,
-        isDeleted
+        isDeleted,
+        deletedAt
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1174,6 +1231,10 @@ class $CategoriesTableTable extends CategoriesTable
       context.handle(_isDeletedMeta,
           isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
     return context;
   }
 
@@ -1201,6 +1262,8 @@ class $CategoriesTableTable extends CategoriesTable
           .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
       isDeleted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
     );
   }
 
@@ -1221,6 +1284,7 @@ class CategoriesTableData extends DataClass
   final bool countsTowardSpending;
   final int sortOrder;
   final bool isDeleted;
+  final DateTime? deletedAt;
   const CategoriesTableData(
       {required this.id,
       required this.name,
@@ -1230,7 +1294,8 @@ class CategoriesTableData extends DataClass
       required this.isSystem,
       required this.countsTowardSpending,
       required this.sortOrder,
-      required this.isDeleted});
+      required this.isDeleted,
+      this.deletedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1243,6 +1308,9 @@ class CategoriesTableData extends DataClass
     map['counts_toward_spending'] = Variable<bool>(countsTowardSpending);
     map['sort_order'] = Variable<int>(sortOrder);
     map['is_deleted'] = Variable<bool>(isDeleted);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -1257,6 +1325,9 @@ class CategoriesTableData extends DataClass
       countsTowardSpending: Value(countsTowardSpending),
       sortOrder: Value(sortOrder),
       isDeleted: Value(isDeleted),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -1274,6 +1345,7 @@ class CategoriesTableData extends DataClass
           serializer.fromJson<bool>(json['countsTowardSpending']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -1289,6 +1361,7 @@ class CategoriesTableData extends DataClass
       'countsTowardSpending': serializer.toJson<bool>(countsTowardSpending),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'isDeleted': serializer.toJson<bool>(isDeleted),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -1301,7 +1374,8 @@ class CategoriesTableData extends DataClass
           bool? isSystem,
           bool? countsTowardSpending,
           int? sortOrder,
-          bool? isDeleted}) =>
+          bool? isDeleted,
+          Value<DateTime?> deletedAt = const Value.absent()}) =>
       CategoriesTableData(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -1312,6 +1386,7 @@ class CategoriesTableData extends DataClass
         countsTowardSpending: countsTowardSpending ?? this.countsTowardSpending,
         sortOrder: sortOrder ?? this.sortOrder,
         isDeleted: isDeleted ?? this.isDeleted,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
       );
   CategoriesTableData copyWithCompanion(CategoriesTableCompanion data) {
     return CategoriesTableData(
@@ -1327,6 +1402,7 @@ class CategoriesTableData extends DataClass
           : this.countsTowardSpending,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -1341,14 +1417,15 @@ class CategoriesTableData extends DataClass
           ..write('isSystem: $isSystem, ')
           ..write('countsTowardSpending: $countsTowardSpending, ')
           ..write('sortOrder: $sortOrder, ')
-          ..write('isDeleted: $isDeleted')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, name, slug, iconName, colorValue,
-      isSystem, countsTowardSpending, sortOrder, isDeleted);
+      isSystem, countsTowardSpending, sortOrder, isDeleted, deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1361,7 +1438,8 @@ class CategoriesTableData extends DataClass
           other.isSystem == this.isSystem &&
           other.countsTowardSpending == this.countsTowardSpending &&
           other.sortOrder == this.sortOrder &&
-          other.isDeleted == this.isDeleted);
+          other.isDeleted == this.isDeleted &&
+          other.deletedAt == this.deletedAt);
 }
 
 class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
@@ -1374,6 +1452,7 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
   final Value<bool> countsTowardSpending;
   final Value<int> sortOrder;
   final Value<bool> isDeleted;
+  final Value<DateTime?> deletedAt;
   const CategoriesTableCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1384,6 +1463,7 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
     this.countsTowardSpending = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   });
   CategoriesTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1395,6 +1475,7 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
     this.countsTowardSpending = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   })  : name = Value(name),
         slug = Value(slug);
   static Insertable<CategoriesTableData> custom({
@@ -1407,6 +1488,7 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
     Expression<bool>? countsTowardSpending,
     Expression<int>? sortOrder,
     Expression<bool>? isDeleted,
+    Expression<DateTime>? deletedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1419,6 +1501,7 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
         'counts_toward_spending': countsTowardSpending,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (isDeleted != null) 'is_deleted': isDeleted,
+      if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
 
@@ -1431,7 +1514,8 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
       Value<bool>? isSystem,
       Value<bool>? countsTowardSpending,
       Value<int>? sortOrder,
-      Value<bool>? isDeleted}) {
+      Value<bool>? isDeleted,
+      Value<DateTime?>? deletedAt}) {
     return CategoriesTableCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -1442,6 +1526,7 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
       countsTowardSpending: countsTowardSpending ?? this.countsTowardSpending,
       sortOrder: sortOrder ?? this.sortOrder,
       isDeleted: isDeleted ?? this.isDeleted,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
@@ -1476,6 +1561,9 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
     if (isDeleted.present) {
       map['is_deleted'] = Variable<bool>(isDeleted.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     return map;
   }
 
@@ -1490,7 +1578,8 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
           ..write('isSystem: $isSystem, ')
           ..write('countsTowardSpending: $countsTowardSpending, ')
           ..write('sortOrder: $sortOrder, ')
-          ..write('isDeleted: $isDeleted')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -1599,6 +1688,12 @@ class $ExpensesTableTable extends ExpensesTable
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -1631,6 +1726,7 @@ class $ExpensesTableTable extends ExpensesTable
         loanPaymentId,
         autoLabels,
         isDeleted,
+        deletedAt,
         createdAt,
         updatedAt
       ];
@@ -1725,6 +1821,10 @@ class $ExpensesTableTable extends ExpensesTable
       context.handle(_isDeletedMeta,
           isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -1770,6 +1870,8 @@ class $ExpensesTableTable extends ExpensesTable
           .read(DriftSqlType.string, data['${effectivePrefix}auto_labels'])!,
       isDeleted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -1799,6 +1901,7 @@ class ExpensesTableData extends DataClass
   final int? loanPaymentId;
   final String autoLabels;
   final bool isDeleted;
+  final DateTime? deletedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   const ExpensesTableData(
@@ -1816,6 +1919,7 @@ class ExpensesTableData extends DataClass
       this.loanPaymentId,
       required this.autoLabels,
       required this.isDeleted,
+      this.deletedAt,
       required this.createdAt,
       required this.updatedAt});
   @override
@@ -1843,6 +1947,9 @@ class ExpensesTableData extends DataClass
     }
     map['auto_labels'] = Variable<String>(autoLabels);
     map['is_deleted'] = Variable<bool>(isDeleted);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -1871,6 +1978,9 @@ class ExpensesTableData extends DataClass
           : Value(loanPaymentId),
       autoLabels: Value(autoLabels),
       isDeleted: Value(isDeleted),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1894,6 +2004,7 @@ class ExpensesTableData extends DataClass
       loanPaymentId: serializer.fromJson<int?>(json['loanPaymentId']),
       autoLabels: serializer.fromJson<String>(json['autoLabels']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1916,6 +2027,7 @@ class ExpensesTableData extends DataClass
       'loanPaymentId': serializer.toJson<int?>(loanPaymentId),
       'autoLabels': serializer.toJson<String>(autoLabels),
       'isDeleted': serializer.toJson<bool>(isDeleted),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1936,6 +2048,7 @@ class ExpensesTableData extends DataClass
           Value<int?> loanPaymentId = const Value.absent(),
           String? autoLabels,
           bool? isDeleted,
+          Value<DateTime?> deletedAt = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
       ExpensesTableData(
@@ -1955,6 +2068,7 @@ class ExpensesTableData extends DataClass
             loanPaymentId.present ? loanPaymentId.value : this.loanPaymentId,
         autoLabels: autoLabels ?? this.autoLabels,
         isDeleted: isDeleted ?? this.isDeleted,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
@@ -1985,6 +2099,7 @@ class ExpensesTableData extends DataClass
       autoLabels:
           data.autoLabels.present ? data.autoLabels.value : this.autoLabels,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -2007,6 +2122,7 @@ class ExpensesTableData extends DataClass
           ..write('loanPaymentId: $loanPaymentId, ')
           ..write('autoLabels: $autoLabels, ')
           ..write('isDeleted: $isDeleted, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2029,6 +2145,7 @@ class ExpensesTableData extends DataClass
       loanPaymentId,
       autoLabels,
       isDeleted,
+      deletedAt,
       createdAt,
       updatedAt);
   @override
@@ -2049,6 +2166,7 @@ class ExpensesTableData extends DataClass
           other.loanPaymentId == this.loanPaymentId &&
           other.autoLabels == this.autoLabels &&
           other.isDeleted == this.isDeleted &&
+          other.deletedAt == this.deletedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -2068,6 +2186,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
   final Value<int?> loanPaymentId;
   final Value<String> autoLabels;
   final Value<bool> isDeleted;
+  final Value<DateTime?> deletedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const ExpensesTableCompanion({
@@ -2085,6 +2204,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
     this.loanPaymentId = const Value.absent(),
     this.autoLabels = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -2103,6 +2223,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
     this.loanPaymentId = const Value.absent(),
     this.autoLabels = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   })  : amountPaise = Value(amountPaise),
@@ -2125,6 +2246,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
     Expression<int>? loanPaymentId,
     Expression<String>? autoLabels,
     Expression<bool>? isDeleted,
+    Expression<DateTime>? deletedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -2143,6 +2265,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
       if (loanPaymentId != null) 'loan_payment_id': loanPaymentId,
       if (autoLabels != null) 'auto_labels': autoLabels,
       if (isDeleted != null) 'is_deleted': isDeleted,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -2163,6 +2286,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
       Value<int?>? loanPaymentId,
       Value<String>? autoLabels,
       Value<bool>? isDeleted,
+      Value<DateTime?>? deletedAt,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt}) {
     return ExpensesTableCompanion(
@@ -2180,6 +2304,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
       loanPaymentId: loanPaymentId ?? this.loanPaymentId,
       autoLabels: autoLabels ?? this.autoLabels,
       isDeleted: isDeleted ?? this.isDeleted,
+      deletedAt: deletedAt ?? this.deletedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -2230,6 +2355,9 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
     if (isDeleted.present) {
       map['is_deleted'] = Variable<bool>(isDeleted.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2256,6 +2384,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
           ..write('loanPaymentId: $loanPaymentId, ')
           ..write('autoLabels: $autoLabels, ')
           ..write('isDeleted: $isDeleted, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2336,6 +2465,19 @@ class $SubscriptionsTableTable extends SubscriptionsTable
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
       defaultValue: const Constant(true));
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('active'));
+  static const VerificationMeta _usageFrequencyMeta =
+      const VerificationMeta('usageFrequency');
+  @override
+  late final GeneratedColumn<String> usageFrequency = GeneratedColumn<String>(
+      'usage_frequency', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -2368,6 +2510,8 @@ class $SubscriptionsTableTable extends SubscriptionsTable
         nextRenewalAt,
         paymentMethod,
         isActive,
+        status,
+        usageFrequency,
         notes,
         createdAt,
         updatedAt
@@ -2434,6 +2578,16 @@ class $SubscriptionsTableTable extends SubscriptionsTable
       context.handle(_isActiveMeta,
           isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
     }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('usage_frequency')) {
+      context.handle(
+          _usageFrequencyMeta,
+          usageFrequency.isAcceptableOrUnknown(
+              data['usage_frequency']!, _usageFrequencyMeta));
+    }
     if (data.containsKey('notes')) {
       context.handle(
           _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
@@ -2473,6 +2627,10 @@ class $SubscriptionsTableTable extends SubscriptionsTable
           .read(DriftSqlType.string, data['${effectivePrefix}payment_method'])!,
       isActive: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      usageFrequency: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}usage_frequency']),
       notes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
       createdAt: attachedDatabase.typeMapping
@@ -2499,6 +2657,8 @@ class SubscriptionsTableData extends DataClass
   final DateTime? nextRenewalAt;
   final String paymentMethod;
   final bool isActive;
+  final String status;
+  final String? usageFrequency;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -2512,6 +2672,8 @@ class SubscriptionsTableData extends DataClass
       this.nextRenewalAt,
       required this.paymentMethod,
       required this.isActive,
+      required this.status,
+      this.usageFrequency,
       this.notes,
       required this.createdAt,
       required this.updatedAt});
@@ -2533,6 +2695,10 @@ class SubscriptionsTableData extends DataClass
     }
     map['payment_method'] = Variable<String>(paymentMethod);
     map['is_active'] = Variable<bool>(isActive);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || usageFrequency != null) {
+      map['usage_frequency'] = Variable<String>(usageFrequency);
+    }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -2558,6 +2724,10 @@ class SubscriptionsTableData extends DataClass
           : Value(nextRenewalAt),
       paymentMethod: Value(paymentMethod),
       isActive: Value(isActive),
+      status: Value(status),
+      usageFrequency: usageFrequency == null && nullToAbsent
+          ? const Value.absent()
+          : Value(usageFrequency),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
       createdAt: Value(createdAt),
@@ -2579,6 +2749,8 @@ class SubscriptionsTableData extends DataClass
       nextRenewalAt: serializer.fromJson<DateTime?>(json['nextRenewalAt']),
       paymentMethod: serializer.fromJson<String>(json['paymentMethod']),
       isActive: serializer.fromJson<bool>(json['isActive']),
+      status: serializer.fromJson<String>(json['status']),
+      usageFrequency: serializer.fromJson<String?>(json['usageFrequency']),
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -2597,6 +2769,8 @@ class SubscriptionsTableData extends DataClass
       'nextRenewalAt': serializer.toJson<DateTime?>(nextRenewalAt),
       'paymentMethod': serializer.toJson<String>(paymentMethod),
       'isActive': serializer.toJson<bool>(isActive),
+      'status': serializer.toJson<String>(status),
+      'usageFrequency': serializer.toJson<String?>(usageFrequency),
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -2613,6 +2787,8 @@ class SubscriptionsTableData extends DataClass
           Value<DateTime?> nextRenewalAt = const Value.absent(),
           String? paymentMethod,
           bool? isActive,
+          String? status,
+          Value<String?> usageFrequency = const Value.absent(),
           Value<String?> notes = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
@@ -2629,6 +2805,9 @@ class SubscriptionsTableData extends DataClass
             nextRenewalAt.present ? nextRenewalAt.value : this.nextRenewalAt,
         paymentMethod: paymentMethod ?? this.paymentMethod,
         isActive: isActive ?? this.isActive,
+        status: status ?? this.status,
+        usageFrequency:
+            usageFrequency.present ? usageFrequency.value : this.usageFrequency,
         notes: notes.present ? notes.value : this.notes,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -2654,6 +2833,10 @@ class SubscriptionsTableData extends DataClass
           ? data.paymentMethod.value
           : this.paymentMethod,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      status: data.status.present ? data.status.value : this.status,
+      usageFrequency: data.usageFrequency.present
+          ? data.usageFrequency.value
+          : this.usageFrequency,
       notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -2672,6 +2855,8 @@ class SubscriptionsTableData extends DataClass
           ..write('nextRenewalAt: $nextRenewalAt, ')
           ..write('paymentMethod: $paymentMethod, ')
           ..write('isActive: $isActive, ')
+          ..write('status: $status, ')
+          ..write('usageFrequency: $usageFrequency, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -2690,6 +2875,8 @@ class SubscriptionsTableData extends DataClass
       nextRenewalAt,
       paymentMethod,
       isActive,
+      status,
+      usageFrequency,
       notes,
       createdAt,
       updatedAt);
@@ -2706,6 +2893,8 @@ class SubscriptionsTableData extends DataClass
           other.nextRenewalAt == this.nextRenewalAt &&
           other.paymentMethod == this.paymentMethod &&
           other.isActive == this.isActive &&
+          other.status == this.status &&
+          other.usageFrequency == this.usageFrequency &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -2722,6 +2911,8 @@ class SubscriptionsTableCompanion
   final Value<DateTime?> nextRenewalAt;
   final Value<String> paymentMethod;
   final Value<bool> isActive;
+  final Value<String> status;
+  final Value<String?> usageFrequency;
   final Value<String?> notes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -2735,6 +2926,8 @@ class SubscriptionsTableCompanion
     this.nextRenewalAt = const Value.absent(),
     this.paymentMethod = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.status = const Value.absent(),
+    this.usageFrequency = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2749,6 +2942,8 @@ class SubscriptionsTableCompanion
     this.nextRenewalAt = const Value.absent(),
     this.paymentMethod = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.status = const Value.absent(),
+    this.usageFrequency = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2764,6 +2959,8 @@ class SubscriptionsTableCompanion
     Expression<DateTime>? nextRenewalAt,
     Expression<String>? paymentMethod,
     Expression<bool>? isActive,
+    Expression<String>? status,
+    Expression<String>? usageFrequency,
     Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -2779,6 +2976,8 @@ class SubscriptionsTableCompanion
       if (nextRenewalAt != null) 'next_renewal_at': nextRenewalAt,
       if (paymentMethod != null) 'payment_method': paymentMethod,
       if (isActive != null) 'is_active': isActive,
+      if (status != null) 'status': status,
+      if (usageFrequency != null) 'usage_frequency': usageFrequency,
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -2795,6 +2994,8 @@ class SubscriptionsTableCompanion
       Value<DateTime?>? nextRenewalAt,
       Value<String>? paymentMethod,
       Value<bool>? isActive,
+      Value<String>? status,
+      Value<String?>? usageFrequency,
       Value<String?>? notes,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt}) {
@@ -2808,6 +3009,8 @@ class SubscriptionsTableCompanion
       nextRenewalAt: nextRenewalAt ?? this.nextRenewalAt,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       isActive: isActive ?? this.isActive,
+      status: status ?? this.status,
+      usageFrequency: usageFrequency ?? this.usageFrequency,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -2844,6 +3047,12 @@ class SubscriptionsTableCompanion
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (usageFrequency.present) {
+      map['usage_frequency'] = Variable<String>(usageFrequency.value);
+    }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
@@ -2868,6 +3077,8 @@ class SubscriptionsTableCompanion
           ..write('nextRenewalAt: $nextRenewalAt, ')
           ..write('paymentMethod: $paymentMethod, ')
           ..write('isActive: $isActive, ')
+          ..write('status: $status, ')
+          ..write('usageFrequency: $usageFrequency, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3389,6 +3600,12 @@ class $LoansTableTable extends LoansTable
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -3418,6 +3635,7 @@ class $LoansTableTable extends LoansTable
         status,
         notes,
         isDeleted,
+        deletedAt,
         createdAt,
         updatedAt
       ];
@@ -3492,6 +3710,10 @@ class $LoansTableTable extends LoansTable
       context.handle(_isDeletedMeta,
           isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -3531,6 +3753,8 @@ class $LoansTableTable extends LoansTable
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
       isDeleted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -3556,6 +3780,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
   final String status;
   final String? notes;
   final bool isDeleted;
+  final DateTime? deletedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   const LoansTableData(
@@ -3570,6 +3795,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
       required this.status,
       this.notes,
       required this.isDeleted,
+      this.deletedAt,
       required this.createdAt,
       required this.updatedAt});
   @override
@@ -3592,6 +3818,9 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
       map['notes'] = Variable<String>(notes);
     }
     map['is_deleted'] = Variable<bool>(isDeleted);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -3614,6 +3843,9 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
       isDeleted: Value(isDeleted),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -3635,6 +3867,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
       status: serializer.fromJson<String>(json['status']),
       notes: serializer.fromJson<String?>(json['notes']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -3654,6 +3887,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
       'status': serializer.toJson<String>(status),
       'notes': serializer.toJson<String?>(notes),
       'isDeleted': serializer.toJson<bool>(isDeleted),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -3671,6 +3905,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
           String? status,
           Value<String?> notes = const Value.absent(),
           bool? isDeleted,
+          Value<DateTime?> deletedAt = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
       LoansTableData(
@@ -3687,6 +3922,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
         status: status ?? this.status,
         notes: notes.present ? notes.value : this.notes,
         isDeleted: isDeleted ?? this.isDeleted,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
@@ -3711,6 +3947,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
       status: data.status.present ? data.status.value : this.status,
       notes: data.notes.present ? data.notes.value : this.notes,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -3730,6 +3967,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
           ..write('status: $status, ')
           ..write('notes: $notes, ')
           ..write('isDeleted: $isDeleted, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -3749,6 +3987,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
       status,
       notes,
       isDeleted,
+      deletedAt,
       createdAt,
       updatedAt);
   @override
@@ -3766,6 +4005,7 @@ class LoansTableData extends DataClass implements Insertable<LoansTableData> {
           other.status == this.status &&
           other.notes == this.notes &&
           other.isDeleted == this.isDeleted &&
+          other.deletedAt == this.deletedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -3782,6 +4022,7 @@ class LoansTableCompanion extends UpdateCompanion<LoansTableData> {
   final Value<String> status;
   final Value<String?> notes;
   final Value<bool> isDeleted;
+  final Value<DateTime?> deletedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const LoansTableCompanion({
@@ -3796,6 +4037,7 @@ class LoansTableCompanion extends UpdateCompanion<LoansTableData> {
     this.status = const Value.absent(),
     this.notes = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -3811,6 +4053,7 @@ class LoansTableCompanion extends UpdateCompanion<LoansTableData> {
     this.status = const Value.absent(),
     this.notes = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   })  : personName = Value(personName),
@@ -3829,6 +4072,7 @@ class LoansTableCompanion extends UpdateCompanion<LoansTableData> {
     Expression<String>? status,
     Expression<String>? notes,
     Expression<bool>? isDeleted,
+    Expression<DateTime>? deletedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -3844,6 +4088,7 @@ class LoansTableCompanion extends UpdateCompanion<LoansTableData> {
       if (status != null) 'status': status,
       if (notes != null) 'notes': notes,
       if (isDeleted != null) 'is_deleted': isDeleted,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -3861,6 +4106,7 @@ class LoansTableCompanion extends UpdateCompanion<LoansTableData> {
       Value<String>? status,
       Value<String?>? notes,
       Value<bool>? isDeleted,
+      Value<DateTime?>? deletedAt,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt}) {
     return LoansTableCompanion(
@@ -3875,6 +4121,7 @@ class LoansTableCompanion extends UpdateCompanion<LoansTableData> {
       status: status ?? this.status,
       notes: notes ?? this.notes,
       isDeleted: isDeleted ?? this.isDeleted,
+      deletedAt: deletedAt ?? this.deletedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -3916,6 +4163,9 @@ class LoansTableCompanion extends UpdateCompanion<LoansTableData> {
     if (isDeleted.present) {
       map['is_deleted'] = Variable<bool>(isDeleted.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3939,6 +4189,7 @@ class LoansTableCompanion extends UpdateCompanion<LoansTableData> {
           ..write('status: $status, ')
           ..write('notes: $notes, ')
           ..write('isDeleted: $isDeleted, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -5763,6 +6014,535 @@ class IncomeSourcesTableCompanion
   }
 }
 
+class $SavingsGoalsTableTable extends SavingsGoalsTable
+    with TableInfo<$SavingsGoalsTableTable, SavingsGoalsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SavingsGoalsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _targetPaiseMeta =
+      const VerificationMeta('targetPaise');
+  @override
+  late final GeneratedColumn<int> targetPaise = GeneratedColumn<int>(
+      'target_paise', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _savedPaiseMeta =
+      const VerificationMeta('savedPaise');
+  @override
+  late final GeneratedColumn<int> savedPaise = GeneratedColumn<int>(
+      'saved_paise', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _monthlyContributionPaiseMeta =
+      const VerificationMeta('monthlyContributionPaise');
+  @override
+  late final GeneratedColumn<int> monthlyContributionPaise =
+      GeneratedColumn<int>('monthly_contribution_paise', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _isWishlistMeta =
+      const VerificationMeta('isWishlist');
+  @override
+  late final GeneratedColumn<bool> isWishlist = GeneratedColumn<bool>(
+      'is_wishlist', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_wishlist" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _targetDateMeta =
+      const VerificationMeta('targetDate');
+  @override
+  late final GeneratedColumn<DateTime> targetDate = GeneratedColumn<DateTime>(
+      'target_date', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        targetPaise,
+        savedPaise,
+        monthlyContributionPaise,
+        isWishlist,
+        targetDate,
+        isActive,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'savings_goals_table';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<SavingsGoalsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('target_paise')) {
+      context.handle(
+          _targetPaiseMeta,
+          targetPaise.isAcceptableOrUnknown(
+              data['target_paise']!, _targetPaiseMeta));
+    } else if (isInserting) {
+      context.missing(_targetPaiseMeta);
+    }
+    if (data.containsKey('saved_paise')) {
+      context.handle(
+          _savedPaiseMeta,
+          savedPaise.isAcceptableOrUnknown(
+              data['saved_paise']!, _savedPaiseMeta));
+    }
+    if (data.containsKey('monthly_contribution_paise')) {
+      context.handle(
+          _monthlyContributionPaiseMeta,
+          monthlyContributionPaise.isAcceptableOrUnknown(
+              data['monthly_contribution_paise']!,
+              _monthlyContributionPaiseMeta));
+    }
+    if (data.containsKey('is_wishlist')) {
+      context.handle(
+          _isWishlistMeta,
+          isWishlist.isAcceptableOrUnknown(
+              data['is_wishlist']!, _isWishlistMeta));
+    }
+    if (data.containsKey('target_date')) {
+      context.handle(
+          _targetDateMeta,
+          targetDate.isAcceptableOrUnknown(
+              data['target_date']!, _targetDateMeta));
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SavingsGoalsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SavingsGoalsTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      targetPaise: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}target_paise'])!,
+      savedPaise: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}saved_paise'])!,
+      monthlyContributionPaise: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}monthly_contribution_paise'])!,
+      isWishlist: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_wishlist'])!,
+      targetDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}target_date']),
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $SavingsGoalsTableTable createAlias(String alias) {
+    return $SavingsGoalsTableTable(attachedDatabase, alias);
+  }
+}
+
+class SavingsGoalsTableData extends DataClass
+    implements Insertable<SavingsGoalsTableData> {
+  final int id;
+  final String name;
+  final int targetPaise;
+  final int savedPaise;
+  final int monthlyContributionPaise;
+  final bool isWishlist;
+  final DateTime? targetDate;
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const SavingsGoalsTableData(
+      {required this.id,
+      required this.name,
+      required this.targetPaise,
+      required this.savedPaise,
+      required this.monthlyContributionPaise,
+      required this.isWishlist,
+      this.targetDate,
+      required this.isActive,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['target_paise'] = Variable<int>(targetPaise);
+    map['saved_paise'] = Variable<int>(savedPaise);
+    map['monthly_contribution_paise'] = Variable<int>(monthlyContributionPaise);
+    map['is_wishlist'] = Variable<bool>(isWishlist);
+    if (!nullToAbsent || targetDate != null) {
+      map['target_date'] = Variable<DateTime>(targetDate);
+    }
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SavingsGoalsTableCompanion toCompanion(bool nullToAbsent) {
+    return SavingsGoalsTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      targetPaise: Value(targetPaise),
+      savedPaise: Value(savedPaise),
+      monthlyContributionPaise: Value(monthlyContributionPaise),
+      isWishlist: Value(isWishlist),
+      targetDate: targetDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetDate),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SavingsGoalsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SavingsGoalsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      targetPaise: serializer.fromJson<int>(json['targetPaise']),
+      savedPaise: serializer.fromJson<int>(json['savedPaise']),
+      monthlyContributionPaise:
+          serializer.fromJson<int>(json['monthlyContributionPaise']),
+      isWishlist: serializer.fromJson<bool>(json['isWishlist']),
+      targetDate: serializer.fromJson<DateTime?>(json['targetDate']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'targetPaise': serializer.toJson<int>(targetPaise),
+      'savedPaise': serializer.toJson<int>(savedPaise),
+      'monthlyContributionPaise':
+          serializer.toJson<int>(monthlyContributionPaise),
+      'isWishlist': serializer.toJson<bool>(isWishlist),
+      'targetDate': serializer.toJson<DateTime?>(targetDate),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SavingsGoalsTableData copyWith(
+          {int? id,
+          String? name,
+          int? targetPaise,
+          int? savedPaise,
+          int? monthlyContributionPaise,
+          bool? isWishlist,
+          Value<DateTime?> targetDate = const Value.absent(),
+          bool? isActive,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      SavingsGoalsTableData(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        targetPaise: targetPaise ?? this.targetPaise,
+        savedPaise: savedPaise ?? this.savedPaise,
+        monthlyContributionPaise:
+            monthlyContributionPaise ?? this.monthlyContributionPaise,
+        isWishlist: isWishlist ?? this.isWishlist,
+        targetDate: targetDate.present ? targetDate.value : this.targetDate,
+        isActive: isActive ?? this.isActive,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  SavingsGoalsTableData copyWithCompanion(SavingsGoalsTableCompanion data) {
+    return SavingsGoalsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      targetPaise:
+          data.targetPaise.present ? data.targetPaise.value : this.targetPaise,
+      savedPaise:
+          data.savedPaise.present ? data.savedPaise.value : this.savedPaise,
+      monthlyContributionPaise: data.monthlyContributionPaise.present
+          ? data.monthlyContributionPaise.value
+          : this.monthlyContributionPaise,
+      isWishlist:
+          data.isWishlist.present ? data.isWishlist.value : this.isWishlist,
+      targetDate:
+          data.targetDate.present ? data.targetDate.value : this.targetDate,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavingsGoalsTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('targetPaise: $targetPaise, ')
+          ..write('savedPaise: $savedPaise, ')
+          ..write('monthlyContributionPaise: $monthlyContributionPaise, ')
+          ..write('isWishlist: $isWishlist, ')
+          ..write('targetDate: $targetDate, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      name,
+      targetPaise,
+      savedPaise,
+      monthlyContributionPaise,
+      isWishlist,
+      targetDate,
+      isActive,
+      createdAt,
+      updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SavingsGoalsTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.targetPaise == this.targetPaise &&
+          other.savedPaise == this.savedPaise &&
+          other.monthlyContributionPaise == this.monthlyContributionPaise &&
+          other.isWishlist == this.isWishlist &&
+          other.targetDate == this.targetDate &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SavingsGoalsTableCompanion
+    extends UpdateCompanion<SavingsGoalsTableData> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<int> targetPaise;
+  final Value<int> savedPaise;
+  final Value<int> monthlyContributionPaise;
+  final Value<bool> isWishlist;
+  final Value<DateTime?> targetDate;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const SavingsGoalsTableCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.targetPaise = const Value.absent(),
+    this.savedPaise = const Value.absent(),
+    this.monthlyContributionPaise = const Value.absent(),
+    this.isWishlist = const Value.absent(),
+    this.targetDate = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  SavingsGoalsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required int targetPaise,
+    this.savedPaise = const Value.absent(),
+    this.monthlyContributionPaise = const Value.absent(),
+    this.isWishlist = const Value.absent(),
+    this.targetDate = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  })  : name = Value(name),
+        targetPaise = Value(targetPaise);
+  static Insertable<SavingsGoalsTableData> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<int>? targetPaise,
+    Expression<int>? savedPaise,
+    Expression<int>? monthlyContributionPaise,
+    Expression<bool>? isWishlist,
+    Expression<DateTime>? targetDate,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (targetPaise != null) 'target_paise': targetPaise,
+      if (savedPaise != null) 'saved_paise': savedPaise,
+      if (monthlyContributionPaise != null)
+        'monthly_contribution_paise': monthlyContributionPaise,
+      if (isWishlist != null) 'is_wishlist': isWishlist,
+      if (targetDate != null) 'target_date': targetDate,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  SavingsGoalsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? name,
+      Value<int>? targetPaise,
+      Value<int>? savedPaise,
+      Value<int>? monthlyContributionPaise,
+      Value<bool>? isWishlist,
+      Value<DateTime?>? targetDate,
+      Value<bool>? isActive,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt}) {
+    return SavingsGoalsTableCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      targetPaise: targetPaise ?? this.targetPaise,
+      savedPaise: savedPaise ?? this.savedPaise,
+      monthlyContributionPaise:
+          monthlyContributionPaise ?? this.monthlyContributionPaise,
+      isWishlist: isWishlist ?? this.isWishlist,
+      targetDate: targetDate ?? this.targetDate,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (targetPaise.present) {
+      map['target_paise'] = Variable<int>(targetPaise.value);
+    }
+    if (savedPaise.present) {
+      map['saved_paise'] = Variable<int>(savedPaise.value);
+    }
+    if (monthlyContributionPaise.present) {
+      map['monthly_contribution_paise'] =
+          Variable<int>(monthlyContributionPaise.value);
+    }
+    if (isWishlist.present) {
+      map['is_wishlist'] = Variable<bool>(isWishlist.value);
+    }
+    if (targetDate.present) {
+      map['target_date'] = Variable<DateTime>(targetDate.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavingsGoalsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('targetPaise: $targetPaise, ')
+          ..write('savedPaise: $savedPaise, ')
+          ..write('monthlyContributionPaise: $monthlyContributionPaise, ')
+          ..write('isWishlist: $isWishlist, ')
+          ..write('targetDate: $targetDate, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $TaggingRulesTableTable extends TaggingRulesTable
     with TableInfo<$TaggingRulesTableTable, TaggingRulesTableData> {
   @override
@@ -6232,6 +7012,649 @@ class TaggingRulesTableCompanion
   }
 }
 
+class $ActivityLogTableTable extends ActivityLogTable
+    with TableInfo<$ActivityLogTableTable, ActivityLogTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActivityLogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _actionMeta = const VerificationMeta('action');
+  @override
+  late final GeneratedColumn<String> action = GeneratedColumn<String>(
+      'action', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _moduleMeta = const VerificationMeta('module');
+  @override
+  late final GeneratedColumn<String> module = GeneratedColumn<String>(
+      'module', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _entityIdMeta =
+      const VerificationMeta('entityId');
+  @override
+  late final GeneratedColumn<int> entityId = GeneratedColumn<int>(
+      'entity_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _entityLabelMeta =
+      const VerificationMeta('entityLabel');
+  @override
+  late final GeneratedColumn<String> entityLabel = GeneratedColumn<String>(
+      'entity_label', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _oldValueJsonMeta =
+      const VerificationMeta('oldValueJson');
+  @override
+  late final GeneratedColumn<String> oldValueJson = GeneratedColumn<String>(
+      'old_value_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _newValueJsonMeta =
+      const VerificationMeta('newValueJson');
+  @override
+  late final GeneratedColumn<String> newValueJson = GeneratedColumn<String>(
+      'new_value_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+      'reason', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _severityMeta =
+      const VerificationMeta('severity');
+  @override
+  late final GeneratedColumn<String> severity = GeneratedColumn<String>(
+      'severity', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('info'));
+  static const VerificationMeta _performedByMeta =
+      const VerificationMeta('performedBy');
+  @override
+  late final GeneratedColumn<String> performedBy = GeneratedColumn<String>(
+      'performed_by', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('user'));
+  static const VerificationMeta _isUndoableMeta =
+      const VerificationMeta('isUndoable');
+  @override
+  late final GeneratedColumn<bool> isUndoable = GeneratedColumn<bool>(
+      'is_undoable', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_undoable" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isUndoneMeta =
+      const VerificationMeta('isUndone');
+  @override
+  late final GeneratedColumn<bool> isUndone = GeneratedColumn<bool>(
+      'is_undone', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_undone" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _occurredAtMeta =
+      const VerificationMeta('occurredAt');
+  @override
+  late final GeneratedColumn<DateTime> occurredAt = GeneratedColumn<DateTime>(
+      'occurred_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        action,
+        module,
+        entityId,
+        entityLabel,
+        oldValueJson,
+        newValueJson,
+        reason,
+        severity,
+        performedBy,
+        isUndoable,
+        isUndone,
+        occurredAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_log_table';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ActivityLogTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('action')) {
+      context.handle(_actionMeta,
+          action.isAcceptableOrUnknown(data['action']!, _actionMeta));
+    } else if (isInserting) {
+      context.missing(_actionMeta);
+    }
+    if (data.containsKey('module')) {
+      context.handle(_moduleMeta,
+          module.isAcceptableOrUnknown(data['module']!, _moduleMeta));
+    } else if (isInserting) {
+      context.missing(_moduleMeta);
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(_entityIdMeta,
+          entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta));
+    }
+    if (data.containsKey('entity_label')) {
+      context.handle(
+          _entityLabelMeta,
+          entityLabel.isAcceptableOrUnknown(
+              data['entity_label']!, _entityLabelMeta));
+    }
+    if (data.containsKey('old_value_json')) {
+      context.handle(
+          _oldValueJsonMeta,
+          oldValueJson.isAcceptableOrUnknown(
+              data['old_value_json']!, _oldValueJsonMeta));
+    }
+    if (data.containsKey('new_value_json')) {
+      context.handle(
+          _newValueJsonMeta,
+          newValueJson.isAcceptableOrUnknown(
+              data['new_value_json']!, _newValueJsonMeta));
+    }
+    if (data.containsKey('reason')) {
+      context.handle(_reasonMeta,
+          reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta));
+    }
+    if (data.containsKey('severity')) {
+      context.handle(_severityMeta,
+          severity.isAcceptableOrUnknown(data['severity']!, _severityMeta));
+    }
+    if (data.containsKey('performed_by')) {
+      context.handle(
+          _performedByMeta,
+          performedBy.isAcceptableOrUnknown(
+              data['performed_by']!, _performedByMeta));
+    }
+    if (data.containsKey('is_undoable')) {
+      context.handle(
+          _isUndoableMeta,
+          isUndoable.isAcceptableOrUnknown(
+              data['is_undoable']!, _isUndoableMeta));
+    }
+    if (data.containsKey('is_undone')) {
+      context.handle(_isUndoneMeta,
+          isUndone.isAcceptableOrUnknown(data['is_undone']!, _isUndoneMeta));
+    }
+    if (data.containsKey('occurred_at')) {
+      context.handle(
+          _occurredAtMeta,
+          occurredAt.isAcceptableOrUnknown(
+              data['occurred_at']!, _occurredAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ActivityLogTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityLogTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      action: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}action'])!,
+      module: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}module'])!,
+      entityId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}entity_id']),
+      entityLabel: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}entity_label'])!,
+      oldValueJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}old_value_json']),
+      newValueJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}new_value_json']),
+      reason: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}reason']),
+      severity: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}severity'])!,
+      performedBy: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}performed_by'])!,
+      isUndoable: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_undoable'])!,
+      isUndone: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_undone'])!,
+      occurredAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}occurred_at'])!,
+    );
+  }
+
+  @override
+  $ActivityLogTableTable createAlias(String alias) {
+    return $ActivityLogTableTable(attachedDatabase, alias);
+  }
+}
+
+class ActivityLogTableData extends DataClass
+    implements Insertable<ActivityLogTableData> {
+  final int id;
+  final String action;
+  final String module;
+  final int? entityId;
+  final String entityLabel;
+  final String? oldValueJson;
+  final String? newValueJson;
+  final String? reason;
+  final String severity;
+  final String performedBy;
+  final bool isUndoable;
+  final bool isUndone;
+  final DateTime occurredAt;
+  const ActivityLogTableData(
+      {required this.id,
+      required this.action,
+      required this.module,
+      this.entityId,
+      required this.entityLabel,
+      this.oldValueJson,
+      this.newValueJson,
+      this.reason,
+      required this.severity,
+      required this.performedBy,
+      required this.isUndoable,
+      required this.isUndone,
+      required this.occurredAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['action'] = Variable<String>(action);
+    map['module'] = Variable<String>(module);
+    if (!nullToAbsent || entityId != null) {
+      map['entity_id'] = Variable<int>(entityId);
+    }
+    map['entity_label'] = Variable<String>(entityLabel);
+    if (!nullToAbsent || oldValueJson != null) {
+      map['old_value_json'] = Variable<String>(oldValueJson);
+    }
+    if (!nullToAbsent || newValueJson != null) {
+      map['new_value_json'] = Variable<String>(newValueJson);
+    }
+    if (!nullToAbsent || reason != null) {
+      map['reason'] = Variable<String>(reason);
+    }
+    map['severity'] = Variable<String>(severity);
+    map['performed_by'] = Variable<String>(performedBy);
+    map['is_undoable'] = Variable<bool>(isUndoable);
+    map['is_undone'] = Variable<bool>(isUndone);
+    map['occurred_at'] = Variable<DateTime>(occurredAt);
+    return map;
+  }
+
+  ActivityLogTableCompanion toCompanion(bool nullToAbsent) {
+    return ActivityLogTableCompanion(
+      id: Value(id),
+      action: Value(action),
+      module: Value(module),
+      entityId: entityId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(entityId),
+      entityLabel: Value(entityLabel),
+      oldValueJson: oldValueJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(oldValueJson),
+      newValueJson: newValueJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(newValueJson),
+      reason:
+          reason == null && nullToAbsent ? const Value.absent() : Value(reason),
+      severity: Value(severity),
+      performedBy: Value(performedBy),
+      isUndoable: Value(isUndoable),
+      isUndone: Value(isUndone),
+      occurredAt: Value(occurredAt),
+    );
+  }
+
+  factory ActivityLogTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityLogTableData(
+      id: serializer.fromJson<int>(json['id']),
+      action: serializer.fromJson<String>(json['action']),
+      module: serializer.fromJson<String>(json['module']),
+      entityId: serializer.fromJson<int?>(json['entityId']),
+      entityLabel: serializer.fromJson<String>(json['entityLabel']),
+      oldValueJson: serializer.fromJson<String?>(json['oldValueJson']),
+      newValueJson: serializer.fromJson<String?>(json['newValueJson']),
+      reason: serializer.fromJson<String?>(json['reason']),
+      severity: serializer.fromJson<String>(json['severity']),
+      performedBy: serializer.fromJson<String>(json['performedBy']),
+      isUndoable: serializer.fromJson<bool>(json['isUndoable']),
+      isUndone: serializer.fromJson<bool>(json['isUndone']),
+      occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'action': serializer.toJson<String>(action),
+      'module': serializer.toJson<String>(module),
+      'entityId': serializer.toJson<int?>(entityId),
+      'entityLabel': serializer.toJson<String>(entityLabel),
+      'oldValueJson': serializer.toJson<String?>(oldValueJson),
+      'newValueJson': serializer.toJson<String?>(newValueJson),
+      'reason': serializer.toJson<String?>(reason),
+      'severity': serializer.toJson<String>(severity),
+      'performedBy': serializer.toJson<String>(performedBy),
+      'isUndoable': serializer.toJson<bool>(isUndoable),
+      'isUndone': serializer.toJson<bool>(isUndone),
+      'occurredAt': serializer.toJson<DateTime>(occurredAt),
+    };
+  }
+
+  ActivityLogTableData copyWith(
+          {int? id,
+          String? action,
+          String? module,
+          Value<int?> entityId = const Value.absent(),
+          String? entityLabel,
+          Value<String?> oldValueJson = const Value.absent(),
+          Value<String?> newValueJson = const Value.absent(),
+          Value<String?> reason = const Value.absent(),
+          String? severity,
+          String? performedBy,
+          bool? isUndoable,
+          bool? isUndone,
+          DateTime? occurredAt}) =>
+      ActivityLogTableData(
+        id: id ?? this.id,
+        action: action ?? this.action,
+        module: module ?? this.module,
+        entityId: entityId.present ? entityId.value : this.entityId,
+        entityLabel: entityLabel ?? this.entityLabel,
+        oldValueJson:
+            oldValueJson.present ? oldValueJson.value : this.oldValueJson,
+        newValueJson:
+            newValueJson.present ? newValueJson.value : this.newValueJson,
+        reason: reason.present ? reason.value : this.reason,
+        severity: severity ?? this.severity,
+        performedBy: performedBy ?? this.performedBy,
+        isUndoable: isUndoable ?? this.isUndoable,
+        isUndone: isUndone ?? this.isUndone,
+        occurredAt: occurredAt ?? this.occurredAt,
+      );
+  ActivityLogTableData copyWithCompanion(ActivityLogTableCompanion data) {
+    return ActivityLogTableData(
+      id: data.id.present ? data.id.value : this.id,
+      action: data.action.present ? data.action.value : this.action,
+      module: data.module.present ? data.module.value : this.module,
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
+      entityLabel:
+          data.entityLabel.present ? data.entityLabel.value : this.entityLabel,
+      oldValueJson: data.oldValueJson.present
+          ? data.oldValueJson.value
+          : this.oldValueJson,
+      newValueJson: data.newValueJson.present
+          ? data.newValueJson.value
+          : this.newValueJson,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      severity: data.severity.present ? data.severity.value : this.severity,
+      performedBy:
+          data.performedBy.present ? data.performedBy.value : this.performedBy,
+      isUndoable:
+          data.isUndoable.present ? data.isUndoable.value : this.isUndoable,
+      isUndone: data.isUndone.present ? data.isUndone.value : this.isUndone,
+      occurredAt:
+          data.occurredAt.present ? data.occurredAt.value : this.occurredAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityLogTableData(')
+          ..write('id: $id, ')
+          ..write('action: $action, ')
+          ..write('module: $module, ')
+          ..write('entityId: $entityId, ')
+          ..write('entityLabel: $entityLabel, ')
+          ..write('oldValueJson: $oldValueJson, ')
+          ..write('newValueJson: $newValueJson, ')
+          ..write('reason: $reason, ')
+          ..write('severity: $severity, ')
+          ..write('performedBy: $performedBy, ')
+          ..write('isUndoable: $isUndoable, ')
+          ..write('isUndone: $isUndone, ')
+          ..write('occurredAt: $occurredAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      action,
+      module,
+      entityId,
+      entityLabel,
+      oldValueJson,
+      newValueJson,
+      reason,
+      severity,
+      performedBy,
+      isUndoable,
+      isUndone,
+      occurredAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityLogTableData &&
+          other.id == this.id &&
+          other.action == this.action &&
+          other.module == this.module &&
+          other.entityId == this.entityId &&
+          other.entityLabel == this.entityLabel &&
+          other.oldValueJson == this.oldValueJson &&
+          other.newValueJson == this.newValueJson &&
+          other.reason == this.reason &&
+          other.severity == this.severity &&
+          other.performedBy == this.performedBy &&
+          other.isUndoable == this.isUndoable &&
+          other.isUndone == this.isUndone &&
+          other.occurredAt == this.occurredAt);
+}
+
+class ActivityLogTableCompanion extends UpdateCompanion<ActivityLogTableData> {
+  final Value<int> id;
+  final Value<String> action;
+  final Value<String> module;
+  final Value<int?> entityId;
+  final Value<String> entityLabel;
+  final Value<String?> oldValueJson;
+  final Value<String?> newValueJson;
+  final Value<String?> reason;
+  final Value<String> severity;
+  final Value<String> performedBy;
+  final Value<bool> isUndoable;
+  final Value<bool> isUndone;
+  final Value<DateTime> occurredAt;
+  const ActivityLogTableCompanion({
+    this.id = const Value.absent(),
+    this.action = const Value.absent(),
+    this.module = const Value.absent(),
+    this.entityId = const Value.absent(),
+    this.entityLabel = const Value.absent(),
+    this.oldValueJson = const Value.absent(),
+    this.newValueJson = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.severity = const Value.absent(),
+    this.performedBy = const Value.absent(),
+    this.isUndoable = const Value.absent(),
+    this.isUndone = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+  });
+  ActivityLogTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String action,
+    required String module,
+    this.entityId = const Value.absent(),
+    this.entityLabel = const Value.absent(),
+    this.oldValueJson = const Value.absent(),
+    this.newValueJson = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.severity = const Value.absent(),
+    this.performedBy = const Value.absent(),
+    this.isUndoable = const Value.absent(),
+    this.isUndone = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+  })  : action = Value(action),
+        module = Value(module);
+  static Insertable<ActivityLogTableData> custom({
+    Expression<int>? id,
+    Expression<String>? action,
+    Expression<String>? module,
+    Expression<int>? entityId,
+    Expression<String>? entityLabel,
+    Expression<String>? oldValueJson,
+    Expression<String>? newValueJson,
+    Expression<String>? reason,
+    Expression<String>? severity,
+    Expression<String>? performedBy,
+    Expression<bool>? isUndoable,
+    Expression<bool>? isUndone,
+    Expression<DateTime>? occurredAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (action != null) 'action': action,
+      if (module != null) 'module': module,
+      if (entityId != null) 'entity_id': entityId,
+      if (entityLabel != null) 'entity_label': entityLabel,
+      if (oldValueJson != null) 'old_value_json': oldValueJson,
+      if (newValueJson != null) 'new_value_json': newValueJson,
+      if (reason != null) 'reason': reason,
+      if (severity != null) 'severity': severity,
+      if (performedBy != null) 'performed_by': performedBy,
+      if (isUndoable != null) 'is_undoable': isUndoable,
+      if (isUndone != null) 'is_undone': isUndone,
+      if (occurredAt != null) 'occurred_at': occurredAt,
+    });
+  }
+
+  ActivityLogTableCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? action,
+      Value<String>? module,
+      Value<int?>? entityId,
+      Value<String>? entityLabel,
+      Value<String?>? oldValueJson,
+      Value<String?>? newValueJson,
+      Value<String?>? reason,
+      Value<String>? severity,
+      Value<String>? performedBy,
+      Value<bool>? isUndoable,
+      Value<bool>? isUndone,
+      Value<DateTime>? occurredAt}) {
+    return ActivityLogTableCompanion(
+      id: id ?? this.id,
+      action: action ?? this.action,
+      module: module ?? this.module,
+      entityId: entityId ?? this.entityId,
+      entityLabel: entityLabel ?? this.entityLabel,
+      oldValueJson: oldValueJson ?? this.oldValueJson,
+      newValueJson: newValueJson ?? this.newValueJson,
+      reason: reason ?? this.reason,
+      severity: severity ?? this.severity,
+      performedBy: performedBy ?? this.performedBy,
+      isUndoable: isUndoable ?? this.isUndoable,
+      isUndone: isUndone ?? this.isUndone,
+      occurredAt: occurredAt ?? this.occurredAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (action.present) {
+      map['action'] = Variable<String>(action.value);
+    }
+    if (module.present) {
+      map['module'] = Variable<String>(module.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<int>(entityId.value);
+    }
+    if (entityLabel.present) {
+      map['entity_label'] = Variable<String>(entityLabel.value);
+    }
+    if (oldValueJson.present) {
+      map['old_value_json'] = Variable<String>(oldValueJson.value);
+    }
+    if (newValueJson.present) {
+      map['new_value_json'] = Variable<String>(newValueJson.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (severity.present) {
+      map['severity'] = Variable<String>(severity.value);
+    }
+    if (performedBy.present) {
+      map['performed_by'] = Variable<String>(performedBy.value);
+    }
+    if (isUndoable.present) {
+      map['is_undoable'] = Variable<bool>(isUndoable.value);
+    }
+    if (isUndone.present) {
+      map['is_undone'] = Variable<bool>(isUndone.value);
+    }
+    if (occurredAt.present) {
+      map['occurred_at'] = Variable<DateTime>(occurredAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityLogTableCompanion(')
+          ..write('id: $id, ')
+          ..write('action: $action, ')
+          ..write('module: $module, ')
+          ..write('entityId: $entityId, ')
+          ..write('entityLabel: $entityLabel, ')
+          ..write('oldValueJson: $oldValueJson, ')
+          ..write('newValueJson: $newValueJson, ')
+          ..write('reason: $reason, ')
+          ..write('severity: $severity, ')
+          ..write('performedBy: $performedBy, ')
+          ..write('isUndoable: $isUndoable, ')
+          ..write('isUndone: $isUndone, ')
+          ..write('occurredAt: $occurredAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6255,8 +7678,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $BudgetBucketsTableTable(this);
   late final $IncomeSourcesTableTable incomeSourcesTable =
       $IncomeSourcesTableTable(this);
+  late final $SavingsGoalsTableTable savingsGoalsTable =
+      $SavingsGoalsTableTable(this);
   late final $TaggingRulesTableTable taggingRulesTable =
       $TaggingRulesTableTable(this);
+  late final $ActivityLogTableTable activityLogTable =
+      $ActivityLogTableTable(this);
   late final ExpensesDao expensesDao = ExpensesDao(this as AppDatabase);
   late final SalaryDao salaryDao = SalaryDao(this as AppDatabase);
   late final CategoriesDao categoriesDao = CategoriesDao(this as AppDatabase);
@@ -6267,8 +7694,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final BudgetDao budgetDao = BudgetDao(this as AppDatabase);
   late final IncomeSourcesDao incomeSourcesDao =
       IncomeSourcesDao(this as AppDatabase);
+  late final SavingsGoalsDao savingsGoalsDao =
+      SavingsGoalsDao(this as AppDatabase);
   late final TaggingRulesDao taggingRulesDao =
       TaggingRulesDao(this as AppDatabase);
+  late final ActivityLogDao activityLogDao =
+      ActivityLogDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6285,7 +7716,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         budgetPlansTable,
         budgetBucketsTable,
         incomeSourcesTable,
-        taggingRulesTable
+        savingsGoalsTable,
+        taggingRulesTable,
+        activityLogTable
       ];
 }
 
@@ -6299,6 +7732,7 @@ typedef $$AppSettingsTableTableCreateCompanionBuilder
   Value<int> veryLargeExpenseThresholdPaise,
   Value<int> majorPurchaseThresholdPaise,
   Value<int> salaryDay,
+  Value<int> recycleBinRetentionDays,
   Value<bool> pinEnabled,
   Value<String?> pinHash,
   Value<DateTime> createdAt,
@@ -6314,6 +7748,7 @@ typedef $$AppSettingsTableTableUpdateCompanionBuilder
   Value<int> veryLargeExpenseThresholdPaise,
   Value<int> majorPurchaseThresholdPaise,
   Value<int> salaryDay,
+  Value<int> recycleBinRetentionDays,
   Value<bool> pinEnabled,
   Value<String?> pinHash,
   Value<DateTime> createdAt,
@@ -6356,6 +7791,10 @@ class $$AppSettingsTableTableFilterComposer
 
   ColumnFilters<int> get salaryDay => $composableBuilder(
       column: $table.salaryDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get recycleBinRetentionDays => $composableBuilder(
+      column: $table.recycleBinRetentionDays,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get pinEnabled => $composableBuilder(
       column: $table.pinEnabled, builder: (column) => ColumnFilters(column));
@@ -6408,6 +7847,10 @@ class $$AppSettingsTableTableOrderingComposer
   ColumnOrderings<int> get salaryDay => $composableBuilder(
       column: $table.salaryDay, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get recycleBinRetentionDays => $composableBuilder(
+      column: $table.recycleBinRetentionDays,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get pinEnabled => $composableBuilder(
       column: $table.pinEnabled, builder: (column) => ColumnOrderings(column));
 
@@ -6454,6 +7897,9 @@ class $$AppSettingsTableTableAnnotationComposer
 
   GeneratedColumn<int> get salaryDay =>
       $composableBuilder(column: $table.salaryDay, builder: (column) => column);
+
+  GeneratedColumn<int> get recycleBinRetentionDays => $composableBuilder(
+      column: $table.recycleBinRetentionDays, builder: (column) => column);
 
   GeneratedColumn<bool> get pinEnabled => $composableBuilder(
       column: $table.pinEnabled, builder: (column) => column);
@@ -6504,6 +7950,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<int> veryLargeExpenseThresholdPaise = const Value.absent(),
             Value<int> majorPurchaseThresholdPaise = const Value.absent(),
             Value<int> salaryDay = const Value.absent(),
+            Value<int> recycleBinRetentionDays = const Value.absent(),
             Value<bool> pinEnabled = const Value.absent(),
             Value<String?> pinHash = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -6518,6 +7965,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             veryLargeExpenseThresholdPaise: veryLargeExpenseThresholdPaise,
             majorPurchaseThresholdPaise: majorPurchaseThresholdPaise,
             salaryDay: salaryDay,
+            recycleBinRetentionDays: recycleBinRetentionDays,
             pinEnabled: pinEnabled,
             pinHash: pinHash,
             createdAt: createdAt,
@@ -6532,6 +7980,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<int> veryLargeExpenseThresholdPaise = const Value.absent(),
             Value<int> majorPurchaseThresholdPaise = const Value.absent(),
             Value<int> salaryDay = const Value.absent(),
+            Value<int> recycleBinRetentionDays = const Value.absent(),
             Value<bool> pinEnabled = const Value.absent(),
             Value<String?> pinHash = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -6546,6 +7995,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             veryLargeExpenseThresholdPaise: veryLargeExpenseThresholdPaise,
             majorPurchaseThresholdPaise: majorPurchaseThresholdPaise,
             salaryDay: salaryDay,
+            recycleBinRetentionDays: recycleBinRetentionDays,
             pinEnabled: pinEnabled,
             pinHash: pinHash,
             createdAt: createdAt,
@@ -6786,6 +8236,7 @@ typedef $$CategoriesTableTableCreateCompanionBuilder = CategoriesTableCompanion
   Value<bool> countsTowardSpending,
   Value<int> sortOrder,
   Value<bool> isDeleted,
+  Value<DateTime?> deletedAt,
 });
 typedef $$CategoriesTableTableUpdateCompanionBuilder = CategoriesTableCompanion
     Function({
@@ -6798,6 +8249,7 @@ typedef $$CategoriesTableTableUpdateCompanionBuilder = CategoriesTableCompanion
   Value<bool> countsTowardSpending,
   Value<int> sortOrder,
   Value<bool> isDeleted,
+  Value<DateTime?> deletedAt,
 });
 
 final class $$CategoriesTableTableReferences extends BaseReferences<
@@ -6893,6 +8345,9 @@ class $$CategoriesTableTableFilterComposer
 
   ColumnFilters<bool> get isDeleted => $composableBuilder(
       column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
 
   Expression<bool> expensesTableRefs(
       Expression<bool> Function($$ExpensesTableTableFilterComposer f) f) {
@@ -6994,6 +8449,9 @@ class $$CategoriesTableTableOrderingComposer
 
   ColumnOrderings<bool> get isDeleted => $composableBuilder(
       column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
 }
 
 class $$CategoriesTableTableAnnotationComposer
@@ -7031,6 +8489,9 @@ class $$CategoriesTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isDeleted =>
       $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 
   Expression<T> expensesTableRefs<T extends Object>(
       Expression<T> Function($$ExpensesTableTableAnnotationComposer a) f) {
@@ -7134,6 +8595,7 @@ class $$CategoriesTableTableTableManager extends RootTableManager<
             Value<bool> countsTowardSpending = const Value.absent(),
             Value<int> sortOrder = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
           }) =>
               CategoriesTableCompanion(
             id: id,
@@ -7145,6 +8607,7 @@ class $$CategoriesTableTableTableManager extends RootTableManager<
             countsTowardSpending: countsTowardSpending,
             sortOrder: sortOrder,
             isDeleted: isDeleted,
+            deletedAt: deletedAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -7156,6 +8619,7 @@ class $$CategoriesTableTableTableManager extends RootTableManager<
             Value<bool> countsTowardSpending = const Value.absent(),
             Value<int> sortOrder = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
           }) =>
               CategoriesTableCompanion.insert(
             id: id,
@@ -7167,6 +8631,7 @@ class $$CategoriesTableTableTableManager extends RootTableManager<
             countsTowardSpending: countsTowardSpending,
             sortOrder: sortOrder,
             isDeleted: isDeleted,
+            deletedAt: deletedAt,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -7265,6 +8730,7 @@ typedef $$ExpensesTableTableCreateCompanionBuilder = ExpensesTableCompanion
   Value<int?> loanPaymentId,
   Value<String> autoLabels,
   Value<bool> isDeleted,
+  Value<DateTime?> deletedAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -7284,6 +8750,7 @@ typedef $$ExpensesTableTableUpdateCompanionBuilder = ExpensesTableCompanion
   Value<int?> loanPaymentId,
   Value<String> autoLabels,
   Value<bool> isDeleted,
+  Value<DateTime?> deletedAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -7358,6 +8825,9 @@ class $$ExpensesTableTableFilterComposer
 
   ColumnFilters<bool> get isDeleted => $composableBuilder(
       column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -7437,6 +8907,9 @@ class $$ExpensesTableTableOrderingComposer
   ColumnOrderings<bool> get isDeleted => $composableBuilder(
       column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -7512,6 +8985,9 @@ class $$ExpensesTableTableAnnotationComposer
   GeneratedColumn<bool> get isDeleted =>
       $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -7576,6 +9052,7 @@ class $$ExpensesTableTableTableManager extends RootTableManager<
             Value<int?> loanPaymentId = const Value.absent(),
             Value<String> autoLabels = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
@@ -7594,6 +9071,7 @@ class $$ExpensesTableTableTableManager extends RootTableManager<
             loanPaymentId: loanPaymentId,
             autoLabels: autoLabels,
             isDeleted: isDeleted,
+            deletedAt: deletedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
@@ -7612,6 +9090,7 @@ class $$ExpensesTableTableTableManager extends RootTableManager<
             Value<int?> loanPaymentId = const Value.absent(),
             Value<String> autoLabels = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
@@ -7630,6 +9109,7 @@ class $$ExpensesTableTableTableManager extends RootTableManager<
             loanPaymentId: loanPaymentId,
             autoLabels: autoLabels,
             isDeleted: isDeleted,
+            deletedAt: deletedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
@@ -7700,6 +9180,8 @@ typedef $$SubscriptionsTableTableCreateCompanionBuilder
   Value<DateTime?> nextRenewalAt,
   Value<String> paymentMethod,
   Value<bool> isActive,
+  Value<String> status,
+  Value<String?> usageFrequency,
   Value<String?> notes,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -7715,6 +9197,8 @@ typedef $$SubscriptionsTableTableUpdateCompanionBuilder
   Value<DateTime?> nextRenewalAt,
   Value<String> paymentMethod,
   Value<bool> isActive,
+  Value<String> status,
+  Value<String?> usageFrequency,
   Value<String?> notes,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -7794,6 +9278,13 @@ class $$SubscriptionsTableTableFilterComposer
 
   ColumnFilters<bool> get isActive => $composableBuilder(
       column: $table.isActive, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get usageFrequency => $composableBuilder(
+      column: $table.usageFrequency,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnFilters(column));
@@ -7886,6 +9377,13 @@ class $$SubscriptionsTableTableOrderingComposer
   ColumnOrderings<bool> get isActive => $composableBuilder(
       column: $table.isActive, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get usageFrequency => $composableBuilder(
+      column: $table.usageFrequency,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get notes => $composableBuilder(
       column: $table.notes, builder: (column) => ColumnOrderings(column));
 
@@ -7948,6 +9446,12 @@ class $$SubscriptionsTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get usageFrequency => $composableBuilder(
+      column: $table.usageFrequency, builder: (column) => column);
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
@@ -8038,6 +9542,8 @@ class $$SubscriptionsTableTableTableManager extends RootTableManager<
             Value<DateTime?> nextRenewalAt = const Value.absent(),
             Value<String> paymentMethod = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<String?> usageFrequency = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -8052,6 +9558,8 @@ class $$SubscriptionsTableTableTableManager extends RootTableManager<
             nextRenewalAt: nextRenewalAt,
             paymentMethod: paymentMethod,
             isActive: isActive,
+            status: status,
+            usageFrequency: usageFrequency,
             notes: notes,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -8066,6 +9574,8 @@ class $$SubscriptionsTableTableTableManager extends RootTableManager<
             Value<DateTime?> nextRenewalAt = const Value.absent(),
             Value<String> paymentMethod = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<String?> usageFrequency = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -8080,6 +9590,8 @@ class $$SubscriptionsTableTableTableManager extends RootTableManager<
             nextRenewalAt: nextRenewalAt,
             paymentMethod: paymentMethod,
             isActive: isActive,
+            status: status,
+            usageFrequency: usageFrequency,
             notes: notes,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -8502,6 +10014,7 @@ typedef $$LoansTableTableCreateCompanionBuilder = LoansTableCompanion Function({
   Value<String> status,
   Value<String?> notes,
   Value<bool> isDeleted,
+  Value<DateTime?> deletedAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -8517,6 +10030,7 @@ typedef $$LoansTableTableUpdateCompanionBuilder = LoansTableCompanion Function({
   Value<String> status,
   Value<String?> notes,
   Value<bool> isDeleted,
+  Value<DateTime?> deletedAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
@@ -8587,6 +10101,9 @@ class $$LoansTableTableFilterComposer
 
   ColumnFilters<bool> get isDeleted => $composableBuilder(
       column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -8661,6 +10178,9 @@ class $$LoansTableTableOrderingComposer
   ColumnOrderings<bool> get isDeleted => $composableBuilder(
       column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -8709,6 +10229,9 @@ class $$LoansTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isDeleted =>
       $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -8773,6 +10296,7 @@ class $$LoansTableTableTableManager extends RootTableManager<
             Value<String> status = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
@@ -8788,6 +10312,7 @@ class $$LoansTableTableTableManager extends RootTableManager<
             status: status,
             notes: notes,
             isDeleted: isDeleted,
+            deletedAt: deletedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
@@ -8803,6 +10328,7 @@ class $$LoansTableTableTableManager extends RootTableManager<
             Value<String> status = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
@@ -8818,6 +10344,7 @@ class $$LoansTableTableTableManager extends RootTableManager<
             status: status,
             notes: notes,
             isDeleted: isDeleted,
+            deletedAt: deletedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
@@ -10139,6 +11666,254 @@ typedef $$IncomeSourcesTableTableProcessedTableManager = ProcessedTableManager<
     ),
     IncomeSourcesTableData,
     PrefetchHooks Function()>;
+typedef $$SavingsGoalsTableTableCreateCompanionBuilder
+    = SavingsGoalsTableCompanion Function({
+  Value<int> id,
+  required String name,
+  required int targetPaise,
+  Value<int> savedPaise,
+  Value<int> monthlyContributionPaise,
+  Value<bool> isWishlist,
+  Value<DateTime?> targetDate,
+  Value<bool> isActive,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+typedef $$SavingsGoalsTableTableUpdateCompanionBuilder
+    = SavingsGoalsTableCompanion Function({
+  Value<int> id,
+  Value<String> name,
+  Value<int> targetPaise,
+  Value<int> savedPaise,
+  Value<int> monthlyContributionPaise,
+  Value<bool> isWishlist,
+  Value<DateTime?> targetDate,
+  Value<bool> isActive,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+
+class $$SavingsGoalsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SavingsGoalsTableTable> {
+  $$SavingsGoalsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get targetPaise => $composableBuilder(
+      column: $table.targetPaise, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get savedPaise => $composableBuilder(
+      column: $table.savedPaise, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get monthlyContributionPaise => $composableBuilder(
+      column: $table.monthlyContributionPaise,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isWishlist => $composableBuilder(
+      column: $table.isWishlist, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get targetDate => $composableBuilder(
+      column: $table.targetDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$SavingsGoalsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SavingsGoalsTableTable> {
+  $$SavingsGoalsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get targetPaise => $composableBuilder(
+      column: $table.targetPaise, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get savedPaise => $composableBuilder(
+      column: $table.savedPaise, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get monthlyContributionPaise => $composableBuilder(
+      column: $table.monthlyContributionPaise,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isWishlist => $composableBuilder(
+      column: $table.isWishlist, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get targetDate => $composableBuilder(
+      column: $table.targetDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$SavingsGoalsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SavingsGoalsTableTable> {
+  $$SavingsGoalsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get targetPaise => $composableBuilder(
+      column: $table.targetPaise, builder: (column) => column);
+
+  GeneratedColumn<int> get savedPaise => $composableBuilder(
+      column: $table.savedPaise, builder: (column) => column);
+
+  GeneratedColumn<int> get monthlyContributionPaise => $composableBuilder(
+      column: $table.monthlyContributionPaise, builder: (column) => column);
+
+  GeneratedColumn<bool> get isWishlist => $composableBuilder(
+      column: $table.isWishlist, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get targetDate => $composableBuilder(
+      column: $table.targetDate, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SavingsGoalsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SavingsGoalsTableTable,
+    SavingsGoalsTableData,
+    $$SavingsGoalsTableTableFilterComposer,
+    $$SavingsGoalsTableTableOrderingComposer,
+    $$SavingsGoalsTableTableAnnotationComposer,
+    $$SavingsGoalsTableTableCreateCompanionBuilder,
+    $$SavingsGoalsTableTableUpdateCompanionBuilder,
+    (
+      SavingsGoalsTableData,
+      BaseReferences<_$AppDatabase, $SavingsGoalsTableTable,
+          SavingsGoalsTableData>
+    ),
+    SavingsGoalsTableData,
+    PrefetchHooks Function()> {
+  $$SavingsGoalsTableTableTableManager(
+      _$AppDatabase db, $SavingsGoalsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SavingsGoalsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SavingsGoalsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SavingsGoalsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<int> targetPaise = const Value.absent(),
+            Value<int> savedPaise = const Value.absent(),
+            Value<int> monthlyContributionPaise = const Value.absent(),
+            Value<bool> isWishlist = const Value.absent(),
+            Value<DateTime?> targetDate = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              SavingsGoalsTableCompanion(
+            id: id,
+            name: name,
+            targetPaise: targetPaise,
+            savedPaise: savedPaise,
+            monthlyContributionPaise: monthlyContributionPaise,
+            isWishlist: isWishlist,
+            targetDate: targetDate,
+            isActive: isActive,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String name,
+            required int targetPaise,
+            Value<int> savedPaise = const Value.absent(),
+            Value<int> monthlyContributionPaise = const Value.absent(),
+            Value<bool> isWishlist = const Value.absent(),
+            Value<DateTime?> targetDate = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              SavingsGoalsTableCompanion.insert(
+            id: id,
+            name: name,
+            targetPaise: targetPaise,
+            savedPaise: savedPaise,
+            monthlyContributionPaise: monthlyContributionPaise,
+            isWishlist: isWishlist,
+            targetDate: targetDate,
+            isActive: isActive,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$SavingsGoalsTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SavingsGoalsTableTable,
+    SavingsGoalsTableData,
+    $$SavingsGoalsTableTableFilterComposer,
+    $$SavingsGoalsTableTableOrderingComposer,
+    $$SavingsGoalsTableTableAnnotationComposer,
+    $$SavingsGoalsTableTableCreateCompanionBuilder,
+    $$SavingsGoalsTableTableUpdateCompanionBuilder,
+    (
+      SavingsGoalsTableData,
+      BaseReferences<_$AppDatabase, $SavingsGoalsTableTable,
+          SavingsGoalsTableData>
+    ),
+    SavingsGoalsTableData,
+    PrefetchHooks Function()>;
 typedef $$TaggingRulesTableTableCreateCompanionBuilder
     = TaggingRulesTableCompanion Function({
   Value<int> id,
@@ -10371,6 +12146,298 @@ typedef $$TaggingRulesTableTableProcessedTableManager = ProcessedTableManager<
     ),
     TaggingRulesTableData,
     PrefetchHooks Function()>;
+typedef $$ActivityLogTableTableCreateCompanionBuilder
+    = ActivityLogTableCompanion Function({
+  Value<int> id,
+  required String action,
+  required String module,
+  Value<int?> entityId,
+  Value<String> entityLabel,
+  Value<String?> oldValueJson,
+  Value<String?> newValueJson,
+  Value<String?> reason,
+  Value<String> severity,
+  Value<String> performedBy,
+  Value<bool> isUndoable,
+  Value<bool> isUndone,
+  Value<DateTime> occurredAt,
+});
+typedef $$ActivityLogTableTableUpdateCompanionBuilder
+    = ActivityLogTableCompanion Function({
+  Value<int> id,
+  Value<String> action,
+  Value<String> module,
+  Value<int?> entityId,
+  Value<String> entityLabel,
+  Value<String?> oldValueJson,
+  Value<String?> newValueJson,
+  Value<String?> reason,
+  Value<String> severity,
+  Value<String> performedBy,
+  Value<bool> isUndoable,
+  Value<bool> isUndone,
+  Value<DateTime> occurredAt,
+});
+
+class $$ActivityLogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActivityLogTableTable> {
+  $$ActivityLogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get action => $composableBuilder(
+      column: $table.action, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get module => $composableBuilder(
+      column: $table.module, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get entityId => $composableBuilder(
+      column: $table.entityId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get entityLabel => $composableBuilder(
+      column: $table.entityLabel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get oldValueJson => $composableBuilder(
+      column: $table.oldValueJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get newValueJson => $composableBuilder(
+      column: $table.newValueJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get reason => $composableBuilder(
+      column: $table.reason, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get severity => $composableBuilder(
+      column: $table.severity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get performedBy => $composableBuilder(
+      column: $table.performedBy, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isUndoable => $composableBuilder(
+      column: $table.isUndoable, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isUndone => $composableBuilder(
+      column: $table.isUndone, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get occurredAt => $composableBuilder(
+      column: $table.occurredAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$ActivityLogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActivityLogTableTable> {
+  $$ActivityLogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get action => $composableBuilder(
+      column: $table.action, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get module => $composableBuilder(
+      column: $table.module, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get entityId => $composableBuilder(
+      column: $table.entityId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get entityLabel => $composableBuilder(
+      column: $table.entityLabel, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get oldValueJson => $composableBuilder(
+      column: $table.oldValueJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get newValueJson => $composableBuilder(
+      column: $table.newValueJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+      column: $table.reason, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get severity => $composableBuilder(
+      column: $table.severity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get performedBy => $composableBuilder(
+      column: $table.performedBy, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isUndoable => $composableBuilder(
+      column: $table.isUndoable, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isUndone => $composableBuilder(
+      column: $table.isUndone, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get occurredAt => $composableBuilder(
+      column: $table.occurredAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ActivityLogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActivityLogTableTable> {
+  $$ActivityLogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => column);
+
+  GeneratedColumn<String> get module =>
+      $composableBuilder(column: $table.module, builder: (column) => column);
+
+  GeneratedColumn<int> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
+
+  GeneratedColumn<String> get entityLabel => $composableBuilder(
+      column: $table.entityLabel, builder: (column) => column);
+
+  GeneratedColumn<String> get oldValueJson => $composableBuilder(
+      column: $table.oldValueJson, builder: (column) => column);
+
+  GeneratedColumn<String> get newValueJson => $composableBuilder(
+      column: $table.newValueJson, builder: (column) => column);
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<String> get severity =>
+      $composableBuilder(column: $table.severity, builder: (column) => column);
+
+  GeneratedColumn<String> get performedBy => $composableBuilder(
+      column: $table.performedBy, builder: (column) => column);
+
+  GeneratedColumn<bool> get isUndoable => $composableBuilder(
+      column: $table.isUndoable, builder: (column) => column);
+
+  GeneratedColumn<bool> get isUndone =>
+      $composableBuilder(column: $table.isUndone, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get occurredAt => $composableBuilder(
+      column: $table.occurredAt, builder: (column) => column);
+}
+
+class $$ActivityLogTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ActivityLogTableTable,
+    ActivityLogTableData,
+    $$ActivityLogTableTableFilterComposer,
+    $$ActivityLogTableTableOrderingComposer,
+    $$ActivityLogTableTableAnnotationComposer,
+    $$ActivityLogTableTableCreateCompanionBuilder,
+    $$ActivityLogTableTableUpdateCompanionBuilder,
+    (
+      ActivityLogTableData,
+      BaseReferences<_$AppDatabase, $ActivityLogTableTable,
+          ActivityLogTableData>
+    ),
+    ActivityLogTableData,
+    PrefetchHooks Function()> {
+  $$ActivityLogTableTableTableManager(
+      _$AppDatabase db, $ActivityLogTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActivityLogTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ActivityLogTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ActivityLogTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> action = const Value.absent(),
+            Value<String> module = const Value.absent(),
+            Value<int?> entityId = const Value.absent(),
+            Value<String> entityLabel = const Value.absent(),
+            Value<String?> oldValueJson = const Value.absent(),
+            Value<String?> newValueJson = const Value.absent(),
+            Value<String?> reason = const Value.absent(),
+            Value<String> severity = const Value.absent(),
+            Value<String> performedBy = const Value.absent(),
+            Value<bool> isUndoable = const Value.absent(),
+            Value<bool> isUndone = const Value.absent(),
+            Value<DateTime> occurredAt = const Value.absent(),
+          }) =>
+              ActivityLogTableCompanion(
+            id: id,
+            action: action,
+            module: module,
+            entityId: entityId,
+            entityLabel: entityLabel,
+            oldValueJson: oldValueJson,
+            newValueJson: newValueJson,
+            reason: reason,
+            severity: severity,
+            performedBy: performedBy,
+            isUndoable: isUndoable,
+            isUndone: isUndone,
+            occurredAt: occurredAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String action,
+            required String module,
+            Value<int?> entityId = const Value.absent(),
+            Value<String> entityLabel = const Value.absent(),
+            Value<String?> oldValueJson = const Value.absent(),
+            Value<String?> newValueJson = const Value.absent(),
+            Value<String?> reason = const Value.absent(),
+            Value<String> severity = const Value.absent(),
+            Value<String> performedBy = const Value.absent(),
+            Value<bool> isUndoable = const Value.absent(),
+            Value<bool> isUndone = const Value.absent(),
+            Value<DateTime> occurredAt = const Value.absent(),
+          }) =>
+              ActivityLogTableCompanion.insert(
+            id: id,
+            action: action,
+            module: module,
+            entityId: entityId,
+            entityLabel: entityLabel,
+            oldValueJson: oldValueJson,
+            newValueJson: newValueJson,
+            reason: reason,
+            severity: severity,
+            performedBy: performedBy,
+            isUndoable: isUndoable,
+            isUndone: isUndone,
+            occurredAt: occurredAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ActivityLogTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ActivityLogTableTable,
+    ActivityLogTableData,
+    $$ActivityLogTableTableFilterComposer,
+    $$ActivityLogTableTableOrderingComposer,
+    $$ActivityLogTableTableAnnotationComposer,
+    $$ActivityLogTableTableCreateCompanionBuilder,
+    $$ActivityLogTableTableUpdateCompanionBuilder,
+    (
+      ActivityLogTableData,
+      BaseReferences<_$AppDatabase, $ActivityLogTableTable,
+          ActivityLogTableData>
+    ),
+    ActivityLogTableData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10398,6 +12465,10 @@ class $AppDatabaseManager {
       $$BudgetBucketsTableTableTableManager(_db, _db.budgetBucketsTable);
   $$IncomeSourcesTableTableTableManager get incomeSourcesTable =>
       $$IncomeSourcesTableTableTableManager(_db, _db.incomeSourcesTable);
+  $$SavingsGoalsTableTableTableManager get savingsGoalsTable =>
+      $$SavingsGoalsTableTableTableManager(_db, _db.savingsGoalsTable);
   $$TaggingRulesTableTableTableManager get taggingRulesTable =>
       $$TaggingRulesTableTableTableManager(_db, _db.taggingRulesTable);
+  $$ActivityLogTableTableTableManager get activityLogTable =>
+      $$ActivityLogTableTableTableManager(_db, _db.activityLogTable);
 }

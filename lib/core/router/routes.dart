@@ -4,18 +4,25 @@ abstract final class AppRoutes {
   static const expenses = '/expenses';
   static const expenseAdd = '/expenses/add';
   static const insights = '/insights';
+  static const jithu = '/jithu';
   static const more = '/more';
   static const salary = '/salary';
   static const subscriptions = '/subscriptions';
   static const loans = '/loans';
   static const settings = '/settings';
-  static const search = '/search';
-  static const calendar = '/calendar';
   static const budget = '/budget';
   static const budgetSetup = '/budget/setup';
+  static const categoryBudget = '/budget/categories';
   static const budgetAlerts = '/budget/alerts';
   static const financialHealth = '/health';
   static const monthlyReport = '/report';
+  static const calendar = '/calendar';
+  static const savingsForecast = '/forecast';
+  static const expenseHeatmap = '/heatmap';
+  static const search = '/search';
+  static const activityHistory = '/activity';
+  static const recycleBin = '/recycle-bin';
   static const about = '/about';
+  static const helpSupport = '/help';
   static const auth = '/auth';
 }

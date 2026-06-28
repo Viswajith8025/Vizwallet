@@ -25,7 +25,7 @@ class SafeSpendCard extends StatelessWidget {
                 Icon(Icons.shield_outlined, color: riskColor, size: 22),
                 const SizedBox(width: 8),
                 Text(
-                  'Safe spend today',
+                  'Today\'s spending guide',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -43,7 +43,7 @@ class SafeSpendCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Today\'s safe limit',
+                        'Suggested daily limit',
                         style: theme.textTheme.labelLarge?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -96,7 +96,7 @@ class SafeSpendCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _MetricTile(
-                    label: 'Remaining safe',
+                    label: 'Left for today',
                     value: formatPaise(
                       snapshot.remainingSafeSpendTodayPaise.clamp(
                         0,
@@ -145,7 +145,7 @@ class SafeSpendCard extends StatelessWidget {
               const Divider(height: 1),
               const SizedBox(height: 12),
               Text(
-                'Projection',
+                'If you keep this pace',
                 style: theme.textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -153,7 +153,7 @@ class SafeSpendCard extends StatelessWidget {
               const SizedBox(height: 8),
               _ProjectionRow(
                 icon: Icons.trending_flat,
-                label: 'Avg daily spend',
+                label: 'Average per day',
                 value: formatPaise(
                   snapshot.projection.averageDailySpendPaise,
                 ),

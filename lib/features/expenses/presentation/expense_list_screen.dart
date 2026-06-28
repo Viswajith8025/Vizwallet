@@ -10,6 +10,7 @@ import 'package:rupee_track/core/design_system/premium_list_tile.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/providers/month_provider.dart';
 import 'package:rupee_track/core/widgets/empty_state.dart';
+import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/expenses/data/expense_repository.dart';
 import 'package:rupee_track/features/quick_add/presentation/quick_add_hub_sheet.dart';
 import 'package:rupee_track/features/smart_tagging/domain/classification_models.dart';
@@ -38,12 +39,20 @@ class ExpenseListScreen extends ConsumerWidget {
       ),
       body: expensesAsync.when(
         loading: () => ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.lg,
+          ),
           itemCount: 8,
           separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
           itemBuilder: (_, __) => const SkeletonCard(height: 80),
         ),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorState(
+          message: 'We couldn\'t load your expenses.',
+          onRetry: () => ref.invalidate(expensesForMonthProvider(monthKey)),
+        ),
         data: (expenses) {
           if (expenses.isEmpty) {
             return EmptyStates.expenses(
@@ -56,7 +65,7 @@ class ExpenseListScreen extends ConsumerWidget {
               AppSpacing.md,
               AppSpacing.xs,
               AppSpacing.md,
-              100,
+              AppSpacing.lg,
             ),
             itemCount: expenses.length,
             separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
@@ -105,17 +114,19 @@ class ExpenseListScreen extends ConsumerWidget {
                       ) ??
                       false;
                 },
-                onDismissed: (_) {
+                onDismissed: (_) async {
                   final repo = ref.read(expenseRepositoryProvider);
-                  final deleted = item;
-                  repo.deleteExpense(expense.id);
+                  final activityId = await repo.deleteExpense(expense.id);
+                  if (!context.mounted) return;
                   showPremiumSnackBar(
                     context,
                     message: 'Expense deleted',
-                    actionLabel: 'Undo',
-                    onAction: () async {
-                      await repo.restoreExpense(deleted);
-                    },
+                    actionLabel: activityId != null ? 'Undo' : null,
+                    onAction: activityId != null
+                        ? () async {
+                            await repo.undoExpenseActivity(activityId);
+                          }
+                        : null,
                   );
                 },
                 child: PremiumExpenseTile(

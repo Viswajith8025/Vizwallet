@@ -7,6 +7,7 @@ import 'package:rupee_track/core/providers/database_provider.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
+import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 
 class SalaryScreen extends HookConsumerWidget {
   const SalaryScreen({super.key});
@@ -32,6 +33,7 @@ class SalaryScreen extends HookConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Monthly salary'),
+        actions: const [ThemeToggleButton()],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),

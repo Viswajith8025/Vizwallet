@@ -39,11 +39,13 @@ dependencies:
   shared_preferences: ^2.5.3
   uuid: ^4.5.1
   collection: ^1.19.1
+  permission_handler: ^11.4.0
   speech_to_text: ^7.0.0
   pdf: ^3.11.3
   printing: ^5.14.2
   share_plus: ^10.1.4
   supabase_flutter: ^2.15.0
+  home_widget: ^0.7.0
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +58,16 @@ dev_dependencies:
   riverpod_generator: ^2.6.5
   custom_lint: ^0.7.5
   riverpod_lint: ^2.6.5
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#1A2F5C"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  remove_alpha_ios: true

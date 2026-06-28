@@ -6,6 +6,7 @@ import 'package:rupee_track/core/database/daos/loans_dao.dart';
 import 'package:rupee_track/core/database/daos/salary_dao.dart';
 import 'package:rupee_track/core/database/daos/settings_dao.dart';
 import 'package:rupee_track/core/database/daos/income_sources_dao.dart';
+import 'package:rupee_track/core/database/daos/savings_goals_dao.dart';
 import 'package:rupee_track/core/database/daos/subscriptions_dao.dart';
 
 final databaseProvider = FutureProvider<AppDatabase>((ref) async {
@@ -47,4 +48,9 @@ final loansDaoProvider = FutureProvider<LoansDao>((ref) async {
 final incomeSourcesDaoProvider = FutureProvider<IncomeSourcesDao>((ref) async {
   final db = await ref.watch(databaseProvider.future);
   return db.incomeSourcesDao;
+});
+
+final savingsGoalsDaoProvider = FutureProvider<SavingsGoalsDao>((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  return db.savingsGoalsDao;
 });

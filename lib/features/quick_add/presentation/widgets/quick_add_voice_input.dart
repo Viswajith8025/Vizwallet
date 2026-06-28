@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 typedef VoiceResultCallback = void Function(int amountPaise, String? merchant);
@@ -56,6 +57,17 @@ class _QuickAddVoiceButtonState extends State<QuickAddVoiceButton> {
       return;
     }
 
+    final micGranted = await _ensureMicPermission();
+    if (!micGranted) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Microphone permission is required for voice input'),
+        ),
+      );
+      return;
+    }
+
     HapticFeedback.mediumImpact();
     setState(() => _listening = true);
     await _speech.listen(
@@ -71,6 +83,13 @@ class _QuickAddVoiceButtonState extends State<QuickAddVoiceButton> {
       pauseFor: const Duration(seconds: 2),
       localeId: 'en_IN',
     );
+  }
+
+  Future<bool> _ensureMicPermission() async {
+    var status = await Permission.microphone.status;
+    if (status.isGranted) return true;
+    status = await Permission.microphone.request();
+    return status.isGranted;
   }
 
   @override

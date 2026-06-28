@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rupee_track/core/design_system/design_tokens.dart';
-
+import 'package:rupee_track/core/design_system/responsive.dart';
+import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 /// Consistent screen app bar — transparent, bold title, optional subtitle.
 class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
   const PremiumAppBar({
@@ -24,11 +24,15 @@ class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appBarActions = [
+      ...?actions,
+      const ThemeToggleButton(),
+    ];
 
     return AppBar(
       leading: leading,
       centerTitle: centerTitle,
-      actions: actions,
+      actions: appBarActions,
       title: subtitle == null
           ? Text(
               title,
@@ -70,14 +74,11 @@ class PremiumScreenBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.screenHorizontal,
-        0,
-        AppSpacing.screenHorizontal,
-        bottomPadding,
+    return ResponsiveBody(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomPadding),
+        child: child,
       ),
-      child: child,
     );
   }
 }

@@ -331,9 +331,19 @@ abstract final class SpendingTrendsEngine {
     required int salaryDay,
   }) {
     final bounds = SalaryCycleEngine.cycleBounds(cycleKey, salaryDay: salaryDay);
-    final startUtc = bounds.startIst.subtract(istOffset);
-    final endUtc =
-        bounds.endIst.add(const Duration(days: 1)).subtract(istOffset);
+    // Build explicit UTC instants from the IST date-only bounds, then shift by
+    // the IST offset. Using bounds.startIst directly (a *local* DateTime) would
+    // double-apply the device timezone offset when compared against UTC rows.
+    final startUtc = DateTime.utc(
+      bounds.startIst.year,
+      bounds.startIst.month,
+      bounds.startIst.day,
+    ).subtract(istOffset);
+    final endUtc = DateTime.utc(
+      bounds.endIst.year,
+      bounds.endIst.month,
+      bounds.endIst.day,
+    ).add(const Duration(days: 1)).subtract(istOffset);
     return (startUtc: startUtc, endUtc: endUtc);
   }
 }

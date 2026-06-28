@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
 import 'package:rupee_track/features/expenses/data/expense_repository.dart';
+import 'package:rupee_track/features/expenses/domain/expense_save_result.dart';
 import 'package:rupee_track/features/quick_add/data/quick_add_store.dart';
 import 'package:rupee_track/features/quick_add/domain/quick_add_models.dart';
+import 'package:rupee_track/features/smart_tagging/data/tagging_repository.dart';
 
 final quickAddStoreProvider = Provider<QuickAddStore>((ref) => QuickAddStore());
 
@@ -78,25 +80,54 @@ class QuickAddRepository {
     );
   }
 
-  Future<void> quickSaveExpense({
+  Future<ExpenseSaveResult> quickSaveExpense({
     required int amountPaise,
     required int categoryId,
     required String title,
     String paymentMethod = 'UPI',
     String? notes,
+    List<String> tags = const [],
   }) async {
-    await _ref.read(expenseRepositoryProvider).addExpense(
+    final result = await _ref.read(expenseRepositoryProvider).addExpense(
           amountPaise: amountPaise,
           categoryId: categoryId,
           title: title,
           paymentMethod: paymentMethod,
           notes: notes,
+          tags: tags,
         );
     await _ref.read(quickAddStoreProvider).recordMerchant(title);
+    return result;
   }
 
-  Future<void> repeatExpense(RepeatExpenseTemplate template) async {
-    await quickSaveExpense(
+  Future<ExpenseSaveResult> quickSaveWithSuggestedCategory({
+    required int amountPaise,
+    required String title,
+    String? notes,
+    String paymentMethod = 'UPI',
+  }) async {
+    final categories = await _ref.read(categoriesProvider.future);
+    final classification = await _ref.read(taggingRepositoryProvider).classify(
+          title: title,
+          notes: notes,
+          categories: categories,
+        );
+
+    final categoryId = classification.categoryId ??
+        categories.firstWhere((c) => c.countsTowardSpending).id;
+
+    return quickSaveExpense(
+      amountPaise: amountPaise,
+      categoryId: categoryId,
+      title: title,
+      notes: notes,
+      paymentMethod: paymentMethod,
+      tags: classification.tags,
+    );
+  }
+
+  Future<ExpenseSaveResult> repeatExpense(RepeatExpenseTemplate template) async {
+    return quickSaveExpense(
       amountPaise: template.amountPaise,
       categoryId: template.categoryId,
       title: template.title,

@@ -3,7 +3,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:rupee_track/core/constants/category_defaults.dart';
+import 'package:rupee_track/core/design_system/design_tokens.dart';
+import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
+import 'package:rupee_track/core/widgets/error_state.dart';
+import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 import 'package:rupee_track/features/expenses/data/expense_repository.dart';
 import 'package:rupee_track/features/smart_tagging/data/tagging_repository.dart';
 import 'package:rupee_track/features/smart_tagging/domain/default_tagging_rules.dart';
@@ -47,17 +51,22 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
+        actions: const [ThemeToggleButton()],
       ),
       body: categoriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorState(
+          message: 'We couldn\'t load your categories.',
+          onRetry: () => ref.invalidate(categoriesProvider),
+        ),
         data: (categories) {
           selectedCategoryId.value ??=
               categories.isNotEmpty ? categories.first.id : null;
 
-          return ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
+          return ResponsiveBody(
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+              children: [
               TextField(
                 controller: amountController,
                 keyboardType:
@@ -171,21 +180,25 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
 
                         isSaving.value = true;
                         try {
-                          await ref.read(expenseRepositoryProvider).addExpense(
-                                amountPaise: amount,
-                                categoryId: categoryId,
-                                title: title,
-                                paymentMethod: paymentMethod.value,
-                                tags: selectedTags.value.toList(),
-                              );
+                          final result =
+                              await ref.read(expenseRepositoryProvider).addExpense(
+                                    amountPaise: amount,
+                                    categoryId: categoryId,
+                                    title: title,
+                                    paymentMethod: paymentMethod.value,
+                                    tags: selectedTags.value.toList(),
+                                  );
                           if (context.mounted) {
                             context.pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Expense saved'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Saved · ${result.snackbarLine}',
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
                           }
                         } catch (e) {
                           if (context.mounted) {
@@ -201,6 +214,7 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
                 ),
               ),
             ],
+            ),
           );
         },
       ),

@@ -7,12 +7,15 @@ import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/utils/category_icon_utils.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/expenses/data/expense_repository.dart';
+import 'package:rupee_track/features/expenses/domain/expense_save_result.dart';
 import 'package:rupee_track/features/quick_add/data/quick_add_repository.dart';
 import 'package:rupee_track/features/quick_add/domain/quick_add_models.dart';
 import 'package:rupee_track/features/quick_add/presentation/widgets/quick_add_calculator_pad.dart';
 import 'package:rupee_track/features/quick_add/presentation/widgets/quick_add_voice_input.dart';
 import 'package:rupee_track/features/smart_tagging/data/tagging_repository.dart';
+import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
+import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/features/smart_tagging/presentation/widgets/smart_tagging_widgets.dart';
 
 Future<void> showQuickAddSheet(BuildContext context, WidgetRef ref) {
@@ -58,6 +61,18 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
     setState(() => _amountDigits = rupees > 0 ? '$rupees' : '');
   }
 
+  void _showSavedSnackBar(BuildContext context, ExpenseSaveResult result) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text(
+          '${formatPaise(result.amountPaise)} · ${result.snackbarLine}',
+        ),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   Future<void> _saveExpense(CategoriesTableData category) async {
     if (_amountPaise <= 0 || _saving) return;
     setState(() => _saving = true);
@@ -70,7 +85,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
     );
 
     try {
-      await repo.quickSaveExpense(
+      final result = await repo.quickSaveExpense(
         amountPaise: _amountPaise,
         categoryId: category.id,
         title: title,
@@ -79,17 +94,43 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
       ref.invalidate(quickAddContextProvider);
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('${formatPaise(_amountPaise)} · $title'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      _showSavedSnackBar(context, result);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e')),
+        const SnackBar(
+          content: Text('Could not save this expense. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _saveFromSuggestion() async {
+    final merchant = _merchant?.trim();
+    if (merchant == null || merchant.isEmpty || _amountPaise <= 0 || _saving) {
+      return;
+    }
+    setState(() => _saving = true);
+    HapticFeedback.mediumImpact();
+
+    try {
+      final result = await ref.read(quickAddRepositoryProvider).quickSaveWithSuggestedCategory(
+            amountPaise: _amountPaise,
+            title: merchant,
+            notes: _note,
+          );
+      ref.invalidate(quickAddContextProvider);
+      if (!mounted) return;
+      Navigator.pop(context);
+      _showSavedSnackBar(context, result);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save this expense. Please try again.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -101,18 +142,12 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
     setState(() => _saving = true);
     HapticFeedback.mediumImpact();
     try {
-      await ref.read(quickAddRepositoryProvider).repeatExpense(template);
+      final result =
+          await ref.read(quickAddRepositoryProvider).repeatExpense(template);
       ref.invalidate(quickAddContextProvider);
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text(
-            'Repeated ${formatPaise(template.amountPaise)} · ${template.title}',
-          ),
-        ),
-      );
+      _showSavedSnackBar(context, result);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -128,25 +163,9 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
           ),
         );
         return;
-      case QuickAddAction.borrow:
-        Navigator.pop(context);
-        context.push(AppRoutes.loans);
-      case QuickAddAction.receive:
-        Navigator.pop(context);
-        context.push(AppRoutes.loans);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Log received money as a loan repayment'),
-          ),
-        );
-      case QuickAddAction.subscription:
-        Navigator.pop(context);
-        context.push(AppRoutes.subscriptions);
       case QuickAddAction.income:
         Navigator.pop(context);
         context.push(AppRoutes.salary);
-      case QuickAddAction.transfer:
-        return;
     }
   }
 
@@ -156,11 +175,11 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
       builder: (ctx) => AlertDialog(
         title: const Text('Quick Add tips'),
         content: const Text(
-          'Fastest path: tap an amount, then a category — saved instantly.\n\n'
-          '• Long-press a category to favorite it\n'
-          '• Tap a repeat chip for one-tap logging\n'
-          '• Use the mic for hands-free entry\n'
-          '• Merchants & notes are optional shortcuts',
+          'Fastest way: choose an amount, then tap what you spent on. It saves immediately.\n\n'
+          '• Long-press a category to keep it near the top\n'
+          '• Repeat chips save common expenses in one tap\n'
+          '• Use the mic to fill amount and merchant\n'
+          '• Notes and merchant names are optional',
         ),
         actions: [
           TextButton(
@@ -209,13 +228,13 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
     return Material(
       color: theme.scaffoldBackgroundColor,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+        padding: AppResponsive.screenPadding(context, bottom: AppSpacing.xl),
         children: [
                 Row(
                   children: [
                     Expanded(
                       child: Text(
-                        'Quick Add',
+                      'Add expense quickly',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -271,7 +290,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _SectionLabel('One-tap repeat'),
+                        const _SectionLabel('Repeat a recent expense'),
                         const SizedBox(height: 8),
                         SizedBox(
                           height: 44,
@@ -315,7 +334,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _SectionLabel('Recent merchants'),
+                        const _SectionLabel('Recent shops or people'),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
@@ -337,12 +356,21 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                   },
                 ),
                 if (_merchant != null && _merchant!.trim().isNotEmpty) ...[
-                  ClassificationSuggestionBanner(title: _merchant!),
+                  ClassificationSuggestionBanner(
+                    title: _merchant!,
+                    canSave: _amountPaise > 0 && !_saving,
+                    onSave: _saveFromSuggestion,
+                  ),
                   const SizedBox(height: 12),
                 ],
                 categoriesAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Text('Error: $e'),
+                  error: (e, _) => Text(
+                    'Could not load categories. Please try again.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
                   data: (categories) {
                     final ctx = contextAsync.valueOrNull;
                     final classifyTitle = _merchant?.trim() ?? '';
@@ -367,50 +395,66 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _SectionLabel('Categories · tap to save'),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: ordered.map((cat) {
-                            final isFavorite = favorites.contains(cat.id);
-                            final isSuggested = suggestedId == cat.id;
-                            final canSave = _amountPaise > 0 && !_saving;
-                            return _CategoryTile(
-                              category: cat,
-                              isFavorite: isFavorite,
-                              isSuggested: isSuggested,
-                              enabled: canSave || _amountPaise > 0,
-                              onTap: canSave
-                                  ? () => _saveExpense(cat)
-                                  : () {
-                                      HapticFeedback.lightImpact();
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Enter an amount first'),
-                                          duration: Duration(seconds: 1),
+                        const _SectionLabel('What was this expense for?'),
+                        const SizedBox(height: AppSpacing.xs),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final tileExtent =
+                                AppResponsive.categoryTileExtent(
+                              constraints.maxWidth,
+                            );
+                            return Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: ordered.map((cat) {
+                                final isFavorite = favorites.contains(cat.id);
+                                final isSuggested = suggestedId == cat.id;
+                                final canSave = _amountPaise > 0 && !_saving;
+                                return SizedBox(
+                                  width: tileExtent,
+                                  height: tileExtent * 0.92,
+                                  child: _CategoryTile(
+                                    category: cat,
+                                    isFavorite: isFavorite,
+                                    isSuggested: isSuggested,
+                                    enabled: canSave || _amountPaise > 0,
+                                    onTap: canSave
+                                        ? () => _saveExpense(cat)
+                                        : () {
+                                            HapticFeedback.lightImpact();
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Enter an amount first',
+                                                ),
+                                                duration: Duration(seconds: 1),
+                                              ),
+                                            );
+                                          },
+                                    onLongPress: () async {
+                                      await ref
+                                          .read(quickAddStoreProvider)
+                                          .toggleFavorite(cat.id);
+                                      ref.invalidate(quickAddContextProvider);
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            isFavorite
+                                                ? 'Removed ${cat.name} from favorites'
+                                                : 'Favorited ${cat.name}',
+                                          ),
+                                          duration: const Duration(seconds: 1),
                                         ),
                                       );
                                     },
-                              onLongPress: () async {
-                                await ref
-                                    .read(quickAddStoreProvider)
-                                    .toggleFavorite(cat.id);
-                                ref.invalidate(quickAddContextProvider);
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      isFavorite
-                                          ? 'Removed ${cat.name} from favorites'
-                                          : 'Favorited ${cat.name}',
-                                    ),
-                                    duration: const Duration(seconds: 1),
                                   ),
                                 );
-                              },
+                              }).toList(),
                             );
-                          }).toList(),
+                          },
                         ),
                       ],
                     );
@@ -425,7 +469,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _SectionLabel('Recent notes'),
+                        const _SectionLabel('Recent notes'),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
@@ -463,12 +507,12 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                     OutlinedButton.icon(
                       onPressed: _showSupport,
                       icon: const Icon(Icons.help_outline, size: 18),
-                      label: const Text('Support'),
+                      label: const Text('Help'),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                _SectionLabel('More actions'),
+                const _SectionLabel('Other things you can add'),
                 const SizedBox(height: 10),
                 _ActionGrid(onAction: _handleAction),
         ],
@@ -502,11 +546,15 @@ class _AmountHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                formatPaise(paise),
-                style: theme.textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  height: 1,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  formatPaise(paise),
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                  ),
                 ),
               ),
               if (merchant != null)
@@ -592,9 +640,7 @@ class _CategoryTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         onLongPress: onLongPress,
-        child: SizedBox(
-          width: 96,
-          height: 88,
+        child: SizedBox.expand(
           child: Stack(
             children: [
               Padding(
@@ -670,20 +716,26 @@ class _ActionGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final actions = <(QuickAddAction, IconData, String)>[
       (QuickAddAction.expense, Icons.remove_circle_outline, 'Expense'),
-      (QuickAddAction.borrow, Icons.arrow_downward, 'Borrow'),
-      (QuickAddAction.receive, Icons.arrow_upward, 'Receive'),
-      (QuickAddAction.subscription, Icons.subscriptions_outlined, 'Subscription'),
-      (QuickAddAction.income, Icons.payments_outlined, 'Income'),
+      (QuickAddAction.income, Icons.payments_outlined, 'Salary'),
     ];
 
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.35,
-      children: actions.map((a) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = AppResponsive.gridColumns(
+          constraints.maxWidth,
+          compact: 2,
+          medium: 2,
+          expanded: 2,
+        );
+
+        return GridView.count(
+          crossAxisCount: columns,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 1.35,
+          children: actions.map((a) {
         return Material(
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(14),
@@ -705,6 +757,8 @@ class _ActionGrid extends StatelessWidget {
           ),
         );
       }).toList(),
+        );
+      },
     );
   }
 }

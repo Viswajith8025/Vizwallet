@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:rupee_track/core/database/daos/expenses_dao.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
+import 'package:rupee_track/core/salary_cycle/salary_cycle_bounds.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/salary_cycle/salary_cycle_engine.dart';
 import 'package:rupee_track/core/utils/auto_label_utils.dart';
@@ -9,6 +11,8 @@ import 'package:rupee_track/features/budget/data/budget_repository.dart';
 import 'package:rupee_track/features/health_score/data/financial_health_repository.dart';
 import 'package:rupee_track/features/health_score/domain/financial_health_models.dart';
 import 'package:rupee_track/features/monthly_report/data/monthly_report_store.dart';
+import 'package:rupee_track/features/monthly_report/domain/ai_monthly_review.dart';
+import 'package:rupee_track/features/monthly_report/domain/ai_monthly_review_engine.dart';
 import 'package:rupee_track/features/monthly_report/domain/monthly_closing_report.dart';
 import 'package:rupee_track/features/monthly_report/domain/monthly_report_engine.dart';
 import 'package:rupee_track/features/trends/data/spending_trends_repository.dart';
@@ -186,7 +190,25 @@ class MonthlyReportRepository {
       previousSavingsPaise: prevSavings,
     );
 
-    return MonthlyClosingReport(
+    final behaviourStats = _behaviourStats(
+      bounds: bounds,
+      expenses: expenses,
+      dailyBudgetPaise: plan != null && cycleDayCount > 0
+          ? ((plan.spendingBuckets.fold<int>(
+                    0,
+                    (s, b) => s + b.totalBudgetPaise,
+                  ) /
+                  cycleDayCount)
+              .round())
+          : 0,
+    );
+
+    final historical = await _loadHistoricalReports(
+      cycleKey,
+      salaryDay: salaryDay,
+    );
+
+    final baseReport = MonthlyClosingReport(
       cycleKey: cycleKey,
       cycleLabel: formatCycleLabel(cycleKey, salaryDay: salaryDay),
       generatedAt: DateTime.now().toUtc(),
@@ -229,6 +251,95 @@ class MonthlyReportRepository {
       budgetBuckets: MonthlyReportEngine.bucketLines(plan),
       budgetOnTrackPercent: MonthlyReportEngine.budgetOnTrackPercent(plan),
       comparison: comparison,
+      aiReview: null,
+    );
+
+    final aiReview = AiMonthlyReviewEngine.build(
+      report: baseReport,
+      behaviourStats: behaviourStats,
+      trends: trends,
+      health: health,
+      historicalReports: historical,
+    );
+
+    return MonthlyClosingReport(
+      cycleKey: baseReport.cycleKey,
+      cycleLabel: baseReport.cycleLabel,
+      generatedAt: baseReport.generatedAt,
+      incomePaise: baseReport.incomePaise,
+      expensesPaise: baseReport.expensesPaise,
+      savingsPaise: baseReport.savingsPaise,
+      savingsRatePercent: baseReport.savingsRatePercent,
+      carryOverPaise: baseReport.carryOverPaise,
+      averageDailySpendPaise: baseReport.averageDailySpendPaise,
+      cycleDayCount: baseReport.cycleDayCount,
+      topCategories: baseReport.topCategories,
+      largestPurchase: baseReport.largestPurchase,
+      majorPurchases: baseReport.majorPurchases,
+      subscriptions: baseReport.subscriptions,
+      loans: baseReport.loans,
+      healthScore: baseReport.healthScore,
+      healthTrendDelta: baseReport.healthTrendDelta,
+      healthMotivation: baseReport.healthMotivation,
+      trendSummaries: baseReport.trendSummaries,
+      goalsAchieved: baseReport.goalsAchieved,
+      goalsMissed: baseReport.goalsMissed,
+      budgetBuckets: baseReport.budgetBuckets,
+      budgetOnTrackPercent: baseReport.budgetOnTrackPercent,
+      comparison: baseReport.comparison,
+      aiReview: aiReview,
+    );
+  }
+
+  Future<List<MonthlyClosingReport>> _loadHistoricalReports(
+    String excludeCycleKey, {
+    required int salaryDay,
+  }) async {
+    final store = _ref.read(monthlyReportStoreProvider);
+    final keys = await store.listStoredCycleKeys();
+    final reports = <MonthlyClosingReport>[];
+    for (final key in keys) {
+      if (key == excludeCycleKey) continue;
+      final loaded = await store.loadReport(key);
+      if (loaded != null) reports.add(loaded);
+    }
+    return reports;
+  }
+
+  CycleBehaviourStats _behaviourStats({
+    required SalaryCycleBounds bounds,
+    required List<ExpenseWithCategory> expenses,
+    required int dailyBudgetPaise,
+  }) {
+    final spendByDay = <DateTime, int>{};
+    for (final row in expenses) {
+      final local = row.expense.occurredAt.toLocal();
+      final key = DateTime(local.year, local.month, local.day);
+      spendByDay[key] = (spendByDay[key] ?? 0) + row.expense.amountPaise;
+    }
+
+    var noSpendDays = 0;
+    var consecutiveBudgetDays = 0;
+    var currentStreak = 0;
+    var cursor = bounds.startIst;
+    while (!cursor.isAfter(bounds.endIst)) {
+      final spent = spendByDay[cursor] ?? 0;
+      if (spent == 0) noSpendDays++;
+      if (dailyBudgetPaise > 0 && spent <= dailyBudgetPaise) {
+        currentStreak++;
+        if (currentStreak > consecutiveBudgetDays) {
+          consecutiveBudgetDays = currentStreak;
+        }
+      } else if (spent > 0) {
+        currentStreak = 0;
+      }
+      cursor = cursor.add(const Duration(days: 1));
+    }
+
+    return CycleBehaviourStats(
+      noSpendDays: noSpendDays,
+      consecutiveBudgetDays: consecutiveBudgetDays,
+      expenseLogCount: expenses.length,
     );
   }
 
@@ -238,7 +349,38 @@ class MonthlyReportRepository {
   }) async {
     final store = _ref.read(monthlyReportStoreProvider);
     final cached = await store.loadReport(cycleKey);
-    if (cached != null) return cached;
+    if (cached != null) {
+      if (cached.aiReview != null) return cached;
+      final augmented = MonthlyClosingReport(
+        cycleKey: cached.cycleKey,
+        cycleLabel: cached.cycleLabel,
+        generatedAt: cached.generatedAt,
+        incomePaise: cached.incomePaise,
+        expensesPaise: cached.expensesPaise,
+        savingsPaise: cached.savingsPaise,
+        savingsRatePercent: cached.savingsRatePercent,
+        carryOverPaise: cached.carryOverPaise,
+        averageDailySpendPaise: cached.averageDailySpendPaise,
+        cycleDayCount: cached.cycleDayCount,
+        topCategories: cached.topCategories,
+        largestPurchase: cached.largestPurchase,
+        majorPurchases: cached.majorPurchases,
+        subscriptions: cached.subscriptions,
+        loans: cached.loans,
+        healthScore: cached.healthScore,
+        healthTrendDelta: cached.healthTrendDelta,
+        healthMotivation: cached.healthMotivation,
+        trendSummaries: cached.trendSummaries,
+        goalsAchieved: cached.goalsAchieved,
+        goalsMissed: cached.goalsMissed,
+        budgetBuckets: cached.budgetBuckets,
+        budgetOnTrackPercent: cached.budgetOnTrackPercent,
+        comparison: cached.comparison,
+        aiReview: AiMonthlyReviewEngine.buildFromReportOnly(cached),
+      );
+      await store.saveReport(augmented);
+      return augmented;
+    }
     if (!await _cycleHasEnded(cycleKey, salaryDay)) return null;
     final report = await buildReport(cycleKey, salaryDay: salaryDay);
     await store.saveReport(report);

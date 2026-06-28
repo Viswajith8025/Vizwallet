@@ -37,9 +37,5 @@ class QuickAddContext {
 
 enum QuickAddAction {
   expense,
-  borrow,
-  receive,
-  subscription,
   income,
-  transfer,
 }

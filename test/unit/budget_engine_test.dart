@@ -18,6 +18,35 @@ void main() {
       expect(allocations.length, defaultBudgetTemplates.length);
     });
 
+    test('fromCategories creates one line per category', () {
+      final allocations = BudgetEngine.fromCategories(
+        categories: const [
+          CategoryBudgetSeed(
+            id: 1,
+            slug: 'food',
+            name: 'Food',
+            sortOrder: 1,
+            countsTowardSpending: true,
+          ),
+          CategoryBudgetSeed(
+            id: 2,
+            slug: 'transport',
+            name: 'Transport',
+            sortOrder: 2,
+            countsTowardSpending: true,
+          ),
+        ],
+        salaryPaise: salary,
+        amountByCategoryId: {1: 500000, 2: 300000},
+      );
+
+      expect(allocations.length, 2);
+      expect(allocations.first.categoryId, 1);
+      expect(allocations.first.allocatedPaise, 500000);
+      expect(allocations.last.categoryId, 2);
+      expect(allocations.last.allocatedPaise, 300000);
+    });
+
     test('alert levels at thresholds', () {
       expect(
         BudgetEngine.alertLevelForPercent(49),

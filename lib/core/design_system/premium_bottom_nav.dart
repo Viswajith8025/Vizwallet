@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
+import 'package:rupee_track/core/design_system/responsive.dart';
 
 class PremiumBottomNav extends StatelessWidget {
   const PremiumBottomNav({
@@ -86,6 +87,7 @@ class _NavItem extends StatelessWidget {
     final color = selected
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
+    final compact = AppResponsive.useCompactNav(context);
 
     return Material(
       color: Colors.transparent,
@@ -96,7 +98,7 @@ class _NavItem extends StatelessWidget {
         child: AnimatedContainer(
           duration: AppDurations.fast,
           curve: AppCurves.standard,
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: EdgeInsets.symmetric(vertical: compact ? 12 : 10),
           decoration: BoxDecoration(
             color: selected
                 ? theme.colorScheme.primary.withValues(alpha: 0.1)
@@ -115,19 +117,26 @@ class _NavItem extends StatelessWidget {
                 child: Icon(
                   selected ? destination.selectedIcon : destination.icon,
                   key: ValueKey(selected),
-                  size: 22,
+                  size: compact ? 24 : 22,
                   color: color,
                 ),
               ),
-              const SizedBox(height: 4),
-              AnimatedDefaultTextStyle(
-                duration: AppDurations.fast,
-                style: theme.textTheme.labelSmall!.copyWith(
-                  color: color,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              if (!compact) ...[
+                const SizedBox(height: 4),
+                AnimatedDefaultTextStyle(
+                  duration: AppDurations.fast,
+                  style: theme.textTheme.labelSmall!.copyWith(
+                    color: color,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                  child: Text(
+                    destination.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                child: Text(destination.label),
-              ),
+              ],
             ],
           ),
         ),

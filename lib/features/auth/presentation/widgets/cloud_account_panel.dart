@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rupee_track/core/config/supabase_config.dart';
 import 'package:rupee_track/core/providers/supabase_provider.dart';
 import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/features/auth/data/auth_repository.dart';
@@ -49,8 +48,8 @@ class _CloudAccountPanelState extends ConsumerState<CloudAccountPanel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const ListTile(
-          title: Text('Cloud account'),
-          subtitle: Text('Sign in to your account (sync coming soon)'),
+          title: Text('Account'),
+          subtitle: Text('Secure access for your Vizwallet profile.'),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -95,8 +94,8 @@ class _CloudAccountPanelState extends ConsumerState<CloudAccountPanel> {
                           _checking
                               ? 'Checking connection…'
                               : _connected == true
-                                  ? 'Connected to Supabase'
-                                  : 'Database schema not ready — run migration',
+                                  ? 'Account service is online'
+                                  : 'Account service is unavailable right now',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
@@ -110,13 +109,55 @@ class _CloudAccountPanelState extends ConsumerState<CloudAccountPanel> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    SupabaseConfig.url,
+                    user == null
+                        ? 'Create an account to keep access consistent on this phone.'
+                        : 'You will stay signed in until you choose to sign out.',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
                   ),
                   const SizedBox(height: 16),
-                  if (user == null) ...[
+                  if (user != null) ...[
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final hint = await ref
+                            .read(authRepositoryProvider)
+                            .fetchPasswordHintForCurrentUser();
+                        if (!context.mounted) return;
+                        await showDialog<void>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            icon: Icon(
+                              Icons.lightbulb_outline_rounded,
+                              color: Theme.of(ctx).colorScheme.primary,
+                            ),
+                            title: const Text('Your password hint'),
+                            content: Text(
+                              hint ??
+                                  'No password hint is saved for your account.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.lightbulb_outline),
+                      label: const Text('View password hint'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        await ref.read(authRepositoryProvider).signOut();
+                        _checkConnection();
+                      },
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Sign out'),
+                    ),
+                  ] else ...[
                     FilledButton.icon(
                       onPressed: () => _openAuth(signUp: false),
                       icon: const Icon(Icons.login),
@@ -128,15 +169,7 @@ class _CloudAccountPanelState extends ConsumerState<CloudAccountPanel> {
                       icon: const Icon(Icons.person_add_outlined),
                       label: const Text('Create account'),
                     ),
-                  ] else
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        await ref.read(authRepositoryProvider).signOut();
-                        _checkConnection();
-                      },
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Sign out'),
-                    ),
+                  ],
                 ],
               ),
             ),

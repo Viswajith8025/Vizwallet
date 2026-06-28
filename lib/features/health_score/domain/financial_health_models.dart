@@ -58,11 +58,11 @@ class FinancialHealthInput {
 }
 
 enum HealthCategory {
-  saving('Saving', 'How much you keep each cycle'),
-  budgeting('Budgeting', 'Staying within your plan'),
-  debt('Debt', 'Loans and borrowed money'),
-  subscriptions('Subscriptions', 'Recurring cost load'),
-  stability('Stability', 'Consistency & mindful spending');
+  saving('Saving', 'How much money you keep each month'),
+  budgeting('Budgeting', 'Staying within your spending plan'),
+  debt('Debt', 'Borrowed money and repayments'),
+  subscriptions('Subscriptions', 'Monthly bills like Netflix or recharge'),
+  stability('Stability', 'How steady your spending feels');
 
   const HealthCategory(this.label, this.description);
 

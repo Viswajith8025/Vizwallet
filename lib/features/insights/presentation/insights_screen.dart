@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:rupee_track/core/branding/brand_colors.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_chip.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
+import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
+import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
+import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/core/widgets/month_selector.dart';
 import 'package:rupee_track/core/widgets/summary_card.dart';
 import 'package:rupee_track/features/health_score/presentation/widgets/financial_health_card.dart';
+import 'package:rupee_track/features/insights/data/insights_feed_repository.dart';
+import 'package:rupee_track/features/insights/presentation/widgets/insights_feed_section.dart';
 import 'package:rupee_track/features/smart_tagging/data/tagging_repository.dart';
 import 'package:rupee_track/features/trends/domain/spending_trends_report.dart';
 import 'package:rupee_track/features/trends/data/spending_trends_repository.dart';
@@ -29,38 +35,102 @@ class InsightsScreen extends ConsumerWidget {
     final salaryDay = ref.watch(salaryDayProvider);
     final mode = ref.watch(trendsComparisonModeProvider);
     final trendsAsync = ref.watch(spendingTrendsProvider);
+    final feedAsync = ref.watch(insightsFeedProvider);
     final theme = Theme.of(context);
 
+    if (feedAsync.isLoading && trendsAsync.isLoading && !feedAsync.hasValue) {
+      return Scaffold(
+        appBar: const PremiumAppBar(
+          title: 'Insights',
+          subtitle: 'Your financial intelligence',
+        ),
+        body: const DashboardSkeleton(),
+      );
+    }
+
     return Scaffold(
-      appBar: const PremiumAppBar(
+      appBar: PremiumAppBar(
         title: 'Insights',
-        subtitle: 'Spending trends & patterns',
+        subtitle: 'Your financial intelligence',
+        actions: [
+          IconButton(
+            tooltip: 'Search',
+            onPressed: () => context.push(AppRoutes.search),
+            icon: const Icon(Icons.search_rounded),
+          ),
+        ],
       ),
       body: trendsAsync.when(
-        loading: () => const DashboardSkeleton(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => ListView(
+          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+          children: const [
+            InsightsFeedSection(),
+            SizedBox(height: AppSpacing.lg),
+            DashboardSkeleton(),
+          ],
+        ),
+        error: (e, _) => ErrorState(
+          message: 'We couldn\'t load your insights.',
+          onRetry: () {
+            ref.invalidate(spendingTrendsProvider);
+            ref.invalidate(insightsFeedProvider);
+          },
+        ),
         data: (report) {
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(spendingTrendsProvider);
+              ref.invalidate(insightsFeedProvider);
               ref.invalidate(spendingByTagsProvider(cycleKey));
             },
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenHorizontal,
-                0,
-                AppSpacing.screenHorizontal,
-                AppSpacing.xxl,
-              ),
-              children: [
-                Text(
-                  formatCycleLabel(cycleKey, salaryDay: salaryDay),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+            child: ResponsiveBody(
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                children: [
+                const InsightsFeedSection(),
+                const SizedBox(height: AppSpacing.lg),
+                PremiumSectionHeader(
+                  title: 'Analytics',
+                  subtitle: formatCycleLabel(cycleKey, salaryDay: salaryDay),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 const CycleSelector(),
+                const SizedBox(height: AppSpacing.md),
+                PremiumCard(
+                  onTap: () => context.push(AppRoutes.calendar),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_month_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Open financial calendar',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'Day-by-day view of spending, renewals & salary cycles.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.md),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -84,60 +154,22 @@ class InsightsScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.lg),
                 SpendingByTagsSection(cycleKey: cycleKey),
                 const SizedBox(height: AppSpacing.lg),
-                if (report.summaries.isNotEmpty)
-                  PremiumCard(
-                    accentColor: theme.colorScheme.primary,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.auto_awesome_rounded,
-                              size: 20,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Text(
-                              'AI-style insights',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        ...report.summaries.map(
-                          (line) => Padding(
-                            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                            child: Text(
-                              line,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                height: 1.45,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: AppSpacing.lg),
                 _MetricsGrid(report: report),
                 const SizedBox(height: AppSpacing.xl),
                 const PremiumSectionHeader(
-                  title: 'Spend over time',
-                  subtitle: 'Grey = previous · colour = current',
+                  title: 'Spending over time',
+                  subtitle: 'Grey = last period · colour = this period',
                 ),
                 PremiumCard(
                   child: TrendsLineChart(points: report.timeSeries),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const PremiumSectionHeader(title: 'Category comparison'),
+                const PremiumSectionHeader(title: 'Compare categories'),
                 PremiumCard(
                   child: TrendsBarChart(categories: report.categoryComparisons),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const PremiumSectionHeader(title: 'Category split'),
+                const PremiumSectionHeader(title: 'Where money goes'),
                 PremiumCard(
                   child: TrendsPieChart(categories: report.categoryComparisons),
                 ),
@@ -158,7 +190,40 @@ class InsightsScreen extends ConsumerWidget {
                       ),
                     ),
                 const SizedBox(height: AppSpacing.xl),
-                const PremiumSectionHeader(title: 'Weekday heat map'),
+                PremiumCard(
+                  onTap: () => context.push(AppRoutes.expenseHeatmap),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.grid_on_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Expense heatmap',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'GitHub-style calendar of daily spending',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                const PremiumSectionHeader(title: 'Spending by day of week'),
                 PremiumCard(
                   child: TrendsHeatMap(cells: report.heatMap),
                 ),
@@ -166,7 +231,7 @@ class InsightsScreen extends ConsumerWidget {
                 _WeekendWeekdayCard(split: report.weekendWeekday),
                 if (report.repeatedExpenses.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xl),
-                  const PremiumSectionHeader(title: 'Repeated expenses'),
+                  const PremiumSectionHeader(title: 'Expenses you repeat often'),
                   ...report.repeatedExpenses.take(5).map(
                         (r) => PremiumRowTile(
                           title: r.title,
@@ -190,7 +255,7 @@ class InsightsScreen extends ConsumerWidget {
                   PremiumCard(
                     accentColor: BrandColors.warning,
                     child: PremiumRowTile(
-                      title: 'Impulse-style purchases',
+                      title: 'Quick buys',
                       subtitle:
                           '${report.impulsePurchases.count} totalling ${formatPaise(report.impulsePurchases.totalPaise)}',
                       leading: Icon(
@@ -201,6 +266,7 @@ class InsightsScreen extends ConsumerWidget {
                   ),
                 ],
               ],
+            ),
             ),
           );
         },
@@ -217,26 +283,21 @@ class _MetricsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppSpacing.sm,
-      crossAxisSpacing: AppSpacing.sm,
+    return ResponsiveSummaryGrid(
       childAspectRatio: 1.45,
       children: [
         SummaryCard(
-          label: 'Avg daily',
+          label: 'Daily average',
           icon: Icons.today_outlined,
           value: Text(formatPaise(report.current.avgDailyPaise)),
         ),
         SummaryCard(
-          label: 'Avg weekly',
+          label: 'Weekly average',
           icon: Icons.date_range_outlined,
           value: Text(formatPaise(report.current.avgWeeklyPaise)),
         ),
         SummaryCard(
-          label: 'Top category',
+          label: 'Biggest category',
           icon: Icons.category_outlined,
           value: Text(report.highestCategory?.categoryName ?? '—'),
           subtitle: report.highestCategory != null
@@ -244,7 +305,7 @@ class _MetricsGrid extends StatelessWidget {
               : null,
         ),
         SummaryCard(
-          label: 'Fastest growing',
+          label: 'Growing fastest',
           icon: Icons.trending_up_rounded,
           value: Text(report.fastestGrowingCategory?.categoryName ?? '—'),
           subtitle: report.fastestGrowingCategory?.changePercent != null

@@ -1,0 +1,608 @@
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:rupee_track/core/design_system/design_tokens.dart';
+import 'package:rupee_track/core/design_system/premium_card.dart';
+import 'package:rupee_track/core/design_system/premium_list_tile.dart';
+import 'package:rupee_track/core/design_system/responsive.dart';
+import 'package:rupee_track/core/design_system/skeleton_loader.dart';
+import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
+import 'package:rupee_track/core/router/routes.dart';
+import 'package:rupee_track/core/utils/date_utils.dart';
+import 'package:rupee_track/core/utils/money_utils.dart';
+import 'package:rupee_track/core/widgets/money_text.dart';
+import 'package:rupee_track/core/widgets/summary_card.dart';
+import 'package:rupee_track/features/budget/presentation/widgets/budget_overview_section.dart';
+import 'package:rupee_track/features/budget_alerts/presentation/widgets/budget_alerts_panel.dart';
+import 'package:rupee_track/features/custom_dashboard/domain/dashboard_layout_models.dart';
+import 'package:rupee_track/features/custom_dashboard/presentation/widgets/dashboard_cycle_header.dart';
+import 'package:rupee_track/features/dashboard/data/dashboard_repository.dart';
+import 'package:rupee_track/features/dashboard/presentation/widgets/dashboard_hero.dart';
+import 'package:rupee_track/features/expenses/data/expense_repository.dart';
+import 'package:rupee_track/features/health_score/presentation/widgets/financial_health_card.dart';
+import 'package:rupee_track/features/monthly_report/data/monthly_report_repository.dart';
+import 'package:rupee_track/features/monthly_report/presentation/widgets/monthly_report_widgets.dart';
+import 'package:rupee_track/features/safe_spend/data/safe_spend_repository.dart';
+import 'package:rupee_track/features/safe_spend/presentation/widgets/safe_spend_card.dart';
+import 'package:rupee_track/features/savings_forecast/data/savings_forecast_repository.dart';
+import 'package:rupee_track/features/savings_forecast/domain/savings_forecast_engine.dart';
+import 'package:rupee_track/features/insights/presentation/widgets/insights_feed_section.dart';
+
+/// Renders a single dashboard widget type — each watches its own providers.
+abstract final class DashboardWidgetRegistry {
+  static Widget build(
+    BuildContext context,
+    WidgetRef ref,
+    DashboardWidgetInstance instance,
+  ) {
+    return switch (instance.type) {
+      DashboardWidgetType.cycleHeader => const DashboardCycleHeader(),
+      DashboardWidgetType.currentBalance => _BalanceWidget(),
+      DashboardWidgetType.todaySpending => _TodaySpendingWidget(),
+      DashboardWidgetType.safeDailySpend => _SafeSpendWidget(),
+      DashboardWidgetType.budgetProgress => _BudgetProgressWidget(),
+      DashboardWidgetType.budgetSetup => _BudgetSetupWidget(),
+      DashboardWidgetType.budgetAlerts => const BudgetAlertsPanel(),
+      DashboardWidgetType.summaryGrid => _SummaryGridWidget(),
+      DashboardWidgetType.expenseCategories => _CategoryChartWidget(),
+      DashboardWidgetType.financialHealth =>
+        const FinancialHealthCard(compact: true),
+      DashboardWidgetType.monthlyReport => const MonthlyReportSummaryCard(),
+      DashboardWidgetType.calendar => _CalendarPromoWidget(),
+      DashboardWidgetType.subscriptions => _SubscriptionsWidget(),
+      DashboardWidgetType.loanSummary => _LoanWidget(),
+      DashboardWidgetType.savingsForecast => _SavingsForecastWidget(),
+      DashboardWidgetType.insightsFeed => _InsightsFeedWidget(),
+      DashboardWidgetType.quickActions => _QuickActionsInlineWidget(),
+      DashboardWidgetType.achievements => _AchievementsWidget(),
+      DashboardWidgetType.wishlist => _WishlistWidget(),
+      DashboardWidgetType.recentTransactions => _RecentTransactionsWidget(),
+    };
+  }
+}
+
+String _cycleKey(WidgetRef ref) {
+  final salaryDay = ref.watch(salaryDayProvider);
+  return currentCycleKey(salaryDay: salaryDay);
+}
+
+class _BalanceWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cycleKey = _cycleKey(ref);
+    final async = ref.watch(monthlySummaryProvider(cycleKey));
+    return async.when(
+      loading: () => const SkeletonCard(height: 200),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (s) => DashboardHero(summary: s),
+    );
+  }
+}
+
+class _TodaySpendingWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cycleKey = _cycleKey(ref);
+    final async = ref.watch(safeSpendProvider(cycleKey));
+    final theme = Theme.of(context);
+    return async.when(
+      loading: () => const SkeletonCard(height: 88),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (snap) => PremiumCard(
+        child: Row(
+          children: [
+            Icon(Icons.today_outlined, color: theme.colorScheme.error),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Today's spending", style: theme.textTheme.labelMedium),
+                  Text(
+                    formatPaise(snap.todaySpentPaise),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SafeSpendWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(safeSpendProvider(_cycleKey(ref)));
+    return async.when(
+      loading: () => const SkeletonCard(height: 140),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (s) => SafeSpendCard(snapshot: s),
+    );
+  }
+}
+
+class _BudgetProgressWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return BudgetOverviewSection(monthKey: _cycleKey(ref));
+  }
+}
+
+class _BudgetSetupWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(monthlySummaryProvider(_cycleKey(ref)));
+    return async.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (summary) {
+        if (summary.salaryEntered) return const SizedBox.shrink();
+        final theme = Theme.of(context);
+        return PremiumCard(
+          accentColor: theme.colorScheme.primary,
+          onTap: () => context.push(AppRoutes.budgetSetup),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline_rounded, color: theme.colorScheme.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Set up your budget',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'Split your salary into spending groups.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SummaryGridWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(monthlySummaryProvider(_cycleKey(ref)));
+    final theme = Theme.of(context);
+    return async.when(
+      loading: () => const SkeletonCard(height: 120),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (summary) => ResponsiveSummaryGrid(
+        children: [
+          SummaryCard(
+            label: 'Salary',
+            icon: Icons.payments_outlined,
+            value: MoneyText(summary.salaryPaise),
+            onTap: () => context.push(AppRoutes.salary),
+          ),
+          SummaryCard(
+            label: 'Spent',
+            icon: Icons.trending_down,
+            value: MoneyText(summary.spentPaise),
+            accentColor: theme.colorScheme.error,
+          ),
+          SummaryCard(
+            label: 'Savings',
+            icon: Icons.savings_outlined,
+            value: MoneyText(summary.savingsPaise),
+            subtitle: formatPercent(summary.savingsPercent),
+          ),
+          SummaryCard(
+            label: 'Subscriptions / mo',
+            icon: Icons.subscriptions_outlined,
+            value: MoneyText(summary.subscriptionMonthlyPaise),
+            onTap: () => context.push(AppRoutes.subscriptions),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryChartWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(monthlySummaryProvider(_cycleKey(ref)));
+    final theme = Theme.of(context);
+    return async.when(
+      loading: () => const SkeletonCard(height: 200),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (summary) {
+        if (summary.categoryBreakdown.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Expense breakdown',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            PremiumCard(
+              child: Column(
+                children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final chartHeight =
+                          AppResponsive.chartHeight(constraints.maxWidth);
+                      final radius = chartHeight * 0.27;
+                      final centerRadius = chartHeight * 0.24;
+                      return SizedBox(
+                        height: chartHeight,
+                        child: PieChart(
+                          PieChartData(
+                            sectionsSpace: 3,
+                            centerSpaceRadius: centerRadius,
+                            sections: summary.categoryBreakdown
+                                .take(6)
+                                .map(
+                                  (row) => PieChartSectionData(
+                                    value: row.totalPaise.toDouble(),
+                                    title: '',
+                                    color: Color(row.colorValue),
+                                    radius: radius,
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ...summary.categoryBreakdown.take(5).map(
+                        (row) => PremiumRowTile(
+                          title: row.categoryName,
+                          leading: CircleAvatar(
+                            radius: 6,
+                            backgroundColor: Color(row.colorValue),
+                          ),
+                          trailing: Text(
+                            formatPaise(row.totalPaise),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _CalendarPromoWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return PremiumCard(
+      accentColor: theme.colorScheme.tertiary,
+      onTap: () => context.push(AppRoutes.calendar),
+      child: Row(
+        children: [
+          Icon(Icons.calendar_month_rounded, color: theme.colorScheme.tertiary),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Financial calendar',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  'Your money timeline',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoanWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(monthlySummaryProvider(_cycleKey(ref)));
+    final theme = Theme.of(context);
+    return async.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (summary) {
+        if (summary.pendingBorrowedPaise <= 0 &&
+            summary.overdueLoansCount <= 0) {
+          return const SizedBox.shrink();
+        }
+        return PremiumCard(
+          accentColor: summary.overdueLoansCount > 0
+              ? theme.colorScheme.error
+              : null,
+          onTap: () => context.push(AppRoutes.loans),
+          child: PremiumRowTile(
+            title: summary.overdueLoansCount > 0
+                ? '${summary.overdueLoansCount} overdue loan(s)'
+                : 'Pending borrowed money',
+            subtitle: formatPaise(summary.pendingBorrowedPaise),
+            leading: Icon(
+              Icons.handshake_outlined,
+              color: summary.overdueLoansCount > 0
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.primary,
+            ),
+            trailing: Icon(
+              Icons.chevron_right_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SubscriptionsWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(monthlySummaryProvider(_cycleKey(ref)));
+    return async.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (summary) {
+        if (summary.upcomingSubscriptionsCount <= 0) {
+          return const SizedBox.shrink();
+        }
+        final theme = Theme.of(context);
+        return PremiumCard(
+          onTap: () => context.push(AppRoutes.subscriptions),
+          child: PremiumRowTile(
+            title:
+                '${summary.upcomingSubscriptionsCount} subscription(s) due soon',
+            leading: Icon(
+              Icons.event_outlined,
+              color: theme.colorScheme.tertiary,
+            ),
+            trailing: Icon(
+              Icons.chevron_right_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SavingsForecastWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(savingsForecastReportProvider);
+    final theme = Theme.of(context);
+    return async.when(
+      loading: () => const SkeletonCard(height: 100),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (report) => PremiumCard(
+        onTap: () => context.push(AppRoutes.savingsForecast),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Savings forecast',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              SavingsForecastEngine.formatPaiseCompact(
+                report.periodSummary.projectedSavingsPaise,
+              ),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (report.insights.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                report.insights.first.message,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InsightsFeedWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const InsightsFeedCompactSection();
+  }
+}
+
+class _QuickActionsInlineWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        ActionChip(
+          avatar: const Icon(Icons.add, size: 18),
+          label: const Text('Expense'),
+          onPressed: () => context.push(AppRoutes.expenseAdd),
+        ),
+        ActionChip(
+          avatar: const Icon(Icons.payments_outlined, size: 18),
+          label: const Text('Income'),
+          onPressed: () => context.push(AppRoutes.salary),
+        ),
+        ActionChip(
+          avatar: const Icon(Icons.calendar_month_outlined, size: 18),
+          label: const Text('Calendar'),
+          onPressed: () => context.push(AppRoutes.calendar),
+        ),
+        ActionChip(
+          avatar: const Icon(Icons.subscriptions_outlined, size: 18),
+          label: const Text('Subs'),
+          onPressed: () => context.push(AppRoutes.subscriptions),
+        ),
+      ],
+    );
+  }
+}
+
+class _AchievementsWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(previousCycleClosingReportProvider);
+    final theme = Theme.of(context);
+    return async.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (report) {
+        if (report == null || report.goalsAchieved.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return PremiumCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Recent wins',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              ...report.goalsAchieved.take(3).map(
+                    (g) => ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.check_circle_outline, size: 20),
+                      title: Text(g.title),
+                      subtitle: Text(g.detail),
+                    ),
+                  ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _WishlistWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return PremiumCard(
+      child: Row(
+        children: [
+          Icon(Icons.favorite_border, color: theme.colorScheme.primary),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              'Wishlist tracking — coming soon',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecentTransactionsWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cycleKey = _cycleKey(ref);
+    final async = ref.watch(expensesForMonthProvider(cycleKey));
+    final theme = Theme.of(context);
+    return async.when(
+      loading: () => const SkeletonCard(height: 120),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return PremiumCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Recent transactions',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              ...items.take(4).map(
+                    (row) => ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(row.expense.title),
+                      subtitle: Text(row.category.name),
+                      trailing: Text(
+                        formatPaise(row.expense.amountPaise),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}

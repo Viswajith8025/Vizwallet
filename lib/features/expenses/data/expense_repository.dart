@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -7,6 +8,11 @@ import 'package:rupee_track/core/database/daos/expenses_dao.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
 import 'package:rupee_track/core/utils/auto_label_utils.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
+import 'package:rupee_track/features/activity_history/data/activity_log_service.dart';
+import 'package:rupee_track/features/activity_history/domain/activity_models.dart';
+import 'package:rupee_track/features/expenses/domain/expense_classification_helper.dart';
+import 'package:rupee_track/features/expenses/domain/expense_save_result.dart';
+import 'package:rupee_track/features/home_widget/data/home_widget_sync_service.dart';
 import 'package:rupee_track/features/smart_tagging/data/tagging_repository.dart';
 
 final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
@@ -23,7 +29,7 @@ class ExpenseRepository {
     yield* dao.watchExpensesForMonth(monthKey);
   }
 
-  Future<void> addExpense({
+  Future<ExpenseSaveResult> addExpense({
     required int amountPaise,
     required int categoryId,
     required String title,
@@ -32,28 +38,42 @@ class ExpenseRepository {
     String paymentMethod = 'UPI',
     List<String> tags = const [],
     String? notes,
-    bool autoClassifyTags = true,
+    bool autoClassify = true,
   }) async {
     final dao = await _ref.read(expensesDaoProvider.future);
     final settingsDao = await _ref.read(settingsDaoProvider.future);
     final settings = await settingsDao.getSettings();
+    final categories = await _ref.read(categoriesProvider.future);
 
-    var resolvedTags = tags;
-    if (autoClassifyTags && resolvedTags.isEmpty) {
-      final categories = await _ref.read(categoriesProvider.future);
+    var resolvedCategoryId = categoryId;
+    var classifiedTags = <String>[];
+
+    if (autoClassify) {
       final classification = await _ref.read(taggingRepositoryProvider).classify(
             title: title,
             description: description,
             notes: notes,
             categories: categories,
           );
-      resolvedTags = _ref
-          .read(taggingRepositoryProvider)
-          .autoTagsForSave(classification);
-      if (resolvedTags.isEmpty && classification.tags.isNotEmpty) {
-        resolvedTags = classification.tags;
+      classifiedTags = classification.tags;
+      if (classifiedTags.isEmpty) {
+        classifiedTags =
+            _ref.read(taggingRepositoryProvider).autoTagsForSave(classification);
       }
+      resolvedCategoryId = resolveCategoryId(
+        selectedCategoryId: categoryId,
+        classification: classification,
+        title: title,
+        categories: categories,
+      );
     }
+
+    final category = categories.firstWhere((c) => c.id == resolvedCategoryId);
+    final resolvedTags = mergeExpenseTags(
+      userTags: tags,
+      classifiedTags: classifiedTags,
+      categoryName: category.name,
+    );
 
     final when = (occurredAt ?? DateTime.now()).toUtc();
     final salaryDay = settings.salaryDay;
@@ -64,10 +84,10 @@ class ExpenseRepository {
       veryLargeThresholdPaise: settings.veryLargeExpenseThresholdPaise,
     );
 
-    await dao.insertExpense(
+    final id = await dao.insertExpense(
       ExpensesTableCompanion.insert(
         amountPaise: amountPaise,
-        categoryId: categoryId,
+        categoryId: resolvedCategoryId,
         title: title,
         description: Value(description),
         occurredAt: when,
@@ -78,7 +98,28 @@ class ExpenseRepository {
         autoLabels: Value(jsonEncode(labels)),
       ),
     );
+    await _ref.read(activityLogServiceProvider).log(
+          action: ActivityAction.created,
+          module: ActivityModule.expense,
+          entityId: id,
+          entityLabel: title,
+          newValue: {
+            'amountPaise': amountPaise,
+            'category': category.name,
+            'title': title,
+          },
+        );
     _ref.invalidate(spendingByTagsProvider(cycleKeyFromDate(when, salaryDay: salaryDay)));
+    unawaited(_ref.read(homeWidgetSyncServiceProvider).sync());
+
+    return ExpenseSaveResult(
+      title: title,
+      amountPaise: amountPaise,
+      categoryId: resolvedCategoryId,
+      categoryName: category.name,
+      tags: resolvedTags,
+      labels: labels,
+    );
   }
 
   Future<void> updateExpenseClassification({
@@ -93,6 +134,8 @@ class ExpenseRepository {
     final categories = await _ref.read(categoriesProvider.future);
     final category = categories.firstWhere((c) => c.id == categoryId);
 
+    final existing = await dao.getExpenseById(expenseId);
+
     await dao.updateExpense(
       id: expenseId,
       categoryId: categoryId,
@@ -100,6 +143,28 @@ class ExpenseRepository {
       tagsJson: jsonEncode(tags),
       notes: notes,
     );
+
+    if (existing != null) {
+      await _ref.read(activityLogServiceProvider).log(
+            action: ActivityAction.updated,
+            module: ActivityModule.expense,
+            entityId: expenseId,
+            entityLabel: title,
+            isUndoable: true,
+            oldValue: {
+              'categoryId': existing.expense.categoryId,
+              'title': existing.expense.title,
+              'tags': existing.expense.tags,
+              'notes': existing.expense.notes,
+            },
+            newValue: {
+              'categoryId': categoryId,
+              'title': title,
+              'tags': jsonEncode(tags),
+              'notes': notes,
+            },
+          );
+    }
 
     await _ref.read(taggingRepositoryProvider).recordCorrection(
           title: title,
@@ -109,15 +174,44 @@ class ExpenseRepository {
     _ref.invalidate(spendingByTagsProvider(monthKey));
   }
 
-  Future<void> deleteExpense(int id) async {
+  Future<int?> deleteExpense(int id) async {
     final dao = await _ref.read(expensesDaoProvider.future);
+    final existing = await dao.getExpenseByIdIncludingDeleted(id) ??
+        await dao.getExpenseById(id);
     await dao.softDeleteExpense(id);
+    unawaited(_ref.read(homeWidgetSyncServiceProvider).sync());
+
+    if (existing == null) return null;
+    return _ref.read(activityLogServiceProvider).log(
+          action: ActivityAction.deleted,
+          module: ActivityModule.expense,
+          entityId: id,
+          entityLabel: existing.expense.title,
+          isUndoable: true,
+          oldValue: {
+            'title': existing.expense.title,
+            'amountPaise': existing.expense.amountPaise,
+            'category': existing.category.name,
+          },
+          severity: ActivitySeverity.warning,
+        );
   }
 
   Future<void> restoreExpense(ExpenseWithCategory item) async {
     final dao = await _ref.read(expensesDaoProvider.future);
     await dao.restoreSoftDeletedExpense(item.expense.id);
+    await _ref.read(activityLogServiceProvider).log(
+          action: ActivityAction.restored,
+          module: ActivityModule.expense,
+          entityId: item.expense.id,
+          entityLabel: item.expense.title,
+        );
     _ref.invalidate(spendingByTagsProvider(item.expense.monthKey));
+    unawaited(_ref.read(homeWidgetSyncServiceProvider).sync());
+  }
+
+  Future<bool> undoExpenseActivity(int activityId) async {
+    return _ref.read(activityLogServiceProvider).undo(activityId);
   }
 }
 

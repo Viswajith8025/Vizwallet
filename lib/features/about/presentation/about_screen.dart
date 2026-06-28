@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rupee_track/core/branding/vis_wallet_logo.dart';
 import 'package:rupee_track/core/constants/app_constants.dart';
+import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -10,7 +11,10 @@ class AboutScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('About')),
+      appBar: AppBar(
+        title: const Text('About'),
+        actions: const [ThemeToggleButton()],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [

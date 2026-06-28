@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:rupee_track/core/branding/brand_colors.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/router/routes.dart';
+import 'package:rupee_track/core/widgets/error_state.dart';
+import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 import 'package:rupee_track/features/budget/domain/allocation_mode.dart';
 import 'package:rupee_track/features/budget_alerts/data/budget_alerts_repository.dart';
 import 'package:rupee_track/features/budget_alerts/domain/budget_alert.dart';
@@ -120,10 +122,16 @@ class BudgetAlertsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Budget alerts')),
+      appBar: AppBar(
+        title: const Text('Budget alerts'),
+        actions: const [ThemeToggleButton()],
+      ),
       body: alertsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => ErrorState(
+          message: 'We couldn\'t load your budget alerts.',
+          onRetry: () => ref.invalidate(budgetAlertsProvider(cycleKey)),
+        ),
         data: (snapshot) {
           if (!snapshot.hasAlerts) {
             return Center(

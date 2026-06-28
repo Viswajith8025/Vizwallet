@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <application android:label="Vizwallet"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
@@ -25,7 +27,65 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.LAUNCH"/>
+            </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".widget.VisWalletCompactWidgetProvider"
+            android:exported="true"
+            android:label="Vizwallet · Money left">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_compact_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.VisWalletStandardWidgetProvider"
+            android:exported="true"
+            android:label="Vizwallet · Daily spend">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_standard_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.VisWalletWideWidgetProvider"
+            android:exported="true"
+            android:label="Vizwallet · Budget &amp; bills">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_wide_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.VisWalletFullWidgetProvider"
+            android:exported="true"
+            android:label="Vizwallet · Dashboard">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_full_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.WidgetMidnightReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".widget.WidgetBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
