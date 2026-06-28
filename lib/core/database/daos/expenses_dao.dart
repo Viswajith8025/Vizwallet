@@ -1,0 +1,324 @@
+import 'package:drift/drift.dart';
+import 'package:rupee_track/core/database/app_database.dart';
+import 'package:rupee_track/core/database/tables.dart';
+import 'package:rupee_track/core/utils/date_utils.dart';
+
+part 'expenses_dao.g.dart';
+
+@DriftAccessor(tables: [ExpensesTable, CategoriesTable])
+class ExpensesDao extends DatabaseAccessor<AppDatabase> with _$ExpensesDaoMixin {
+  ExpensesDao(super.db);
+
+  Stream<List<ExpenseWithCategory>> watchExpensesForMonth(String monthKey) {
+    final query = select(expensesTable).join([
+      innerJoin(
+        categoriesTable,
+        categoriesTable.id.equalsExp(expensesTable.categoryId),
+      ),
+    ])
+      ..where(expensesTable.monthKey.equals(monthKey))
+      ..where(expensesTable.isDeleted.equals(false))
+      ..orderBy([
+        OrderingTerm.desc(expensesTable.occurredAt),
+      ]);
+
+    return query.watch().map(
+          (rows) => rows
+              .map(
+                (row) => ExpenseWithCategory(
+                  expense: row.readTable(expensesTable),
+                  category: row.readTable(categoriesTable),
+                ),
+              )
+              .toList(),
+        );
+  }
+
+  Future<int> sumSpentForMonth(String monthKey) async {
+    final query = selectOnly(expensesTable)
+      ..addColumns([expensesTable.amountPaise.sum()])
+      ..join([
+        innerJoin(
+          categoriesTable,
+          categoriesTable.id.equalsExp(expensesTable.categoryId),
+        ),
+      ])
+      ..where(expensesTable.monthKey.equals(monthKey))
+      ..where(expensesTable.isDeleted.equals(false))
+      ..where(categoriesTable.countsTowardSpending.equals(true));
+
+    final row = await query.getSingleOrNull();
+    return row?.read(expensesTable.amountPaise.sum()) ?? 0;
+  }
+
+  /// Sum of spending-category expenses today (IST) within [cycleKey].
+  Future<int> sumSpentTodayInCycle(String cycleKey, {DateTime? now}) async {
+    final ist = toIst(now ?? DateTime.now());
+    final dayStartUtc =
+        DateTime.utc(ist.year, ist.month, ist.day).subtract(istOffset);
+    final dayEndUtc = dayStartUtc.add(const Duration(days: 1));
+
+    final sum = expensesTable.amountPaise.sum();
+    final query = selectOnly(expensesTable)
+      ..addColumns([sum])
+      ..join([
+        innerJoin(
+          categoriesTable,
+          categoriesTable.id.equalsExp(expensesTable.categoryId),
+        ),
+      ])
+      ..where(expensesTable.monthKey.equals(cycleKey))
+      ..where(expensesTable.isDeleted.equals(false))
+      ..where(categoriesTable.countsTowardSpending.equals(true))
+      ..where(expensesTable.occurredAt.isBiggerOrEqualValue(dayStartUtc))
+      ..where(expensesTable.occurredAt.isSmallerThanValue(dayEndUtc));
+
+    final row = await query.getSingleOrNull();
+    return row?.read(sum) ?? 0;
+  }
+
+  Future<List<CategorySpendRow>> categoryBreakdown(String monthKey) async {
+    final amountSum = expensesTable.amountPaise.sum();
+    final query = selectOnly(expensesTable)
+      ..addColumns([
+        categoriesTable.id,
+        categoriesTable.name,
+        categoriesTable.colorValue,
+        amountSum,
+      ])
+      ..join([
+        innerJoin(
+          categoriesTable,
+          categoriesTable.id.equalsExp(expensesTable.categoryId),
+        ),
+      ])
+      ..where(expensesTable.monthKey.equals(monthKey))
+      ..where(expensesTable.isDeleted.equals(false))
+      ..where(categoriesTable.countsTowardSpending.equals(true))
+      ..groupBy([
+        categoriesTable.id,
+        categoriesTable.name,
+        categoriesTable.colorValue,
+      ])
+      ..orderBy([OrderingTerm.desc(amountSum)]);
+
+    final rows = await query.get();
+    return rows
+        .map(
+          (row) => CategorySpendRow(
+            categoryId: row.read(categoriesTable.id)!,
+            categoryName: row.read(categoriesTable.name)!,
+            colorValue: row.read(categoriesTable.colorValue)!,
+            totalPaise: row.read(amountSum) ?? 0,
+          ),
+        )
+        .toList();
+  }
+
+  Future<int> insertExpense(ExpensesTableCompanion expense) {
+    return into(expensesTable).insert(expense);
+  }
+
+  Future<int> sumForCategory(String monthKey, int categoryId) async {
+    final sum = expensesTable.amountPaise.sum();
+    final query = selectOnly(expensesTable)
+      ..addColumns([sum])
+      ..where(expensesTable.monthKey.equals(monthKey))
+      ..where(expensesTable.categoryId.equals(categoryId))
+      ..where(expensesTable.isDeleted.equals(false));
+
+    final row = await query.getSingleOrNull();
+    return row?.read(sum) ?? 0;
+  }
+
+  Future<Map<int, int>> sumByCategoryForMonth(String monthKey) async {
+    final amountSum = expensesTable.amountPaise.sum();
+    final query = selectOnly(expensesTable)
+      ..addColumns([expensesTable.categoryId, amountSum])
+      ..where(expensesTable.monthKey.equals(monthKey))
+      ..where(expensesTable.isDeleted.equals(false))
+      ..groupBy([expensesTable.categoryId]);
+
+    final rows = await query.get();
+    return {
+      for (final row in rows)
+        if (row.read(expensesTable.categoryId) != null)
+          row.read(expensesTable.categoryId)!: row.read(amountSum) ?? 0,
+    };
+  }
+
+  /// Average monthly spend per category slug over the given month keys.
+  Future<Map<String, int>> averageSpendByCategorySlug(
+    List<String> monthKeys,
+  ) async {
+    if (monthKeys.isEmpty) return {};
+
+    final totals = <String, int>{};
+
+    for (final monthKey in monthKeys) {
+      final breakdown = await categoryBreakdown(monthKey);
+      for (final row in breakdown) {
+        final slug = await _slugForCategoryId(row.categoryId);
+        if (slug == null) continue;
+        totals[slug] = (totals[slug] ?? 0) + row.totalPaise;
+      }
+    }
+
+    final divisor = monthKeys.length;
+    return totals.map(
+      (slug, total) => MapEntry(slug, (total / divisor).round()),
+    );
+  }
+
+  Future<String?> _slugForCategoryId(int categoryId) async {
+    final row = await (select(categoriesTable)
+          ..where((t) => t.id.equals(categoryId)))
+        .getSingleOrNull();
+    return row?.slug;
+  }
+
+  Future<bool> softDeleteExpense(int id) {
+    return (update(expensesTable)..where((t) => t.id.equals(id))).write(
+      ExpensesTableCompanion(
+        isDeleted: const Value(true),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    ).then((count) => count > 0);
+  }
+
+  Future<bool> restoreSoftDeletedExpense(int id) {
+    return (update(expensesTable)..where((t) => t.id.equals(id))).write(
+      ExpensesTableCompanion(
+        isDeleted: const Value(false),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    ).then((count) => count > 0);
+  }
+
+  Future<ExpenseWithCategory?> getExpenseById(int id) async {
+    final query = select(expensesTable).join([
+      innerJoin(
+        categoriesTable,
+        categoriesTable.id.equalsExp(expensesTable.categoryId),
+      ),
+    ])
+      ..where(expensesTable.id.equals(id))
+      ..where(expensesTable.isDeleted.equals(false));
+
+    final row = await query.getSingleOrNull();
+    if (row == null) return null;
+    return ExpenseWithCategory(
+      expense: row.readTable(expensesTable),
+      category: row.readTable(categoriesTable),
+    );
+  }
+
+  Future<bool> updateExpense({
+    required int id,
+    required int categoryId,
+    required String title,
+    required String tagsJson,
+    String? notes,
+  }) {
+    return (update(expensesTable)..where((t) => t.id.equals(id)))
+        .write(
+      ExpensesTableCompanion(
+        categoryId: Value(categoryId),
+        title: Value(title),
+        tags: Value(tagsJson),
+        notes: Value(notes),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    )
+        .then((count) => count > 0);
+  }
+
+  /// Fires whenever spending data may have changed (for live analytics).
+  Stream<void> watchSpendingChanges() {
+    return (select(expensesTable)
+          ..where((t) => t.isDeleted.equals(false)))
+        .watch()
+        .map((_) {});
+  }
+
+  Future<List<ExpenseWithCategory>> listSpendingBetween({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final query = select(expensesTable).join([
+      innerJoin(
+        categoriesTable,
+        categoriesTable.id.equalsExp(expensesTable.categoryId),
+      ),
+    ])
+      ..where(expensesTable.isDeleted.equals(false))
+      ..where(categoriesTable.countsTowardSpending.equals(true))
+      ..where(expensesTable.occurredAt.isBiggerOrEqualValue(startUtc))
+      ..where(expensesTable.occurredAt.isSmallerThanValue(endUtc))
+      ..orderBy([OrderingTerm.desc(expensesTable.occurredAt)]);
+
+    final rows = await query.get();
+    return rows
+        .map(
+          (row) => ExpenseWithCategory(
+            expense: row.readTable(expensesTable),
+            category: row.readTable(categoriesTable),
+          ),
+        )
+        .toList();
+  }
+
+  Future<int> sumSpentBetween({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async {
+    final list = await listSpendingBetween(startUtc: startUtc, endUtc: endUtc);
+    return list.fold<int>(0, (sum, e) => sum + e.expense.amountPaise);
+  }
+
+  Future<List<ExpenseWithCategory>> getRecentExpenses({int limit = 25}) async {
+    final query = select(expensesTable).join([
+      innerJoin(
+        categoriesTable,
+        categoriesTable.id.equalsExp(expensesTable.categoryId),
+      ),
+    ])
+      ..where(expensesTable.isDeleted.equals(false))
+      ..orderBy([OrderingTerm.desc(expensesTable.occurredAt)])
+      ..limit(limit);
+
+    final rows = await query.get();
+    return rows
+        .map(
+          (row) => ExpenseWithCategory(
+            expense: row.readTable(expensesTable),
+            category: row.readTable(categoriesTable),
+          ),
+        )
+        .toList();
+  }
+}
+
+class ExpenseWithCategory {
+  const ExpenseWithCategory({
+    required this.expense,
+    required this.category,
+  });
+
+  final ExpensesTableData expense;
+  final CategoriesTableData category;
+}
+
+class CategorySpendRow {
+  const CategorySpendRow({
+    required this.categoryId,
+    required this.categoryName,
+    required this.colorValue,
+    required this.totalPaise,
+  });
+
+  final int categoryId;
+  final String categoryName;
+  final int colorValue;
+  final int totalPaise;
+}

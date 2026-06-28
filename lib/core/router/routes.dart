@@ -1,0 +1,21 @@
+abstract final class AppRoutes {
+  static const onboarding = '/onboarding';
+  static const home = '/';
+  static const expenses = '/expenses';
+  static const expenseAdd = '/expenses/add';
+  static const insights = '/insights';
+  static const more = '/more';
+  static const salary = '/salary';
+  static const subscriptions = '/subscriptions';
+  static const loans = '/loans';
+  static const settings = '/settings';
+  static const search = '/search';
+  static const calendar = '/calendar';
+  static const budget = '/budget';
+  static const budgetSetup = '/budget/setup';
+  static const budgetAlerts = '/budget/alerts';
+  static const financialHealth = '/health';
+  static const monthlyReport = '/report';
+  static const about = '/about';
+  static const auth = '/auth';
+}
