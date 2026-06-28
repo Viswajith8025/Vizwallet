@@ -29,6 +29,7 @@ android/key.properties
 .env
 .env.local
 supabase/.env.local
+lib/core/config/groq_local.dart
 *.keystore
 
 # OS

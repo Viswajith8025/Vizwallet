@@ -5,11 +5,11 @@ class AppSettingsTable extends Table {
   TextColumn get currencyCode => text().withDefault(const Constant('INR'))();
   TextColumn get themeMode => text().withDefault(const Constant('system'))();
   IntColumn get majorExpenseThresholdPaise =>
-      integer().withDefault(const Constant(10000))();
-  IntColumn get largeExpenseThresholdPaise =>
       integer().withDefault(const Constant(50000))();
+  IntColumn get largeExpenseThresholdPaise =>
+      integer().withDefault(const Constant(200000))();
   IntColumn get veryLargeExpenseThresholdPaise =>
-      integer().withDefault(const Constant(100000))();
+      integer().withDefault(const Constant(1000000))();
   IntColumn get majorPurchaseThresholdPaise =>
       integer().withDefault(const Constant(500000))();
   IntColumn get salaryDay => integer().withDefault(const Constant(1))();

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
+import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/router/routes.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -16,9 +17,10 @@ class MoreScreen extends StatelessWidget {
         subtitle: 'Reports, help, and settings',
       ),
       body: ListView(
-        padding: const EdgeInsets.only(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(
           top: AppSpacing.sm,
-          bottom: AppSpacing.lg,
+          bottom: ShellBottomInset.scrollBottom(context),
         ),
         children: [
           PremiumMenuTile(

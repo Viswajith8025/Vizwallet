@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
+import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/universal_search/data/universal_search_repository.dart';
 import 'package:rupee_track/features/universal_search/domain/universal_search_models.dart';
 import 'package:rupee_track/features/universal_search/presentation/widgets/search_result_tile.dart';
@@ -150,10 +151,10 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
                       child: SkeletonCard(height: 56),
                     ),
                   ),
-                  error: (e, _) => Center(
-                    child: Text(
-                      'Search failed. Try again.',
-                      style: theme.textTheme.bodyMedium,
+                  error: (e, _) => ErrorState(
+                    message: 'We couldn\'t run that search.',
+                    onRetry: () => ref.invalidate(
+                      universalSearchReportProvider(_debouncedQuery),
                     ),
                   ),
                   data: (report) {
@@ -177,9 +178,32 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
 
                     if (report.groups.isEmpty) {
                       return Center(
-                        child: Text(
-                          'No results for "${report.query}"',
-                          style: theme.textTheme.bodyLarge,
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off_rounded,
+                                size: 48,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Text(
+                                'No results for "${report.query}"',
+                                style: theme.textTheme.titleMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                'Try another keyword or clear filters.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     }

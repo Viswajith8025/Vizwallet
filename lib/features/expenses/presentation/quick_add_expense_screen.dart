@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:rupee_track/core/constants/category_defaults.dart';
+import 'package:rupee_track/core/database/app_database.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
@@ -19,7 +20,7 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final amountController = useTextEditingController();
-    final titleController = useTextEditingController();
+    final labelController = useTextEditingController();
     final selectedCategoryId = useState<int?>(null);
     final paymentMethod = useState(paymentMethods.first);
     final isSaving = useState(false);
@@ -27,10 +28,10 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
     final selectedTags = useState<Set<String>>({});
 
     final categoriesAsync = ref.watch(categoriesProvider);
-    useListenable(titleController);
-    final title = titleController.text.trim();
-    final classificationAsync = title.isNotEmpty
-        ? ref.watch(transactionClassificationProvider(title))
+    useListenable(labelController);
+    final label = labelController.text.trim();
+    final classificationAsync = label.isNotEmpty
+        ? ref.watch(transactionClassificationProvider(label))
         : null;
 
     useEffect(() {
@@ -42,7 +43,7 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
         selectedCategoryId.value = c!.categoryId;
       }
       return null;
-    }, [classificationAsync?.valueOrNull?.categoryId, title]);
+    }, [classificationAsync?.valueOrNull?.categoryId, label]);
 
     return Scaffold(
       appBar: AppBar(
@@ -82,19 +83,8 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: titleController,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  hintText: 'Spotify, Lunch, Petrol...',
-                ),
-              ),
-              const SizedBox(height: 8),
-              ClassificationSuggestionBanner(title: title),
-              const SizedBox(height: 16),
               Text(
-                'Category',
+                '1 · Category',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const SizedBox(height: 8),
@@ -111,6 +101,24 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
                   );
                 }).toList(),
               ),
+              const SizedBox(height: 16),
+              Text(
+                '2 · Label (optional)',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: labelController,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  hintText: _labelHint(categories, selectedCategoryId.value),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              if (label.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ClassificationSuggestionBanner(title: label),
+              ],
               const SizedBox(height: 16),
               Text('Tags', style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 8),
@@ -162,15 +170,16 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
                     ? null
                     : () async {
                         final amount = rupeesToPaise(amountController.text);
-                        final title = titleController.text.trim();
                         final categoryId = selectedCategoryId.value;
+                        final category = categories.firstWhere(
+                          (c) => c.id == categoryId,
+                        );
+                        final expenseTitle = label.isNotEmpty
+                            ? label
+                            : category.name;
 
                         if (amount <= 0) {
                           _showError(context, 'Enter a valid amount');
-                          return;
-                        }
-                        if (title.isEmpty) {
-                          _showError(context, 'Enter a title');
                           return;
                         }
                         if (categoryId == null) {
@@ -184,7 +193,7 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
                               await ref.read(expenseRepositoryProvider).addExpense(
                                     amountPaise: amount,
                                     categoryId: categoryId,
-                                    title: title,
+                                    title: expenseTitle,
                                     paymentMethod: paymentMethod.value,
                                     tags: selectedTags.value.toList(),
                                   );
@@ -225,5 +234,15 @@ class QuickAddExpenseScreen extends HookConsumerWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  String _labelHint(List<CategoriesTableData> categories, int? categoryId) {
+    if (categoryId == null) return 'e.g. Netflix, Swiggy (optional)';
+    final category = categories.firstWhere((c) => c.id == categoryId);
+    final name = category.name.toLowerCase();
+    if (name.contains('subscription')) {
+      return 'Which subscription? e.g. Netflix (optional)';
+    }
+    return 'Label or shop name (optional)';
   }
 }

@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/constants/app_constants.dart';
 import 'package:rupee_track/core/providers/settings_provider.dart';
 import 'package:rupee_track/core/router/app_router.dart';
+import 'package:rupee_track/core/design_system/app_scroll_behavior.dart';
 import 'package:rupee_track/core/theme/app_theme.dart';
+import 'package:rupee_track/features/app_lock/presentation/app_lock_gate.dart';
 import 'package:rupee_track/features/splash/presentation/splash_screen.dart';
 
 class VisWalletApp extends ConsumerStatefulWidget {
@@ -31,6 +33,7 @@ class _VisWalletAppState extends ConsumerState<VisWalletApp> {
         title: AppConstants.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark,
+        scrollBehavior: const AppScrollBehavior(),
         home: const SplashScreen(),
       );
     }
@@ -44,7 +47,10 @@ class _VisWalletAppState extends ConsumerState<VisWalletApp> {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
+      scrollBehavior: const AppScrollBehavior(),
       routerConfig: router,
+      builder: (context, child) =>
+          AppLockGate(child: child ?? const SizedBox.shrink()),
     );
   }
 }

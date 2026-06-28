@@ -1,5 +1,5 @@
 -- =============================================================================
--- Vizwallet — complete Supabase base schema (synced with app schema v9)
+-- Vizwallet — complete Supabase base schema (synced with app schema v10)
 -- =============================================================================
 -- Run once in Supabase Dashboard → SQL Editor → New query → Run
 --
@@ -35,9 +35,9 @@ alter table public.profiles
 create table if not exists public.user_settings (
   user_id uuid primary key references auth.users (id) on delete cascade,
   theme_mode text not null default 'system',
-  major_expense_threshold_paise int not null default 10000,
-  large_expense_threshold_paise int not null default 50000,
-  very_large_expense_threshold_paise int not null default 100000,
+  major_expense_threshold_paise int not null default 50000,
+  large_expense_threshold_paise int not null default 200000,
+  very_large_expense_threshold_paise int not null default 1000000,
   major_purchase_threshold_paise int not null default 500000,
   recycle_bin_retention_days int not null default 30 check (recycle_bin_retention_days >= 0),
   pin_enabled boolean not null default false,

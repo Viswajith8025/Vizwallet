@@ -5,9 +5,9 @@ class AppConstants {
   static const currencySymbol = '₹';
   static const defaultSalaryDay = 1;
 
-  static const defaultMajorExpenseThresholdRupees = 100;
-  static const defaultLargeExpenseThresholdRupees = 500;
-  static const defaultVeryLargeExpenseThresholdRupees = 1000;
+  static const defaultMajorExpenseThresholdRupees = 500;
+  static const defaultLargeExpenseThresholdRupees = 2000;
+  static const defaultVeryLargeExpenseThresholdRupees = 10000;
   static const defaultMajorPurchaseThresholdRupees = 5000;
 
   static const onboardingCompleteKey = 'onboarding_complete';

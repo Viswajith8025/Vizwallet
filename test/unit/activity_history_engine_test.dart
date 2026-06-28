@@ -4,16 +4,22 @@ import 'package:rupee_track/features/activity_history/domain/activity_models.dar
 
 void main() {
   group('ActivityHistoryEngine', () {
-    final now = DateTime.utc(2026, 6, 28, 10);
-
     test('groups entries by date with Today label', () {
+      final localToday = DateTime.now();
+      final occurred = DateTime(
+        localToday.year,
+        localToday.month,
+        localToday.day,
+        10,
+      );
+
       final groups = ActivityHistoryEngine.groupByDate([
         ActivityEntry(
           id: 1,
           action: ActivityAction.created,
           module: ActivityModule.expense,
           entityLabel: 'Coffee',
-          occurredAt: now,
+          occurredAt: occurred,
         ),
       ]);
       expect(groups.length, 1);
@@ -22,6 +28,7 @@ void main() {
     });
 
     test('filters by module and query', () {
+      final now = DateTime.now();
       final entries = [
         ActivityEntry(
           id: 1,

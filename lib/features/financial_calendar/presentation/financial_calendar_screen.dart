@@ -166,31 +166,78 @@ class _ViewModeSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<CalendarViewMode>(
-      segments: const [
-        ButtonSegment(
-          value: CalendarViewMode.month,
-          label: Text('Month'),
-          icon: Icon(Icons.calendar_month_outlined, size: 18),
+    final width = AppResponsive.screenWidth(context);
+    final iconOnly = width < AppBreakpoints.medium;
+
+    return Scrollbar(
+      thumbVisibility: true,
+      trackVisibility: true,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SegmentedButton<CalendarViewMode>(
+          showSelectedIcon: false,
+          style: SegmentedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            padding: EdgeInsets.symmetric(
+              horizontal: iconOnly ? AppSpacing.sm : AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+          ),
+          segments: [
+            ButtonSegment(
+              value: CalendarViewMode.month,
+              label: iconOnly
+                  ? null
+                  : const Text(
+                      'Month',
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
+              icon: const Icon(Icons.calendar_month_outlined, size: 18),
+              tooltip: 'Month',
+            ),
+            ButtonSegment(
+              value: CalendarViewMode.week,
+              label: iconOnly
+                  ? null
+                  : const Text(
+                      'Week',
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
+              icon: const Icon(Icons.view_week_outlined, size: 18),
+              tooltip: 'Week',
+            ),
+            ButtonSegment(
+              value: CalendarViewMode.day,
+              label: iconOnly
+                  ? null
+                  : const Text(
+                      'Day',
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
+              icon: const Icon(Icons.today_outlined, size: 18),
+              tooltip: 'Day',
+            ),
+            ButtonSegment(
+              value: CalendarViewMode.agenda,
+              label: iconOnly
+                  ? null
+                  : const Text(
+                      'Agenda',
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
+              icon: const Icon(Icons.list_alt_rounded, size: 18),
+              tooltip: 'Agenda',
+            ),
+          ],
+          selected: {mode},
+          onSelectionChanged: (value) => onChanged(value.first),
         ),
-        ButtonSegment(
-          value: CalendarViewMode.week,
-          label: Text('Week'),
-          icon: Icon(Icons.view_week_outlined, size: 18),
-        ),
-        ButtonSegment(
-          value: CalendarViewMode.day,
-          label: Text('Day'),
-          icon: Icon(Icons.today_outlined, size: 18),
-        ),
-        ButtonSegment(
-          value: CalendarViewMode.agenda,
-          label: Text('Agenda'),
-          icon: Icon(Icons.list_alt_rounded, size: 18),
-        ),
-      ],
-      selected: {mode},
-      onSelectionChanged: (value) => onChanged(value.first),
+      ),
     );
   }
 }

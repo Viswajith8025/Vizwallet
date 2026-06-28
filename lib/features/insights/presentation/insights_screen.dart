@@ -7,7 +7,9 @@ import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_chip.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
+import 'package:rupee_track/core/design_system/app_scroll_behavior.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
+import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/router/routes.dart';
@@ -62,7 +64,10 @@ class InsightsScreen extends ConsumerWidget {
       ),
       body: trendsAsync.when(
         loading: () => ListView(
-          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.only(
+            bottom: ShellBottomInset.scrollBottom(context),
+          ),
           children: const [
             InsightsFeedSection(),
             SizedBox(height: AppSpacing.lg),
@@ -84,8 +89,12 @@ class InsightsScreen extends ConsumerWidget {
               ref.invalidate(spendingByTagsProvider(cycleKey));
             },
             child: ResponsiveBody(
+              padding: EdgeInsets.zero,
               child: ListView(
-                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.only(
+                  bottom: ShellBottomInset.scrollBottom(context),
+                ),
                 children: [
                 const InsightsFeedSection(),
                 const SizedBox(height: AppSpacing.lg),
@@ -132,22 +141,20 @@ class InsightsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: TrendsComparisonMode.values.map((m) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.xs),
-                        child: PremiumFilterChip(
-                          label: m.label,
-                          selected: m == mode,
-                          onSelected: (_) => ref
-                              .read(trendsComparisonModeProvider.notifier)
-                              .setMode(m),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                AppHorizontalScrollRow(
+                  padding: EdgeInsets.zero,
+                  children: TrendsComparisonMode.values.map((m) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: AppSpacing.xs),
+                      child: PremiumFilterChip(
+                        label: m.label,
+                        selected: m == mode,
+                        onSelected: (_) => ref
+                            .read(trendsComparisonModeProvider.notifier)
+                            .setMode(m),
+                      ),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 const FinancialHealthCard(),

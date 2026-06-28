@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/database/app_database.dart';
 import 'package:rupee_track/core/database/daos/expenses_dao.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
+import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/utils/auto_label_utils.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/features/activity_history/data/activity_log_service.dart';
 import 'package:rupee_track/features/activity_history/domain/activity_models.dart';
 import 'package:rupee_track/features/expenses/domain/expense_classification_helper.dart';
+import 'package:rupee_track/features/expenses/domain/expense_date_filter.dart';
 import 'package:rupee_track/features/expenses/domain/expense_save_result.dart';
 import 'package:rupee_track/features/home_widget/data/home_widget_sync_service.dart';
 import 'package:rupee_track/features/smart_tagging/data/tagging_repository.dart';
@@ -27,6 +29,14 @@ class ExpenseRepository {
   Stream<List<ExpenseWithCategory>> watchForMonth(String monthKey) async* {
     final dao = await _ref.read(expensesDaoProvider.future);
     yield* dao.watchExpensesForMonth(monthKey);
+  }
+
+  Stream<List<ExpenseWithCategory>> watchBetween({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) async* {
+    final dao = await _ref.read(expensesDaoProvider.future);
+    yield* dao.watchExpensesBetween(startUtc: startUtc, endUtc: endUtc);
   }
 
   Future<ExpenseSaveResult> addExpense({
@@ -219,6 +229,15 @@ final expensesForMonthProvider =
     StreamProvider.family<List<ExpenseWithCategory>, String>((ref, monthKey) {
   final repo = ref.watch(expenseRepositoryProvider);
   return repo.watchForMonth(monthKey);
+});
+
+final expensesForDateFilterProvider =
+    StreamProvider<List<ExpenseWithCategory>>((ref) {
+  final filter = ref.watch(expenseDateFilterProvider);
+  final salaryDay = ref.watch(salaryDayProvider);
+  final bounds = filter.boundsUtc(salaryDay: salaryDay);
+  final repo = ref.watch(expenseRepositoryProvider);
+  return repo.watchBetween(startUtc: bounds.$1, endUtc: bounds.$2);
 });
 
 final categoriesProvider = StreamProvider<List<CategoriesTableData>>((ref) async* {

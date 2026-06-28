@@ -10,6 +10,7 @@ import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/providers/settings_provider.dart';
 import 'package:rupee_track/features/budget_alerts/presentation/widgets/budget_alert_settings.dart';
 import 'package:rupee_track/features/settings/presentation/widgets/salary_cycle_settings.dart';
+import 'package:rupee_track/features/app_lock/presentation/widgets/app_lock_settings_card.dart';
 import 'package:rupee_track/features/auth/presentation/widgets/cloud_account_panel.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -77,6 +78,8 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: AppSpacing.lg),
+          const AppLockSettingsCard(),
           const SizedBox(height: AppSpacing.lg),
           const SalaryCycleSettings(),
           const SizedBox(height: AppSpacing.lg),

@@ -200,9 +200,8 @@ abstract final class HelpFaqData {
       icon: Icons.auto_awesome_outlined,
       question: 'Who is Jithu?',
       answer:
-          'Jithu is your in-app money helper. Ask simple questions like '
-          '"How much can I spend today?" or "Where is my money going?" '
-          'Answers are based on your own Vizwallet data — no internet AI needed.',
+          'Jithu is your AI money assistant in Vizwallet. Ask about safe daily spending, '
+          'where your money is going, or saving tips. Answers use your real Vizwallet numbers.',
     ),
     HelpFaqEntry(
       category: 'Jithu',
@@ -217,8 +216,9 @@ abstract final class HelpFaqData {
       icon: Icons.auto_awesome_outlined,
       question: 'Is Jithu connected to the internet?',
       answer:
-          'No. Jithu reads your local Vizwallet numbers and gives advice from that. '
-          'Your chats are not sent to an external AI service.',
+          'Yes, when you chat Jithu uses cloud AI (Groq) with your financial summary as context. '
+          'Your full expense list is not uploaded — only the numbers shown in Jithu\'s quick read. '
+          'If offline, Jithu falls back to simple on-device answers.',
     ),
 
     // Insights & reports

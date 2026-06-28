@@ -360,6 +360,33 @@ class ExpensesDao extends DatabaseAccessor<AppDatabase> with _$ExpensesDaoMixin 
     return list.fold<int>(0, (sum, e) => sum + e.expense.amountPaise);
   }
 
+  Stream<List<ExpenseWithCategory>> watchExpensesBetween({
+    required DateTime startUtc,
+    required DateTime endUtc,
+  }) {
+    final query = select(expensesTable).join([
+      innerJoin(
+        categoriesTable,
+        categoriesTable.id.equalsExp(expensesTable.categoryId),
+      ),
+    ])
+      ..where(expensesTable.isDeleted.equals(false))
+      ..where(expensesTable.occurredAt.isBiggerOrEqualValue(startUtc))
+      ..where(expensesTable.occurredAt.isSmallerThanValue(endUtc))
+      ..orderBy([OrderingTerm.desc(expensesTable.occurredAt)]);
+
+    return query.watch().map(
+          (rows) => rows
+              .map(
+                (row) => ExpenseWithCategory(
+                  expense: row.readTable(expensesTable),
+                  category: row.readTable(categoriesTable),
+                ),
+              )
+              .toList(),
+        );
+  }
+
   Future<List<ExpenseWithCategory>> getRecentExpenses({int limit = 25}) async {
     final query = select(expensesTable).join([
       innerJoin(

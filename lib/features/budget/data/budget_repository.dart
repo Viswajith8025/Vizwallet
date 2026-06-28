@@ -27,12 +27,14 @@ class BudgetRepository {
         yield null;
         continue;
       }
-      yield await _buildStatus(
-        db: db,
-        plan: plan,
-        monthKey: monthKey,
-        salaryDay: settings.salaryDay,
-      );
+      await for (final _ in db.expensesDao.watchExpensesForMonth(monthKey)) {
+        yield await _buildStatus(
+          db: db,
+          plan: plan,
+          monthKey: monthKey,
+          salaryDay: settings.salaryDay,
+        );
+      }
     }
   }
 

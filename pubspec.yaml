@@ -46,6 +46,10 @@ dependencies:
   share_plus: ^10.1.4
   supabase_flutter: ^2.15.0
   home_widget: ^0.7.0
+  http: ^1.4.0
+  local_auth: ^2.3.0
+  crypto: ^3.0.6
+  flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
   flutter_test:

@@ -5,10 +5,14 @@ import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
+import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/dashboard/data/dashboard_repository.dart';
 import 'package:rupee_track/features/dashboard/domain/monthly_summary.dart';
+import 'package:rupee_track/features/jithu/data/jithu_repository.dart';
+import 'package:rupee_track/features/jithu/domain/jithu_chat_message.dart';
+import 'package:rupee_track/features/jithu/domain/jithu_fallback_advisor.dart';
 import 'package:rupee_track/features/safe_spend/data/safe_spend_repository.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
 
@@ -21,39 +25,79 @@ class JithuScreen extends ConsumerStatefulWidget {
 
 class _JithuScreenState extends ConsumerState<JithuScreen> {
   final _controller = TextEditingController();
-  final _messages = <_JithuMessage>[
-    const _JithuMessage(
+  final _scrollController = ScrollController();
+  final _messages = <JithuChatMessage>[
+    const JithuChatMessage(
       fromUser: false,
       text:
           'Hi, I am Jithu. Ask me how much you can spend today, where your money is going, or how to save more.',
     ),
   ];
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _ask(String text, CycleSummary summary, SafeSpendSnapshot safeSpend) {
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  Future<void> _ask(
+    String text,
+    CycleSummary summary,
+    SafeSpendSnapshot safeSpend,
+  ) async {
     final question = text.trim();
-    if (question.isEmpty) return;
+    if (question.isEmpty || _isLoading) return;
 
     setState(() {
-      _messages
-        ..add(_JithuMessage(fromUser: true, text: question))
-        ..add(
-          _JithuMessage(
+      _messages.add(JithuChatMessage(fromUser: true, text: question));
+      _isLoading = true;
+      _controller.clear();
+    });
+    _scrollToBottom();
+
+    try {
+      final reply = await ref.read(jithuRepositoryProvider).ask(
+            question: question,
+            history: _messages,
+            summary: summary,
+            safeSpend: safeSpend,
+          );
+
+      if (!mounted) return;
+      setState(() {
+        _messages.add(JithuChatMessage(fromUser: false, text: reply));
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(
+          JithuChatMessage(
             fromUser: false,
-            text: _JithuAdvisor.reply(
+            text: JithuFallbackAdvisor.reply(
               question: question,
               summary: summary,
               safeSpend: safeSpend,
             ),
           ),
         );
-      _controller.clear();
-    });
+        _isLoading = false;
+      });
+    }
+    _scrollToBottom();
   }
 
   @override
@@ -66,7 +110,7 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
     return Scaffold(
       appBar: const PremiumAppBar(
         title: 'Jithu',
-        subtitle: 'Simple money help',
+        subtitle: 'AI money assistant',
       ),
       body: summaryAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -80,12 +124,14 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
         data: (summary) => safeSpendAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => ErrorState(
-          message: 'Jithu couldn\'t read today\'s spending limit.',
+            message: 'Jithu couldn\'t read today\'s spending limit.',
             onRetry: () => ref.invalidate(safeSpendProvider(cycleKey)),
           ),
           data: (safeSpend) => _JithuBody(
             controller: _controller,
+            scrollController: _scrollController,
             messages: _messages,
+            isLoading: _isLoading,
             summary: summary,
             safeSpend: safeSpend,
             onAsk: (text) => _ask(text, summary, safeSpend),
@@ -99,14 +145,18 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
 class _JithuBody extends StatelessWidget {
   const _JithuBody({
     required this.controller,
+    required this.scrollController,
     required this.messages,
+    required this.isLoading,
     required this.summary,
     required this.safeSpend,
     required this.onAsk,
   });
 
   final TextEditingController controller;
-  final List<_JithuMessage> messages;
+  final ScrollController scrollController;
+  final List<JithuChatMessage> messages;
+  final bool isLoading;
   final CycleSummary summary;
   final SafeSpendSnapshot safeSpend;
   final ValueChanged<String> onAsk;
@@ -114,17 +164,19 @@ class _JithuBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final suggestions = _JithuAdvisor.suggestions(summary);
+    final suggestions = JithuFallbackAdvisor.suggestions(summary);
 
     return Column(
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(
+            controller: scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.screenHorizontal,
               AppSpacing.sm,
               AppSpacing.screenHorizontal,
-              AppSpacing.lg,
+              ShellBottomInset.scrollBottom(context),
             ),
             children: [
               _JithuSummaryCard(summary: summary, safeSpend: safeSpend),
@@ -137,13 +189,14 @@ class _JithuBody extends StatelessWidget {
                       (s) => ActionChip(
                         label: Text(s),
                         avatar: const Icon(Icons.auto_awesome_rounded, size: 16),
-                        onPressed: () => onAsk(s),
+                        onPressed: isLoading ? null : () => onAsk(s),
                       ),
                     )
                     .toList(),
               ),
               const SizedBox(height: AppSpacing.lg),
               ...messages.map((m) => _MessageBubble(message: m)),
+              if (isLoading) const _TypingBubble(),
             ],
           ),
         ),
@@ -161,18 +214,19 @@ class _JithuBody extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     controller: controller,
+                    enabled: !isLoading,
                     textInputAction: TextInputAction.send,
                     minLines: 1,
                     maxLines: 3,
                     decoration: const InputDecoration(
-                    hintText: 'Ask Jithu a money question...',
+                      hintText: 'Ask Jithu a money question...',
                     ),
-                    onSubmitted: onAsk,
+                    onSubmitted: isLoading ? null : onAsk,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 FilledButton(
-                  onPressed: () => onAsk(controller.text),
+                  onPressed: isLoading ? null : () => onAsk(controller.text),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(52, 52),
                     padding: EdgeInsets.zero,
@@ -180,10 +234,19 @@ class _JithuBody extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                   ),
-                  child: Icon(
-                    Icons.send_rounded,
-                    color: theme.colorScheme.onPrimary,
-                  ),
+                  child: isLoading
+                      ? SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                        )
+                      : Icon(
+                          Icons.send_rounded,
+                          color: theme.colorScheme.onPrimary,
+                        ),
                 ),
               ],
             ),
@@ -313,7 +376,7 @@ class _MetricLine extends StatelessWidget {
 class _MessageBubble extends StatelessWidget {
   const _MessageBubble({required this.message});
 
-  final _JithuMessage message;
+  final JithuChatMessage message;
 
   @override
   Widget build(BuildContext context) {
@@ -353,87 +416,45 @@ class _MessageBubble extends StatelessWidget {
   }
 }
 
-class _JithuMessage {
-  const _JithuMessage({
-    required this.fromUser,
-    required this.text,
-  });
+class _TypingBubble extends StatelessWidget {
+  const _TypingBubble();
 
-  final bool fromUser;
-  final String text;
-}
-
-abstract final class _JithuAdvisor {
-  static List<String> suggestions(CycleSummary summary) {
-    if (!summary.salaryEntered) {
-      return const [
-        'What should I set up first?',
-        'How do budgets work?',
-        'How can I start tracking?',
-      ];
-    }
-
-    return const [
-      'How am I doing?',
-        'How much can I spend today?',
-      'Where is my money going?',
-      'Give me one saving tip',
-    ];
-  }
-
-  static String reply({
-    required String question,
-    required CycleSummary summary,
-    required SafeSpendSnapshot safeSpend,
-  }) {
-    final q = question.toLowerCase();
-
-    if (!summary.salaryEntered) {
-      return 'Start by setting your monthly salary. After that I can calculate safe daily spending, savings pace, and category advice for you.';
-    }
-
-    if (q.contains('today') ||
-        q.contains('spend') ||
-        q.contains('safe') ||
-        q.contains('can i')) {
-      final left = safeSpend.remainingSafeSpendTodayPaise;
-      if (left <= 0) {
-        return 'For today, you have already used the safe guide. Best move: avoid non-essential spending and shift purchases to tomorrow.';
-      }
-      return 'You can spend about ${formatPaise(left)} more today and stay within today\'s suggested limit. Current status: ${safeSpend.riskLevel.label}.';
-    }
-
-    if (q.contains('where') ||
-        q.contains('category') ||
-        q.contains('money going') ||
-        q.contains('top')) {
-      if (summary.categoryBreakdown.isEmpty) {
-        return 'No spending pattern yet this month. Add a few expenses and I will show your biggest category.';
-      }
-      final top = summary.categoryBreakdown.first;
-        return 'Your biggest spending area this month is ${top.categoryName} at ${formatPaise(top.totalPaise)}. If you want quick control, try reducing this by 10-15%.';
-    }
-
-    if (q.contains('save') ||
-        q.contains('saving') ||
-        q.contains('advice') ||
-        q.contains('tip')) {
-      if (summary.savingsPercent < 0) {
-        return 'You are over your available money by ${formatPaise(summary.moneyLeftPaise.abs())}. Pause optional spending first, then check your biggest spending area.';
-      }
-      if (summary.savingsPercent < 10) {
-        return 'Your savings cushion is small right now. Try this: keep one day\'s spending limit untouched for the next 3 days.';
-      }
-      return 'You have a decent cushion. To improve it, save ${formatPaise((summary.safeDailyLimitPaise * 0.2).round())} from your daily limit each day.';
-    }
-
-    if (q.contains('how') ||
-        q.contains('doing') ||
-        q.contains('update') ||
-        q.contains('summary')) {
-      return 'This month you spent ${formatPaise(summary.spentPaise)} and have ${formatPaise(summary.moneyLeftPaise)} left. Your suggested daily limit is ${formatPaise(summary.safeDailyLimitPaise)} for the remaining ${summary.daysLeftInCycle} day(s).';
-    }
-
-    return 'Here is my quick view: money left is ${formatPaise(summary.moneyLeftPaise)}, today\'s remaining limit is ${formatPaise(safeSpend.remainingSafeSpendTodayPaise)}, and your current status is ${safeSpend.riskLevel.label}.';
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Jithu is thinking...',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

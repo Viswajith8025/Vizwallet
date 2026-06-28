@@ -7,6 +7,14 @@ DateTime toIst(DateTime utc) => utc.toUtc().add(istOffset);
 
 DateTime nowIst() => toIst(DateTime.now());
 
+/// UTC bounds [start, end) for one IST calendar day.
+(DateTime startUtc, DateTime endUtc) istDayBoundsUtc(DateTime day) {
+  final ist = toIst(day);
+  final startUtc =
+      DateTime.utc(ist.year, ist.month, ist.day).subtract(istOffset);
+  return (startUtc, startUtc.add(const Duration(days: 1)));
+}
+
 // ---------------------------------------------------------------------------
 // Salary-cycle keys (stored in `monthKey` columns for backward compatibility)
 // ---------------------------------------------------------------------------

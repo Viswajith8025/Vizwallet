@@ -96,6 +96,8 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Widget _buildShellBody(BuildContext context, Size size, {required bool hasBottomNav}) {
+    final location = GoRouterState.of(context).uri.toString();
+    final showFab = !location.startsWith(AppRoutes.jithu);
     final bottomInset = ShellBottomInset.of(context, hasBottomNav: hasBottomNav);
     final offset = _clampFabOffset(
       context,
@@ -114,26 +116,30 @@ class _MainShellState extends ConsumerState<MainShell> {
           left: offset.dx,
           top: offset.dy,
           child: GestureDetector(
-            onPanUpdate: (details) {
-              setState(() {
-                _fabOffset = _clampFabOffset(
-                  context,
-                  offset + details.delta,
-                  size,
-                  hasBottomNav: hasBottomNav,
-                );
-              });
-            },
-            onPanEnd: (_) {
-              final saved = _clampFabOffset(
-                context,
-                _fabOffset ?? offset,
-                size,
-                hasBottomNav: hasBottomNav,
-              );
-              _saveFabOffset(saved);
-            },
-            child: const QuickAddFab(),
+            onPanUpdate: showFab
+                ? (details) {
+                    setState(() {
+                      _fabOffset = _clampFabOffset(
+                        context,
+                        offset + details.delta,
+                        size,
+                        hasBottomNav: hasBottomNav,
+                      );
+                    });
+                  }
+                : null,
+            onPanEnd: showFab
+                ? (_) {
+                    final saved = _clampFabOffset(
+                      context,
+                      _fabOffset ?? offset,
+                      size,
+                      hasBottomNav: hasBottomNav,
+                    );
+                    _saveFabOffset(saved);
+                  }
+                : null,
+            child: showFab ? const QuickAddFab() : const SizedBox.shrink(),
           ),
         ),
       ],

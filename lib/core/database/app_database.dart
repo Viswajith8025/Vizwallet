@@ -60,7 +60,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -122,6 +122,9 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(loansTable, loansTable.deletedAt);
             await m.addColumn(categoriesTable, categoriesTable.deletedAt);
             await _createActivityIndexes();
+          }
+          if (from < 10) {
+            await _migrateExpenseAmountThresholds();
           }
         },
         beforeOpen: (details) async {
@@ -240,6 +243,21 @@ class AppDatabase extends _$AppDatabase {
         );
       }
     }
+  }
+
+  Future<void> _migrateExpenseAmountThresholds() async {
+    await customStatement(
+      'UPDATE app_settings SET major_expense_threshold_paise = 50000 '
+      'WHERE major_expense_threshold_paise = 10000',
+    );
+    await customStatement(
+      'UPDATE app_settings SET large_expense_threshold_paise = 200000 '
+      'WHERE large_expense_threshold_paise = 50000',
+    );
+    await customStatement(
+      'UPDATE app_settings SET very_large_expense_threshold_paise = 1000000 '
+      'WHERE very_large_expense_threshold_paise = 100000',
+    );
   }
 
   Future<void> _seedDefaults() async {

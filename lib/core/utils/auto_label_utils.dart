@@ -6,11 +6,11 @@ List<String> computeAutoLabels({
 }) {
   final labels = <String>[];
 
-  if (amountPaise > veryLargeThresholdPaise) {
+  if (amountPaise >= veryLargeThresholdPaise) {
     labels.add('Very Large Expense');
-  } else if (amountPaise > largeThresholdPaise) {
+  } else if (amountPaise >= largeThresholdPaise) {
     labels.add('Large Expense');
-  } else if (amountPaise > majorThresholdPaise) {
+  } else if (amountPaise >= majorThresholdPaise) {
     labels.add('Major Expense');
   }
 

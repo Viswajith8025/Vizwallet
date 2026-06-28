@@ -34,22 +34,32 @@ void main() {
   });
 
   group('auto_label_utils', () {
-    test('assigns major expense above threshold', () {
+    test('assigns major expense at 500 rupees', () {
       final labels = computeAutoLabels(
-        amountPaise: 15000,
-        majorThresholdPaise: 10000,
-        largeThresholdPaise: 50000,
-        veryLargeThresholdPaise: 100000,
+        amountPaise: 50000,
+        majorThresholdPaise: 50000,
+        largeThresholdPaise: 200000,
+        veryLargeThresholdPaise: 1000000,
       );
       expect(labels, contains('Major Expense'));
     });
 
+    test('does not mark 200 rupees as major when threshold is 500', () {
+      final labels = computeAutoLabels(
+        amountPaise: 20000,
+        majorThresholdPaise: 50000,
+        largeThresholdPaise: 200000,
+        veryLargeThresholdPaise: 1000000,
+      );
+      expect(labels, isEmpty);
+    });
+
     test('assigns very large expense', () {
       final labels = computeAutoLabels(
-        amountPaise: 150000,
-        majorThresholdPaise: 10000,
-        largeThresholdPaise: 50000,
-        veryLargeThresholdPaise: 100000,
+        amountPaise: 1500000,
+        majorThresholdPaise: 50000,
+        largeThresholdPaise: 200000,
+        veryLargeThresholdPaise: 1000000,
       );
       expect(labels, contains('Very Large Expense'));
     });

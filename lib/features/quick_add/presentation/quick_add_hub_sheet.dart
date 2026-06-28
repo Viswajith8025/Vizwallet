@@ -16,7 +16,6 @@ import 'package:rupee_track/features/smart_tagging/data/tagging_repository.dart'
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
-import 'package:rupee_track/features/smart_tagging/presentation/widgets/smart_tagging_widgets.dart';
 
 Future<void> showQuickAddSheet(BuildContext context, WidgetRef ref) {
   return showPremiumBottomSheet<void>(
@@ -34,10 +33,17 @@ class QuickAddHubSheet extends ConsumerStatefulWidget {
 
 class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
   String _amountDigits = '';
-  String? _merchant;
+  int? _selectedCategoryId;
+  final _labelController = TextEditingController();
   String? _note;
   bool _showCalculator = false;
   bool _saving = false;
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    super.dispose();
+  }
 
   int get _amountPaise {
     if (_amountDigits.isEmpty) return 0;
@@ -73,15 +79,16 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
     );
   }
 
-  Future<void> _saveExpense(CategoriesTableData category) async {
+  Future<void> _saveSelectedExpense(CategoriesTableData category) async {
     if (_amountPaise <= 0 || _saving) return;
     setState(() => _saving = true);
     HapticFeedback.mediumImpact();
 
     final repo = ref.read(quickAddRepositoryProvider);
+    final label = _labelController.text.trim();
     final title = repo.titleForCategory(
       category.name,
-      merchant: _merchant,
+      merchant: label.isEmpty ? null : label,
     );
 
     try {
@@ -107,34 +114,31 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
     }
   }
 
-  Future<void> _saveFromSuggestion() async {
-    final merchant = _merchant?.trim();
-    if (merchant == null || merchant.isEmpty || _amountPaise <= 0 || _saving) {
-      return;
-    }
-    setState(() => _saving = true);
-    HapticFeedback.mediumImpact();
+  void _selectCategory(int categoryId) {
+    HapticFeedback.selectionClick();
+    setState(() => _selectedCategoryId = categoryId);
+  }
 
-    try {
-      final result = await ref.read(quickAddRepositoryProvider).quickSaveWithSuggestedCategory(
-            amountPaise: _amountPaise,
-            title: merchant,
-            notes: _note,
-          );
-      ref.invalidate(quickAddContextProvider);
-      if (!mounted) return;
-      Navigator.pop(context);
-      _showSavedSnackBar(context, result);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not save this expense. Please try again.'),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _saving = false);
+  CategoriesTableData? _selectedCategory(List<CategoriesTableData> categories) {
+    if (_selectedCategoryId == null) return null;
+    for (final c in categories) {
+      if (c.id == _selectedCategoryId) return c;
     }
+    return null;
+  }
+
+  String _labelHintFor(CategoriesTableData category) {
+    final name = category.name.toLowerCase();
+    if (name.contains('subscription')) {
+      return 'Which subscription? e.g. Netflix (optional)';
+    }
+    if (name.contains('food') || name.contains('dining')) {
+      return 'Where? e.g. Swiggy, restaurant (optional)';
+    }
+    if (name.contains('transport')) {
+      return 'e.g. Uber, petrol pump (optional)';
+    }
+    return 'Label or shop name (optional)';
   }
 
   Future<void> _repeat(RepeatExpenseTemplate template) async {
@@ -253,7 +257,9 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                 const SizedBox(height: 4),
                 _AmountHeader(
                   amountDigits: _amountDigits,
-                  merchant: _merchant,
+                  labelPreview: _labelController.text.trim().isEmpty
+                      ? null
+                      : _labelController.text.trim(),
                   onToggleCalculator: () =>
                       setState(() => _showCalculator = !_showCalculator),
                   showCalculator: _showCalculator,
@@ -334,19 +340,18 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const _SectionLabel('Recent shops or people'),
+                        const _SectionLabel('Recent labels'),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: ctx.recentMerchants.map((m) {
-                            final selected = _merchant == m;
-                            return FilterChip(
+                            return ActionChip(
                               label: Text(m),
-                              selected: selected,
-                              onSelected: (_) => setState(
-                                () => _merchant = selected ? null : m,
-                              ),
+                              onPressed: () {
+                                _labelController.text = m;
+                                setState(() {});
+                              },
                             );
                           }).toList(),
                         ),
@@ -355,14 +360,6 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                     );
                   },
                 ),
-                if (_merchant != null && _merchant!.trim().isNotEmpty) ...[
-                  ClassificationSuggestionBanner(
-                    title: _merchant!,
-                    canSave: _amountPaise > 0 && !_saving,
-                    onSave: _saveFromSuggestion,
-                  ),
-                  const SizedBox(height: 12),
-                ],
                 categoriesAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Text(
@@ -373,7 +370,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                   ),
                   data: (categories) {
                     final ctx = contextAsync.valueOrNull;
-                    final classifyTitle = _merchant?.trim() ?? '';
+                    final classifyTitle = _labelController.text.trim();
                     final classificationAsync = classifyTitle.isNotEmpty
                         ? ref.watch(
                             transactionClassificationProvider(classifyTitle),
@@ -391,11 +388,12 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                         : categories;
 
                     final favorites = ctx?.favoriteCategoryIds.toSet() ?? {};
+                    final selected = _selectedCategory(categories);
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const _SectionLabel('What was this expense for?'),
+                        const _SectionLabel('1 · Choose category'),
                         const SizedBox(height: AppSpacing.xs),
                         LayoutBuilder(
                           builder: (context, constraints) {
@@ -409,7 +407,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                               children: ordered.map((cat) {
                                 final isFavorite = favorites.contains(cat.id);
                                 final isSuggested = suggestedId == cat.id;
-                                final canSave = _amountPaise > 0 && !_saving;
+                                final isSelected = _selectedCategoryId == cat.id;
                                 return SizedBox(
                                   width: tileExtent,
                                   height: tileExtent * 0.92,
@@ -417,9 +415,10 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                                     category: cat,
                                     isFavorite: isFavorite,
                                     isSuggested: isSuggested,
-                                    enabled: canSave || _amountPaise > 0,
-                                    onTap: canSave
-                                        ? () => _saveExpense(cat)
+                                    isSelected: isSelected,
+                                    enabled: _amountPaise > 0,
+                                    onTap: _amountPaise > 0
+                                        ? () => _selectCategory(cat.id)
                                         : () {
                                             HapticFeedback.lightImpact();
                                             ScaffoldMessenger.of(context)
@@ -456,6 +455,42 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                             );
                           },
                         ),
+                        if (selected != null) ...[
+                          const SizedBox(height: AppSpacing.lg),
+                          const _SectionLabel('2 · Add a label (optional)'),
+                          const SizedBox(height: AppSpacing.sm),
+                          TextField(
+                            controller: _labelController,
+                            textCapitalization: TextCapitalization.sentences,
+                            decoration: InputDecoration(
+                              labelText: 'Label',
+                              hintText: _labelHintFor(selected),
+                              border: const OutlineInputBorder(),
+                            ),
+                            onChanged: (_) => setState(() {}),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: _amountPaise > 0 && !_saving
+                                  ? () => _saveSelectedExpense(selected)
+                                  : null,
+                              child: _saving
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Save · ${selected.name}'
+                                      '${_labelController.text.trim().isEmpty ? '' : ' · ${_labelController.text.trim()}'}',
+                                    ),
+                            ),
+                          ),
+                        ],
                       ],
                     );
                   },
@@ -498,7 +533,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                             _amountDigits = '${(amountPaise / 100).round()}';
                           }
                           if (merchant != null && merchant.isNotEmpty) {
-                            _merchant = merchant;
+                            _labelController.text = merchant;
                           }
                         });
                       },
@@ -524,13 +559,13 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
 class _AmountHeader extends StatelessWidget {
   const _AmountHeader({
     required this.amountDigits,
-    required this.merchant,
+    required this.labelPreview,
     required this.onToggleCalculator,
     required this.showCalculator,
   });
 
   final String amountDigits;
-  final String? merchant;
+  final String? labelPreview;
   final VoidCallback onToggleCalculator;
   final bool showCalculator;
 
@@ -557,9 +592,9 @@ class _AmountHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              if (merchant != null)
+              if (labelPreview != null)
                 Text(
-                  merchant!,
+                  labelPreview!,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.primary,
                   ),
@@ -618,6 +653,7 @@ class _CategoryTile extends StatelessWidget {
     required this.category,
     required this.isFavorite,
     required this.isSuggested,
+    required this.isSelected,
     required this.enabled,
     required this.onTap,
     required this.onLongPress,
@@ -626,6 +662,7 @@ class _CategoryTile extends StatelessWidget {
   final CategoriesTableData category;
   final bool isFavorite;
   final bool isSuggested;
+  final bool isSelected;
   final bool enabled;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
@@ -634,7 +671,9 @@ class _CategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Color(category.colorValue);
     return Material(
-      color: color.withValues(alpha: enabled ? 0.14 : 0.06),
+      color: isSelected
+          ? color.withValues(alpha: 0.28)
+          : color.withValues(alpha: enabled ? 0.14 : 0.06),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -666,6 +705,16 @@ class _CategoryTile extends StatelessWidget {
                   ],
                 ),
               ),
+              if (isSelected)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               if (isFavorite)
                 const Positioned(
                   top: 6,

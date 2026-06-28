@@ -200,7 +200,7 @@ class PremiumExpenseTile extends StatelessWidget {
     required this.amountPaise,
     required this.categoryName,
     required this.categoryColor,
-    required this.meta,
+    required this.subtitle,
     super.key,
     this.tags = const [],
     this.onTap,
@@ -210,7 +210,7 @@ class PremiumExpenseTile extends StatelessWidget {
   final int amountPaise;
   final String categoryName;
   final int categoryColor;
-  final String meta;
+  final String subtitle;
   final List<String> tags;
   final VoidCallback? onTap;
 
@@ -247,7 +247,7 @@ class PremiumExpenseTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$categoryName · $meta',
+                  subtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

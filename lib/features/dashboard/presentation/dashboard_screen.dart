@@ -16,6 +16,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final editMode = ref.watch(dashboardEditModeProvider);
     final theme = Theme.of(context);
+    final compact = AppResponsive.isCompact(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -24,34 +25,86 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             const VisWalletLogo(size: 28),
             const SizedBox(width: 10),
-            Text(AppConstants.appName, style: theme.textTheme.titleLarge),
+            Flexible(
+              child: Text(
+                AppConstants.appName,
+                style: theme.textTheme.titleLarge,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: editMode ? 'Done editing' : 'Customize dashboard',
-            icon: Icon(editMode ? Icons.check_rounded : Icons.dashboard_customize_outlined),
-            onPressed: () {
-              final next = !editMode;
-              ref.read(dashboardEditModeProvider.notifier).state = next;
-            },
-          ),
-          if (editMode)
+          if (compact && editMode)
+            PopupMenuButton<String>(
+              tooltip: 'Dashboard options',
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (value) {
+                switch (value) {
+                  case 'done':
+                    ref.read(dashboardEditModeProvider.notifier).state = false;
+                  case 'add':
+                    showDashboardAddWidgetSheet(context, ref);
+                  case 'settings':
+                    showDashboardCustomizeSheet(context, ref);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'done',
+                  child: ListTile(
+                    leading: Icon(Icons.check_rounded),
+                    title: Text('Done editing'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'add',
+                  child: ListTile(
+                    leading: Icon(Icons.add_box_outlined),
+                    title: Text('Add widget'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: ListTile(
+                    leading: Icon(Icons.tune_rounded),
+                    title: Text('Dashboard settings'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            )
+          else ...[
             IconButton(
-              tooltip: 'Add widget',
-              icon: const Icon(Icons.add_box_outlined),
-              onPressed: () => showDashboardAddWidgetSheet(context, ref),
+              tooltip: editMode ? 'Done editing' : 'Customize dashboard',
+              icon: Icon(
+                editMode
+                    ? Icons.check_rounded
+                    : Icons.dashboard_customize_outlined,
+              ),
+              onPressed: () {
+                ref.read(dashboardEditModeProvider.notifier).state = !editMode;
+              },
             ),
-          if (editMode)
-            IconButton(
-              tooltip: 'Dashboard settings',
-              icon: const Icon(Icons.tune_rounded),
-              onPressed: () => showDashboardCustomizeSheet(context, ref),
-            ),
+            if (editMode)
+              IconButton(
+                tooltip: 'Add widget',
+                icon: const Icon(Icons.add_box_outlined),
+                onPressed: () => showDashboardAddWidgetSheet(context, ref),
+              ),
+            if (editMode)
+              IconButton(
+                tooltip: 'Dashboard settings',
+                icon: const Icon(Icons.tune_rounded),
+                onPressed: () => showDashboardCustomizeSheet(context, ref),
+              ),
+          ],
           const ThemeToggleButton(),
         ],
       ),
-      body: ResponsiveBody(child: const DashboardCanvas()),
+      body: const DashboardCanvas(),
     );
   }
 }

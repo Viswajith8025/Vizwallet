@@ -6,6 +6,7 @@ import 'package:rupee_track/core/salary_cycle/salary_cycle_engine.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/features/budget/data/budget_repository.dart';
 import 'package:rupee_track/features/dashboard/data/dashboard_repository.dart';
+import 'package:rupee_track/features/health_score/data/financial_health_repository.dart';
 import 'package:rupee_track/features/monthly_report/domain/monthly_report_engine.dart';
 import 'package:rupee_track/features/savings_forecast/domain/savings_forecast_engine.dart';
 import 'package:rupee_track/features/savings_forecast/domain/savings_forecast_models.dart';
@@ -149,6 +150,18 @@ class SavingsForecastRepository {
       carryOverPaise: carryOver,
     );
 
+    final healthReport =
+        await _ref.read(financialHealthRepositoryProvider).buildHealthReport(
+              cycleKey,
+            );
+    final healthScore = healthReport.hasEnoughData
+        ? healthReport.overallScore
+        : _fallbackHealthScore(
+            savingsRate: savingsRate,
+            budgetAdherence: budgetAdherence,
+            subShare: salary > 0 ? subMonthly / salary : 0,
+          );
+
     return SavingsForecastInput(
       cycleKey: cycleKey,
       currentBalancePaise: currentBalance.clamp(0, 99999999999),
@@ -160,11 +173,7 @@ class SavingsForecastRepository {
       loanMonthlyPaise: loanMonthly,
       goalContributionsMonthlyPaise: goalContrib,
       budgetAdherencePercent: budgetAdherence,
-      healthScore: _estimateHealthScore(
-        savingsRate: savingsRate,
-        budgetAdherence: budgetAdherence,
-        subShare: salary > 0 ? subMonthly / salary : 0,
-      ),
+      healthScore: healthScore,
       historicalCycleSpent: historicalSpent,
       historicalSalaries: historicalSalaries,
       categoryMonthlyAvg: categoryMonthlyAvg,
@@ -175,7 +184,7 @@ class SavingsForecastRepository {
     );
   }
 
-  int _estimateHealthScore({
+  int _fallbackHealthScore({
     required double savingsRate,
     required double budgetAdherence,
     required double subShare,

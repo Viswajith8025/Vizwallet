@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
+import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/widgets/error_state.dart';
@@ -33,54 +34,79 @@ class DashboardCanvas extends ConsumerWidget {
         final visible = layout.visibleWidgets;
         final useTwoColumn = _useTwoColumn(context, layout.layoutMode);
 
-        return Column(
-          children: [
-            if (editMode) _EditModeBanner(),
-            if (layout.quickActionsPinned && !editMode)
-              const Padding(
-                padding: EdgeInsets.only(bottom: AppSpacing.sm),
-                child: DashboardQuickActionsBar(),
+        if (editMode) {
+          return Column(
+            children: [
+              const _EditModeBanner(),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => _refresh(ref, cycleKey),
+                  child: _ReorderableList(
+                    visible: visible,
+                    layout: layout,
+                    editMode: true,
+                  ),
+                ),
               ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(monthlySummaryProvider(cycleKey));
-                  ref.invalidate(safeSpendProvider(cycleKey));
-                },
-                child: editMode
-                    ? _ReorderableList(
-                        visible: visible,
-                        layout: layout,
-                        editMode: true,
-                      )
-                    : useTwoColumn
-                        ? _TwoColumnBody(visible: visible, layout: layout)
-                        : _SingleColumnBody(visible: visible, layout: layout),
-              ),
-            ),
-          ],
+            ],
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => _refresh(ref, cycleKey),
+          child: useTwoColumn
+              ? _TwoColumnBody(
+                  visible: visible,
+                  layout: layout,
+                  showQuickActions: layout.quickActionsPinned,
+                )
+              : _SingleColumnBody(
+                  visible: visible,
+                  layout: layout,
+                  showQuickActions: layout.quickActionsPinned,
+                ),
         );
       },
     );
   }
 
+  Future<void> _refresh(WidgetRef ref, String cycleKey) async {
+    ref.invalidate(monthlySummaryProvider(cycleKey));
+    ref.invalidate(safeSpendProvider(cycleKey));
+  }
+
   bool _useTwoColumn(BuildContext context, DashboardLayoutMode mode) {
+    if (!AppResponsive.isMediumOrWider(context)) return false;
     if (mode == DashboardLayoutMode.singleColumn) return false;
     if (mode == DashboardLayoutMode.twoColumn ||
         mode == DashboardLayoutMode.grid) {
       return true;
     }
-    return AppResponsive.isMediumOrWider(context);
+    return true;
   }
 }
 
+EdgeInsets _dashboardListPadding(BuildContext context) {
+  return AppResponsive.screenPadding(
+    context,
+    bottom: ShellBottomInset.scrollBottom(context),
+  );
+}
+
 class _EditModeBanner extends StatelessWidget {
+  const _EditModeBanner();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.screenHorizontal,
+        AppSpacing.sm,
+        AppSpacing.screenHorizontal,
+        AppSpacing.sm,
+      ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
@@ -99,35 +125,51 @@ class _EditModeBanner extends StatelessWidget {
 }
 
 class _SingleColumnBody extends ConsumerWidget {
-  const _SingleColumnBody({required this.visible, required this.layout});
+  const _SingleColumnBody({
+    required this.visible,
+    required this.layout,
+    required this.showQuickActions,
+  });
 
   final List<DashboardWidgetInstance> visible;
   final DashboardLayoutConfig layout;
+  final bool showQuickActions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final editMode = ref.watch(dashboardEditModeProvider);
+
     return ListView(
-      padding: AppResponsive.screenPadding(context, bottom: AppSpacing.xl),
-      children: visible
-          .map(
-            (w) => DashboardWidgetShell(
-              key: ValueKey(w.id),
-              instance: w,
-              editMode: editMode,
-              density: layout.density,
-            ),
-          )
-          .toList(),
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: _dashboardListPadding(context),
+      children: [
+        if (showQuickActions) ...[
+          const DashboardQuickActionsBar(),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        ...visible.map(
+          (w) => DashboardWidgetShell(
+            key: ValueKey(w.id),
+            instance: w,
+            editMode: editMode,
+            density: layout.density,
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _TwoColumnBody extends ConsumerWidget {
-  const _TwoColumnBody({required this.visible, required this.layout});
+  const _TwoColumnBody({
+    required this.visible,
+    required this.layout,
+    required this.showQuickActions,
+  });
 
   final List<DashboardWidgetInstance> visible;
   final DashboardLayoutConfig layout;
+  final bool showQuickActions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -135,8 +177,14 @@ class _TwoColumnBody extends ConsumerWidget {
     final rows = _chunkRows(visible);
 
     return ListView(
-      padding: AppResponsive.screenPadding(context, bottom: AppSpacing.xl),
-      children: rows.map((row) {
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: _dashboardListPadding(context),
+      children: [
+        if (showQuickActions) ...[
+          const DashboardQuickActionsBar(),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        ...rows.map((row) {
         if (row.length == 1 || row.first.pinned) {
           return DashboardWidgetShell(
             key: ValueKey(row.first.id),
@@ -161,7 +209,8 @@ class _TwoColumnBody extends ConsumerWidget {
             ],
           ),
         );
-      }).toList(),
+      }),
+      ],
     );
   }
 
@@ -203,7 +252,7 @@ class _ReorderableList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ReorderableListView.builder(
-      padding: AppResponsive.screenPadding(context, bottom: AppSpacing.xxxl),
+      padding: _dashboardListPadding(context),
       buildDefaultDragHandles: false,
       proxyDecorator: (child, index, animation) {
         return AnimatedBuilder(

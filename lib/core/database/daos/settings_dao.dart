@@ -52,4 +52,27 @@ class SettingsDao extends DatabaseAccessor<AppDatabase> with _$SettingsDaoMixin 
       ),
     );
   }
+
+  Future<void> updatePin({
+    required bool enabled,
+    required String pinHash,
+  }) async {
+    await (update(appSettingsTable)..where((t) => t.id.equals(1))).write(
+      AppSettingsTableCompanion(
+        pinEnabled: Value(enabled),
+        pinHash: Value(pinHash),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+  }
+
+  Future<void> clearPin() async {
+    await (update(appSettingsTable)..where((t) => t.id.equals(1))).write(
+      AppSettingsTableCompanion(
+        pinEnabled: const Value(false),
+        pinHash: const Value(null),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+  }
 }
