@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:rupee_track/core/branding/brand_typography.dart';
 import 'package:rupee_track/core/design_system/context_banner.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
-import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_chip.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
@@ -24,6 +22,7 @@ import 'package:rupee_track/features/expenses/domain/expense_date_filter.dart';
 import 'package:rupee_track/features/expenses/domain/expense_display_utils.dart';
 import 'package:rupee_track/features/quick_add/presentation/quick_add_hub_sheet.dart';
 import 'package:rupee_track/features/smart_tagging/domain/classification_models.dart';
+import 'package:rupee_track/features/expenses/presentation/widgets/expense_delete_utils.dart';
 import 'package:rupee_track/features/smart_tagging/presentation/expense_correction_sheet.dart';
 
 class ExpenseListScreen extends ConsumerWidget {
@@ -34,6 +33,7 @@ class ExpenseListScreen extends ConsumerWidget {
     final filter = ref.watch(expenseDateFilterProvider);
     final salaryDay = ref.watch(salaryDayProvider);
     final settings = ref.watch(appSettingsProvider).valueOrNull;
+    final swipeLocked = ref.watch(expenseSwipeDeleteLockedProvider);
     final expensesAsync = ref.watch(expensesForDateFilterProvider);
     final dateFormat = DateFormat('d MMM · h:mm a');
     final today = toIst(DateTime.now());
@@ -44,6 +44,17 @@ class ExpenseListScreen extends ConsumerWidget {
         title: 'Expenses',
         subtitle: 'Track what you spend · $headerDate',
         actions: [
+          IconButton(
+            icon: Icon(
+              swipeLocked ? Icons.lock_rounded : Icons.lock_open_rounded,
+            ),
+            tooltip: swipeLocked
+                ? 'Swipe delete locked — tap to unlock'
+                : 'Swipe delete unlocked — tap to lock',
+            onPressed: () => ref
+                .read(expenseSwipeDeleteLockedProvider.notifier)
+                .toggle(),
+          ),
           IconButton(
             icon: const Icon(Icons.add_rounded),
             onPressed: () => showQuickAddSheet(context, ref),
@@ -89,8 +100,8 @@ class ExpenseListScreen extends ConsumerWidget {
             ),
           ),
           ContextBanner(
-            icon: Icons.filter_list_rounded,
-            message: _filterHint(filter, salaryDay),
+            icon: swipeLocked ? Icons.lock_rounded : Icons.swipe_left_rounded,
+            message: _filterHint(filter, salaryDay, swipeLocked: swipeLocked),
           ),
           Expanded(
             child: expensesAsync.when(
@@ -156,6 +167,21 @@ class ExpenseListScreen extends ConsumerWidget {
                       meta: dateFormat.format(expense.occurredAt.toLocal()),
                     );
 
+                    final tile = PremiumExpenseTile(
+                      title: expense.title,
+                      amountPaise: expense.amountPaise,
+                      categoryName: item.category.name,
+                      categoryColor: item.category.colorValue,
+                      subtitle: subtitle,
+                      tags: displayTags,
+                      onTap: () =>
+                          showExpenseCorrectionSheet(context, ref, item),
+                    );
+
+                    if (swipeLocked) {
+                      return tile;
+                    }
+
                     return Dismissible(
                       key: ValueKey(expense.id),
                       direction: DismissDirection.endToStart,
@@ -171,53 +197,13 @@ class ExpenseListScreen extends ConsumerWidget {
                           color: Theme.of(context).colorScheme.error,
                         ),
                       ),
-                      confirmDismiss: (_) async {
-                        return await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Delete expense?'),
-                                content: const Text(
-                                  'This removes the transaction from your records.',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  FilledButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
-                              ),
-                            ) ??
-                            false;
-                      },
-                      onDismissed: (_) async {
-                        final repo = ref.read(expenseRepositoryProvider);
-                        final activityId =
-                            await repo.deleteExpense(expense.id);
-                        if (!context.mounted) return;
-                        if (activityId != null) {
-                          showPremiumSnackBar(
-                            context,
-                            message: 'Expense deleted',
-                            actionLabel: 'Undo',
-                            onAction: () =>
-                                repo.undoExpenseActivity(activityId),
-                          );
-                        }
-                      },
-                      child: PremiumExpenseTile(
-                        title: expense.title,
-                        amountPaise: expense.amountPaise,
-                        categoryName: item.category.name,
-                        categoryColor: item.category.colorValue,
-                        subtitle: subtitle,
-                        tags: displayTags,
-                        onTap: () =>
-                            showExpenseCorrectionSheet(context, ref, item),
+                      confirmDismiss: (_) => confirmDeleteExpense(context),
+                      onDismissed: (_) => deleteExpenseWithFeedback(
+                        context,
+                        ref,
+                        expense.id,
                       ),
+                      child: tile,
                     );
                   },
                 );
@@ -230,14 +216,29 @@ class ExpenseListScreen extends ConsumerWidget {
     );
   }
 
-  String _filterHint(ExpenseDateFilter filter, int salaryDay) {
+  String _filterHint(
+    ExpenseDateFilter filter,
+    int salaryDay, {
+    required bool swipeLocked,
+  }) {
+    if (swipeLocked) {
+      return switch (filter.mode) {
+        ExpenseDateFilterMode.today =>
+          'Swipe delete is locked. Tap an expense to edit or delete.',
+        ExpenseDateFilterMode.pickDate =>
+          'Showing spending on ${filter.label(salaryDay: salaryDay)}. Tap a row to edit or delete.',
+        ExpenseDateFilterMode.payCycle =>
+          'Pay cycle (${filter.label(salaryDay: salaryDay)}). Tap a row to edit or delete.',
+      };
+    }
+
     return switch (filter.mode) {
       ExpenseDateFilterMode.today =>
-        'Showing everything you spent today. Swipe left on a row to delete.',
+        'Swipe left on a row to delete, or tap to edit.',
       ExpenseDateFilterMode.pickDate =>
         'Showing spending on ${filter.label(salaryDay: salaryDay)}.',
       ExpenseDateFilterMode.payCycle =>
-        'Showing this pay cycle (${filter.label(salaryDay: salaryDay)}).',
+        'Showing this pay cycle (${filter.label(salaryDay: salaryDay)}). Swipe left to delete.',
     };
   }
 

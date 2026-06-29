@@ -7,11 +7,15 @@ class PressableScale extends StatefulWidget {
     super.key,
     this.onTap,
     this.scale = 0.97,
+    this.semanticLabel,
+    this.enabled = true,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final double scale;
+  final String? semanticLabel;
+  final bool enabled;
 
   @override
   State<PressableScale> createState() => _PressableScaleState();
@@ -22,17 +26,30 @@ class _PressableScaleState extends State<PressableScale> {
 
   @override
   Widget build(BuildContext context) {
+    final interactive = widget.enabled && widget.onTap != null;
+
+    Widget content = AnimatedScale(
+      scale: _pressed && interactive ? widget.scale : 1,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeOut,
+      child: widget.child,
+    );
+
+    if (widget.semanticLabel != null) {
+      content = Semantics(
+        button: true,
+        enabled: interactive,
+        label: widget.semanticLabel,
+        child: content,
+      );
+    }
+
     return GestureDetector(
-      onTapDown: widget.onTap != null ? (_) => setState(() => _pressed = true) : null,
-      onTapUp: widget.onTap != null ? (_) => setState(() => _pressed = false) : null,
-      onTapCancel: widget.onTap != null ? () => setState(() => _pressed = false) : null,
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _pressed ? widget.scale : 1,
-        duration: const Duration(milliseconds: 100),
-        curve: Curves.easeOut,
-        child: widget.child,
-      ),
+      onTapDown: interactive ? (_) => setState(() => _pressed = true) : null,
+      onTapUp: interactive ? (_) => setState(() => _pressed = false) : null,
+      onTapCancel: interactive ? () => setState(() => _pressed = false) : null,
+      onTap: interactive ? widget.onTap : null,
+      child: content,
     );
   }
 }

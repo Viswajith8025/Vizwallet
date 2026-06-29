@@ -15,6 +15,7 @@ import 'package:rupee_track/features/settings/presentation/widgets/salary_cycle_
 import 'package:rupee_track/features/app_lock/presentation/widgets/app_lock_settings_card.dart';
 import 'package:rupee_track/features/auth/presentation/widgets/cloud_account_panel.dart';
 import 'package:rupee_track/features/settings/presentation/widgets/app_management_settings_card.dart';
+import 'package:rupee_track/features/expenses/presentation/widgets/expense_swipe_lock_settings.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -32,11 +33,9 @@ class SettingsScreen extends ConsumerWidget {
       body: ResponsiveBody(
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-            ShellBottomInset.scrollBottom(context),
+          padding: EdgeInsets.only(
+            top: AppSpacing.sm,
+            bottom: ShellBottomInset.scrollBottom(context),
           ),
           children: [
             PremiumCard(
@@ -90,6 +89,8 @@ class SettingsScreen extends ConsumerWidget {
             const AppLockSettingsCard(),
             const SizedBox(height: AppSpacing.lg),
             const SalaryCycleSettings(),
+            const SizedBox(height: AppSpacing.lg),
+            const ExpenseSwipeLockSettings(),
             const SizedBox(height: AppSpacing.lg),
             const BudgetAlertSettings(),
             const SizedBox(height: AppSpacing.lg),

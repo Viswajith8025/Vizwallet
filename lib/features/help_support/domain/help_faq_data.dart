@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rupee_track/features/jithu/domain/jithu_branding.dart';
 
 /// One help article shown in Help & Support.
 class HelpFaqEntry {
@@ -22,7 +23,7 @@ abstract final class HelpFaqData {
     'Adding expenses',
     'Budget & salary',
     'Home screen',
-    'Jithu',
+    JithuBranding.displayName,
     'Insights & reports',
     'Account & settings',
   ];
@@ -52,7 +53,7 @@ abstract final class HelpFaqData {
       question: 'What happens after onboarding?',
       answer:
           'You land on Home. From there you can add expenses with the + button, '
-          'check today\'s spending guide, open Jithu for quick advice, '
+          'check today\'s spending guide, open ${JithuBranding.displayName} for quick advice, '
           'and use More for budget planning, reports, and settings.',
     ),
 
@@ -194,31 +195,31 @@ abstract final class HelpFaqData {
           'You can also set System, Light, or Dark in Settings → Appearance.',
     ),
 
-    // Jithu
+    // AI Jithu
     HelpFaqEntry(
-      category: 'Jithu',
+      category: JithuBranding.displayName,
       icon: Icons.auto_awesome_outlined,
-      question: 'Who is Jithu?',
+      question: 'Who is ${JithuBranding.displayName}?',
       answer:
-          'Jithu is your AI money assistant in Vizwallet. Ask about safe daily spending, '
+          '${JithuBranding.displayName} is your AI money assistant in Vizwallet. Ask about safe daily spending, '
           'where your money is going, or saving tips. Answers use your real Vizwallet numbers.',
     ),
     HelpFaqEntry(
-      category: 'Jithu',
+      category: JithuBranding.displayName,
       icon: Icons.auto_awesome_outlined,
-      question: 'Why does Jithu say "Add salary to unlock advice"?',
+      question: 'Why does ${JithuBranding.displayName} say "Add salary to unlock advice"?',
       answer:
-          'Jithu needs your salary and some spending data to give useful answers. '
+          '${JithuBranding.displayName} needs your salary and some spending data to give useful answers. '
           'Add salary in onboarding or tap Salary on the Home screen.',
     ),
     HelpFaqEntry(
-      category: 'Jithu',
+      category: JithuBranding.displayName,
       icon: Icons.auto_awesome_outlined,
-      question: 'Is Jithu connected to the internet?',
+      question: 'Is ${JithuBranding.displayName} connected to the internet?',
       answer:
-          'Yes, when you chat Jithu uses cloud AI (Groq) with your financial summary as context. '
-          'Your full expense list is not uploaded — only the numbers shown in Jithu\'s quick read. '
-          'If offline, Jithu falls back to simple on-device answers.',
+          'Yes, when you chat ${JithuBranding.displayName} uses cloud AI (Groq) with your financial summary as context. '
+          'Your full expense list is not uploaded — only the numbers shown in the quick read. '
+          'If offline, ${JithuBranding.displayName} falls back to simple on-device answers.',
     ),
 
     // Insights & reports

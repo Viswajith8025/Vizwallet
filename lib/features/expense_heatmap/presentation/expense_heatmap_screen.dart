@@ -25,7 +25,7 @@ class ExpenseHeatmapScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: PremiumAppBar(
-        title: 'Expense Heatmap',
+        title: 'Expense heatmap',
         subtitle: 'Your spending patterns',
         actions: [
           IconButton(
@@ -33,6 +33,7 @@ class ExpenseHeatmapScreen extends ConsumerWidget {
               isLabelVisible: filters.hasActiveFilters,
               child: const Icon(Icons.filter_list_rounded),
             ),
+            tooltip: 'Filters',
             onPressed: () => showHeatmapFiltersSheet(context, ref),
           ),
           IconButton(
@@ -81,6 +82,7 @@ class ExpenseHeatmapScreen extends ConsumerWidget {
                 Row(
                   children: [
                     IconButton(
+                      tooltip: 'Previous period',
                       onPressed: () =>
                           ref.read(heatmapAnchorProvider.notifier).previous(),
                       icon: const Icon(Icons.chevron_left),
@@ -95,6 +97,7 @@ class ExpenseHeatmapScreen extends ConsumerWidget {
                       ),
                     ),
                     IconButton(
+                      tooltip: 'Next period',
                       onPressed: () =>
                           ref.read(heatmapAnchorProvider.notifier).next(),
                       icon: const Icon(Icons.chevron_right),

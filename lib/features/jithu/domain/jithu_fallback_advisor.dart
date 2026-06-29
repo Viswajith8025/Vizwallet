@@ -1,5 +1,6 @@
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/dashboard/domain/monthly_summary.dart';
+import 'package:rupee_track/features/jithu/domain/jithu_branding.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
 
 /// Offline rule-based replies when Groq is unavailable.
@@ -29,7 +30,7 @@ abstract final class JithuFallbackAdvisor {
     final q = question.toLowerCase();
 
     if (q.contains('name') && (q.contains('your') || q.contains('who'))) {
-      return 'I am Jithu, your Vizwallet money assistant. Ask me about spending, savings, or your budget anytime.';
+      return 'I am ${JithuBranding.displayName}, your Vizwallet money assistant. Ask me about spending, savings, or your budget anytime.';
     }
 
     if (q == 'hello' ||
@@ -37,7 +38,7 @@ abstract final class JithuFallbackAdvisor {
         q == 'hey' ||
         q.startsWith('hello ') ||
         q.startsWith('hi ')) {
-      return 'Hello! I am Jithu. I can help with today\'s safe spend, where your money is going, and quick saving tips.';
+      return 'Hello! I am ${JithuBranding.displayName}. I can help with today\'s safe spend, where your money is going, and quick saving tips.';
     }
 
     if (!summary.salaryEntered) {

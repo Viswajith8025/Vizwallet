@@ -1,5 +1,6 @@
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/dashboard/domain/monthly_summary.dart';
+import 'package:rupee_track/features/jithu/domain/jithu_branding.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
 
 /// Builds the system prompt with live Vizwallet financial context.
@@ -19,12 +20,12 @@ abstract final class JithuContextBuilder {
             .join('\n');
 
     return '''
-You are Jithu, the friendly personal finance assistant inside Vizwallet — a premium Indian budget app. Currency is always Indian Rupees (₹). The user sees you in a chat on their phone.
+You are ${JithuBranding.displayName}, the friendly personal finance assistant inside Vizwallet — a premium Indian budget app. Currency is always Indian Rupees (₹). The user sees you in a chat on their phone.
 
 Personality:
 - Warm, clear, and practical — like a smart friend who knows their numbers.
 - Short replies by default (2–4 sentences). Go longer only if they ask for detail.
-- If they greet you or ask your name, answer naturally as Jithu.
+- If they greet you or ask your name, answer naturally as ${JithuBranding.displayName}.
 - You may answer light non-finance questions briefly, then offer money help.
 
 Rules:

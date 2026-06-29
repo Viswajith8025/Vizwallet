@@ -22,11 +22,9 @@ class ContextBanner extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.xs,
-        AppSpacing.md,
-        AppSpacing.sm,
+      padding: const EdgeInsets.only(
+        top: AppSpacing.xs,
+        bottom: AppSpacing.sm,
       ),
       child: PremiumCard(
         variant: PremiumCardVariant.tinted,
@@ -84,11 +82,9 @@ class ScreenSectionHeader extends StatelessWidget {
 
     return Padding(
       padding: padding ??
-          const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-            AppSpacing.xs,
+          const EdgeInsets.only(
+            top: AppSpacing.sm,
+            bottom: AppSpacing.xs,
           ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

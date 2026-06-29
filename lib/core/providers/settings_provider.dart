@@ -36,3 +36,25 @@ final appSettingsProvider = StreamProvider<AppSettingsTableData>((ref) async* {
   final dao = await ref.watch(settingsDaoProvider.future);
   yield* dao.watchSettings();
 });
+
+/// When true, swipe-to-delete on the Expenses list is disabled.
+final expenseSwipeDeleteLockedProvider =
+    NotifierProvider<ExpenseSwipeDeleteLockedNotifier, bool>(
+  ExpenseSwipeDeleteLockedNotifier.new,
+);
+
+class ExpenseSwipeDeleteLockedNotifier extends Notifier<bool> {
+  static const _key = 'expense_swipe_delete_locked';
+
+  @override
+  bool build() {
+    return sharedPreferences.getBool(_key) ?? false;
+  }
+
+  Future<void> setLocked(bool locked) async {
+    state = locked;
+    await sharedPreferences.setBool(_key, locked);
+  }
+
+  Future<void> toggle() => setLocked(!state);
+}

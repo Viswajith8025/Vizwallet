@@ -99,55 +99,60 @@ class _NavItem extends StatelessWidget {
         : theme.colorScheme.onSurfaceVariant;
     final compact = AppResponsive.useCompactNav(context);
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-        child: AnimatedContainer(
-          duration: AppDurations.fast,
-          curve: AppCurves.standard,
-          padding: EdgeInsets.symmetric(vertical: compact ? 12 : 10),
-          decoration: BoxDecoration(
-            color: selected
-                ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedSwitcher(
-                duration: AppDurations.fast,
-                transitionBuilder: (child, animation) => ScaleTransition(
-                  scale: animation,
-                  child: child,
-                ),
-                child: Icon(
-                  selected ? destination.selectedIcon : destination.icon,
-                  key: ValueKey(selected),
-                  size: compact ? 24 : 22,
-                  color: color,
-                ),
-              ),
-              if (!compact) ...[
-                const SizedBox(height: 4),
-                AnimatedDefaultTextStyle(
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: destination.label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+          child: AnimatedContainer(
+            duration: AppDurations.fast,
+            curve: AppCurves.standard,
+            padding: EdgeInsets.symmetric(vertical: compact ? 12 : 10),
+            decoration: BoxDecoration(
+              color: selected
+                  ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSwitcher(
                   duration: AppDurations.fast,
-                  style: theme.textTheme.labelSmall!.copyWith(
-                    color: color,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  transitionBuilder: (child, animation) => ScaleTransition(
+                    scale: animation,
+                    child: child,
                   ),
-                  child: Text(
-                    destination.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
+                  child: Icon(
+                    selected ? destination.selectedIcon : destination.icon,
+                    key: ValueKey(selected),
+                    size: compact ? 24 : 22,
+                    color: color,
                   ),
                 ),
+                if (!compact) ...[
+                  const SizedBox(height: 4),
+                  AnimatedDefaultTextStyle(
+                    duration: AppDurations.fast,
+                    style: theme.textTheme.labelSmall!.copyWith(
+                      color: color,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                    child: Text(
+                      destination.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

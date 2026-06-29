@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rupee_track/core/design_system/compact_widget_error.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
@@ -74,7 +75,10 @@ class _BalanceWidget extends ConsumerWidget {
     final async = ref.watch(monthlySummaryProvider(cycleKey));
     return async.when(
       loading: () => const SkeletonCard(height: 200),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load balance",
+        onRetry: () => ref.invalidate(monthlySummaryProvider(cycleKey)),
+      ),
       data: (s) => DashboardHero(summary: s),
     );
   }
@@ -88,7 +92,10 @@ class _TodaySpendingWidget extends ConsumerWidget {
     final theme = Theme.of(context);
     return async.when(
       loading: () => const SkeletonCard(height: 88),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load today's spending",
+        onRetry: () => ref.invalidate(safeSpendProvider(cycleKey)),
+      ),
       data: (snap) => PremiumCard(
         child: Row(
           children: [
@@ -122,7 +129,10 @@ class _SafeSpendWidget extends ConsumerWidget {
     final async = ref.watch(safeSpendProvider(_cycleKey(ref)));
     return async.when(
       loading: () => const SkeletonCard(height: 140),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load spending guide",
+        onRetry: () => ref.invalidate(safeSpendProvider(_cycleKey(ref))),
+      ),
       data: (s) => SafeSpendCard(snapshot: s),
     );
   }
@@ -138,10 +148,14 @@ class _BudgetProgressWidget extends ConsumerWidget {
 class _BudgetSetupWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(monthlySummaryProvider(_cycleKey(ref)));
+    final cycleKey = _cycleKey(ref);
+    final async = ref.watch(monthlySummaryProvider(cycleKey));
     return async.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load budget setup",
+        onRetry: () => ref.invalidate(monthlySummaryProvider(cycleKey)),
+      ),
       data: (summary) {
         if (summary.salaryEntered) return const SizedBox.shrink();
         final theme = Theme.of(context);
@@ -190,7 +204,10 @@ class _SummaryGridWidget extends ConsumerWidget {
     final theme = Theme.of(context);
     return async.when(
       loading: () => const SkeletonCard(height: 120),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load summary",
+        onRetry: () => ref.invalidate(monthlySummaryProvider(_cycleKey(ref))),
+      ),
       data: (summary) => ResponsiveSummaryGrid(
         childAspectRatio: 0.96,
         children: [
@@ -231,7 +248,10 @@ class _CategoryChartWidget extends ConsumerWidget {
     final theme = Theme.of(context);
     return async.when(
       loading: () => const SkeletonCard(height: 200),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load categories",
+        onRetry: () => ref.invalidate(monthlySummaryProvider(_cycleKey(ref))),
+      ),
       data: (summary) {
         if (summary.categoryBreakdown.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -348,7 +368,10 @@ class _LoanWidget extends ConsumerWidget {
     final theme = Theme.of(context);
     return async.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load loans",
+        onRetry: () => ref.invalidate(monthlySummaryProvider(_cycleKey(ref))),
+      ),
       data: (summary) {
         if (summary.pendingBorrowedPaise <= 0 &&
             summary.overdueLoansCount <= 0) {
@@ -387,7 +410,10 @@ class _SubscriptionsWidget extends ConsumerWidget {
     final async = ref.watch(monthlySummaryProvider(_cycleKey(ref)));
     return async.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load subscriptions",
+        onRetry: () => ref.invalidate(monthlySummaryProvider(_cycleKey(ref))),
+      ),
       data: (summary) {
         if (summary.upcomingSubscriptionsCount <= 0) {
           return const SizedBox.shrink();
@@ -420,7 +446,10 @@ class _SavingsForecastWidget extends ConsumerWidget {
     final theme = Theme.of(context);
     return async.when(
       loading: () => const SkeletonCard(height: 100),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load savings forecast",
+        onRetry: () => ref.invalidate(savingsForecastReportProvider),
+      ),
       data: (report) => PremiumCard(
         onTap: () => context.push(AppRoutes.savingsForecast),
         child: Column(
@@ -512,7 +541,10 @@ class _AchievementsWidget extends ConsumerWidget {
     final theme = Theme.of(context);
     return async.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load achievements",
+        onRetry: () => ref.invalidate(previousCycleClosingReportProvider),
+      ),
       data: (report) {
         if (report == null || report.goalsAchieved.isEmpty) {
           return const SizedBox.shrink();
@@ -575,7 +607,10 @@ class _RecentTransactionsWidget extends ConsumerWidget {
     final theme = Theme.of(context);
     return async.when(
       loading: () => const SkeletonCard(height: 120),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => CompactWidgetError(
+        message: "Couldn't load transactions",
+        onRetry: () => ref.invalidate(expensesForMonthProvider(cycleKey)),
+      ),
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
         return PremiumCard(

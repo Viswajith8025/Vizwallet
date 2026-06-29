@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rupee_track/core/design_system/premium_confirm_dialog.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_nav.dart';
 import 'package:rupee_track/core/design_system/premium_side_nav.dart';
+import 'package:rupee_track/features/jithu/domain/jithu_branding.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/router/routes.dart';
@@ -38,7 +40,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     PremiumNavDestination(
       icon: Icons.auto_awesome_outlined,
       selectedIcon: Icons.auto_awesome_rounded,
-      label: 'Ask Jithu',
+      label: JithuBranding.displayName,
     ),
     PremiumNavDestination(
       icon: Icons.grid_view_outlined,
@@ -97,22 +99,13 @@ class _MainShellState extends ConsumerState<MainShell> {
       return;
     }
 
-    final shouldExit = await showDialog<bool>(
+    final shouldExit = await showPremiumConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Exit Vizwallet?'),
-        content: const Text('Are you sure you want to exit the app?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Stay'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Exit'),
-          ),
-        ],
-      ),
+      title: 'Exit Vizwallet?',
+      message: 'Are you sure you want to close the app?',
+      confirmLabel: 'Exit',
+      cancelLabel: 'Stay',
+      icon: Icons.logout_rounded,
     );
 
     if (shouldExit == true && context.mounted) {

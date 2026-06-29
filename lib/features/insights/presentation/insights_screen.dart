@@ -57,12 +57,14 @@ class InsightsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        error: (e, _) => ErrorState(
-          message: 'We couldn\'t load your insights.',
-          onRetry: () {
-            ref.invalidate(spendingTrendsProvider);
-            ref.invalidate(insightsFeedProvider);
-          },
+        error: (e, _) => ResponsiveBody(
+          child: ErrorState(
+            message: 'We couldn\'t load your insights.',
+            onRetry: () {
+              ref.invalidate(spendingTrendsProvider);
+              ref.invalidate(insightsFeedProvider);
+            },
+          ),
         ),
         data: (report) {
           return RefreshIndicator(

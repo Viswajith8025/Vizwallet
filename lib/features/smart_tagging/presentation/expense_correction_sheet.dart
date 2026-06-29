@@ -5,6 +5,7 @@ import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/features/expenses/data/expense_repository.dart';
+import 'package:rupee_track/features/expenses/presentation/widgets/expense_delete_utils.dart';
 import 'package:rupee_track/features/smart_tagging/domain/classification_models.dart';
 import 'package:rupee_track/features/smart_tagging/domain/default_tagging_rules.dart';
 
@@ -156,6 +157,25 @@ class _ExpenseCorrectionSheetState extends ConsumerState<ExpenseCorrectionSheet>
             FilledButton(
               onPressed: _saving ? null : _save,
               child: Text(_saving ? 'Saving…' : 'Save & remember'),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextButton.icon(
+              onPressed: _saving
+                  ? null
+                  : () => deleteExpenseWithFeedback(
+                        context,
+                        ref,
+                        widget.item.expense.id,
+                        popSheetFirst: true,
+                      ),
+              icon: Icon(
+                Icons.delete_outline_rounded,
+                color: theme.colorScheme.error,
+              ),
+              label: Text(
+                'Delete expense',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
             ),
           ],
         );

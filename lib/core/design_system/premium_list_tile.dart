@@ -76,12 +76,10 @@ class PremiumMenuTile extends StatelessWidget {
     final accent = iconColor ?? theme.colorScheme.primary;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xxs,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
       child: PressableScale(
         onTap: onTap,
+        semanticLabel: '$title. $subtitle',
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -168,6 +166,7 @@ class PremiumRowTile extends StatelessWidget {
 
     return PressableScale(
       onTap: onTap,
+      semanticLabel: onTap != null ? title : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         child: Row(

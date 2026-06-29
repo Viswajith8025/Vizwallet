@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
+import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
@@ -10,6 +11,7 @@ import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/dashboard/data/dashboard_repository.dart';
 import 'package:rupee_track/features/dashboard/domain/monthly_summary.dart';
 import 'package:rupee_track/features/jithu/data/jithu_repository.dart';
+import 'package:rupee_track/features/jithu/domain/jithu_branding.dart';
 import 'package:rupee_track/features/jithu/domain/jithu_chat_message.dart';
 import 'package:rupee_track/features/jithu/domain/jithu_fallback_advisor.dart';
 import 'package:rupee_track/features/safe_spend/data/safe_spend_repository.dart';
@@ -31,7 +33,7 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
     const JithuChatMessage(
       fromUser: false,
       text:
-          'Hi, I am Jithu. Ask me how much you can spend today, where your money is going, or how to save more.',
+          'Ask me how much you can spend today, where your money is going, or how to save more.',
     ),
   ];
   bool _isLoading = false;
@@ -110,23 +112,29 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
 
     return Scaffold(
       appBar: const PremiumAppBar(
-        title: 'Jithu',
+        title: JithuBranding.displayName,
         subtitle: 'Ask anything about your money',
       ),
       body: summaryAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorState(
-          message: 'Jithu couldn\'t read your financial summary.',
-          onRetry: () {
-            ref.invalidate(monthlySummaryProvider(cycleKey));
-            ref.invalidate(safeSpendProvider(cycleKey));
-          },
+        loading: () => const ResponsiveBody(child: DashboardSkeleton()),
+        error: (e, _) => ResponsiveBody(
+          child: ErrorState(
+            message:
+                '${JithuBranding.displayName} couldn\'t read your financial summary.',
+            onRetry: () {
+              ref.invalidate(monthlySummaryProvider(cycleKey));
+              ref.invalidate(safeSpendProvider(cycleKey));
+            },
+          ),
         ),
         data: (summary) => safeSpendAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => ErrorState(
-            message: 'Jithu couldn\'t read today\'s spending limit.',
-            onRetry: () => ref.invalidate(safeSpendProvider(cycleKey)),
+          loading: () => const ResponsiveBody(child: DashboardSkeleton()),
+          error: (e, _) => ResponsiveBody(
+            child: ErrorState(
+              message:
+                  '${JithuBranding.displayName} couldn\'t read today\'s spending limit.',
+              onRetry: () => ref.invalidate(safeSpendProvider(cycleKey)),
+            ),
           ),
           data: (safeSpend) => _JithuBody(
             controller: _controller,
@@ -195,10 +203,14 @@ class _JithuBody extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: ActionChip(
-                      label: Text(s),
-                      avatar: const Icon(Icons.auto_awesome_rounded, size: 16),
-                      onPressed: isLoading ? null : () => onAsk(s),
+                    child: Tooltip(
+                      message: s,
+                      child: ActionChip(
+                        label: Text(s),
+                        avatar:
+                            const Icon(Icons.auto_awesome_rounded, size: 16),
+                        onPressed: isLoading ? null : () => onAsk(s),
+                      ),
                     ),
                   ),
                 ),
@@ -227,7 +239,7 @@ class _JithuBody extends StatelessWidget {
                     minLines: 1,
                     maxLines: 3,
                     decoration: const InputDecoration(
-                      hintText: 'Ask Jithu a money question...',
+                      hintText: 'Ask a money question...',
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.md,
                         vertical: AppSpacing.sm,
@@ -237,30 +249,34 @@ class _JithuBody extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                SizedBox(
-                  height: 48,
-                  width: 48,
-                  child: FilledButton(
-                    onPressed: isLoading ? null : () => onAsk(controller.text),
-                    style: FilledButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
+                Semantics(
+                  button: true,
+                  label: 'Send message',
+                  child: SizedBox(
+                    height: 48,
+                    width: 48,
+                    child: FilledButton(
+                      onPressed: isLoading ? null : () => onAsk(controller.text),
+                      style: FilledButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
                       ),
-                    ),
-                    child: isLoading
-                        ? SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                      child: isLoading
+                          ? SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.colorScheme.onPrimary,
+                              ),
+                            )
+                          : Icon(
+                              Icons.send_rounded,
                               color: theme.colorScheme.onPrimary,
                             ),
-                          )
-                        : Icon(
-                            Icons.send_rounded,
-                            color: theme.colorScheme.onPrimary,
-                          ),
+                    ),
                   ),
                 ),
               ],
@@ -296,14 +312,6 @@ class _JithuSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Jithu already knows this about you',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Container(
@@ -324,7 +332,7 @@ class _JithuSummaryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Jithu\'s quick read',
+                      'Your snapshot',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -473,7 +481,7 @@ class _TypingBubble extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Text(
-              'Jithu is thinking...',
+              'Thinking...',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

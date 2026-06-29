@@ -91,11 +91,9 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.sm,
+                padding: const EdgeInsets.only(
+                  top: AppSpacing.sm,
+                  bottom: AppSpacing.sm,
                 ),
                 child: Row(
                   children: [
@@ -144,10 +142,7 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
                   loading: () => ListView.builder(
                     itemCount: 6,
                     itemBuilder: (_, __) => const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.xs,
-                      ),
+                      padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
                       child: SkeletonCard(height: 56),
                     ),
                   ),

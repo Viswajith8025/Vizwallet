@@ -50,17 +50,21 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
         ],
       ),
       body: timelineAsync.when(
-        loading: () => ListView.builder(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          itemCount: 6,
-          itemBuilder: (_, __) => const Padding(
-            padding: EdgeInsets.only(bottom: AppSpacing.sm),
-            child: SkeletonCard(height: 72),
+        loading: () => ResponsiveBody(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+            itemCount: 6,
+            itemBuilder: (_, __) => const Padding(
+              padding: EdgeInsets.only(bottom: AppSpacing.sm),
+              child: SkeletonCard(height: 72),
+            ),
           ),
         ),
-        error: (e, _) => ErrorState(
-          message: 'Could not load activity history.',
-          onRetry: () => ref.invalidate(activityTimelineProvider),
+        error: (e, _) => ResponsiveBody(
+          child: ErrorState(
+            message: 'Could not load activity history.',
+            onRetry: () => ref.invalidate(activityTimelineProvider),
+          ),
         ),
         data: (groups) {
           if (groups.isEmpty) {
@@ -81,11 +85,9 @@ class _ActivityTimelineScreenState extends ConsumerState<ActivityTimelineScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.md,
-                          AppSpacing.md,
-                          AppSpacing.md,
-                          AppSpacing.sm,
+                        padding: const EdgeInsets.only(
+                          top: AppSpacing.md,
+                          bottom: AppSpacing.sm,
                         ),
                         child: Text(
                           group.dateLabel,
