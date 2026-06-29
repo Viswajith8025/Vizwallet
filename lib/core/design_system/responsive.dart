@@ -97,13 +97,20 @@ class ResponsiveBody extends StatelessWidget {
         final width = constraints.maxWidth;
         final maxWidth = AppResponsive.contentMaxWidth(width);
         final horizontal = AppResponsive.horizontalPadding(width);
+        final extra = padding?.resolve(Directionality.of(context)) ?? EdgeInsets.zero;
+        final effectivePadding = EdgeInsets.fromLTRB(
+          horizontal + extra.left,
+          extra.top,
+          horizontal + extra.right,
+          extra.bottom,
+        );
 
         return Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth),
             child: Padding(
-              padding: padding ?? EdgeInsets.symmetric(horizontal: horizontal),
+              padding: effectivePadding,
               child: child,
             ),
           ),

@@ -11,6 +11,7 @@ import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_chip.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
+import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/providers/settings_provider.dart';
@@ -50,16 +51,18 @@ class ExpenseListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.sm,
-              AppSpacing.md,
-              AppSpacing.xs,
-            ),
+      body: ResponsiveBody(
+        padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                0,
+                AppSpacing.sm,
+                0,
+                AppSpacing.xs,
+              ),
             child: Wrap(
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
@@ -92,7 +95,7 @@ class ExpenseListScreen extends ConsumerWidget {
           Expanded(
             child: expensesAsync.when(
               loading: () => ListView.separated(
-                padding: ShellBottomInset.scrollPadding(context),
+                padding: ShellBottomInset.bottomOnly(context),
                 itemCount: 8,
                 separatorBuilder: (_, __) =>
                     const SizedBox(height: AppSpacing.xs),
@@ -116,9 +119,9 @@ class ExpenseListScreen extends ConsumerWidget {
 
                 return ListView.separated(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: ShellBottomInset.scrollPadding(
-                    context,
+                  padding: EdgeInsets.only(
                     top: AppSpacing.xs,
+                    bottom: ShellBottomInset.scrollBottom(context),
                   ),
                   itemCount: expenses.length + 1,
                   separatorBuilder: (_, __) =>
@@ -222,6 +225,7 @@ class ExpenseListScreen extends ConsumerWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

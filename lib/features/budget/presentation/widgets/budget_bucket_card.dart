@@ -3,6 +3,8 @@ import 'package:rupee_track/core/branding/brand_colors.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/budget/domain/allocation_mode.dart';
 import 'package:rupee_track/features/budget/domain/bucket_status.dart';
+import 'package:rupee_track/core/design_system/compact_label.dart';
+import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/features/budget/presentation/widgets/budget_progress_bar.dart';
 
@@ -50,27 +52,32 @@ class BudgetBucketCard extends StatelessWidget {
                     const SizedBox(width: 10),
                   ],
                   Expanded(
-                    child: Text(
+                    child: SingleLineLabel(
                       bucket.displayName,
                       style: theme.textTheme.titleMedium,
                     ),
                   ),
                   if (bucket.alertLevel != BudgetAlertLevel.none)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _alertColor(context, bucket.alertLevel)
-                            .withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        _alertLabel,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: _alertColor(context, bucket.alertLevel),
-                          fontWeight: FontWeight.w600,
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _alertColor(context, bucket.alertLevel)
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _alertLabel,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: _alertColor(context, bucket.alertLevel),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -102,17 +109,22 @@ class BudgetBucketCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Text(
-                    '${bucket.percentUsed.toStringAsFixed(0)}% used',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  Flexible(
+                    child: SingleLineLabel(
+                      '${bucket.percentUsed.toStringAsFixed(0)}% used',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    '${formatPaise(bucket.dailyAllowancePaise)} per day · ${bucket.daysRemaining} days left',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  const SizedBox(width: AppSpacing.sm),
+                  Flexible(
+                    child: SingleLineLabel(
+                      '${formatPaise(bucket.dailyAllowancePaise)} per day · ${bucket.daysRemaining} days left',
+                      textAlign: TextAlign.end,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -159,13 +171,13 @@ class _Metric extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          FittingLabel(
             label,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          Text(
+          FittingLabel(
             value,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,

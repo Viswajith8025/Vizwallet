@@ -18,14 +18,12 @@ class _QuickAddVoiceButtonState extends State<QuickAddVoiceButton> {
   final _speech = SpeechToText();
   bool _listening = false;
   bool _available = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initSpeech();
-  }
+  bool _initializing = false;
 
   Future<void> _initSpeech() async {
+    if (_available || _initializing) return;
+
+    setState(() => _initializing = true);
     try {
       _available = await _speech.initialize(
         onStatus: (status) {
@@ -37,25 +35,21 @@ class _QuickAddVoiceButtonState extends State<QuickAddVoiceButton> {
           if (mounted) setState(() => _listening = false);
         },
       );
-      if (mounted) setState(() {});
     } catch (_) {
       _available = false;
+    } finally {
+      if (mounted) setState(() => _initializing = false);
     }
   }
 
   Future<void> _toggleListen() async {
-    if (!_available) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Voice input not available on this device')),
-      );
-      return;
-    }
-
     if (_listening) {
       await _speech.stop();
       setState(() => _listening = false);
       return;
     }
+
+    if (_initializing) return;
 
     final micGranted = await _ensureMicPermission();
     if (!micGranted) {
@@ -63,6 +57,20 @@ class _QuickAddVoiceButtonState extends State<QuickAddVoiceButton> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Microphone permission is required for voice input'),
+        ),
+      );
+      return;
+    }
+
+    if (!_available) {
+      await _initSpeech();
+    }
+
+    if (!_available) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Voice input not available on this device'),
         ),
       );
       return;
@@ -96,9 +104,15 @@ class _QuickAddVoiceButtonState extends State<QuickAddVoiceButton> {
   Widget build(BuildContext context) {
     return Expanded(
       child: FilledButton.tonalIcon(
-        onPressed: _toggleListen,
+        onPressed: _initializing ? null : _toggleListen,
         icon: Icon(_listening ? Icons.mic : Icons.mic_none),
-        label: Text(_listening ? 'Listening…' : 'Voice'),
+        label: Text(
+          _initializing
+              ? 'Starting…'
+              : _listening
+                  ? 'Listening…'
+                  : 'Voice',
+        ),
       ),
     );
   }

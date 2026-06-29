@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rupee_track/core/design_system/compact_label.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/features/insights/domain/insights_feed_models.dart';
@@ -35,9 +36,13 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
     final item = widget.item;
     final accent = _severityColor(item.severity, theme.colorScheme);
     final icon = item.icon ?? iconForInsightCategory(item.category);
+    final categoryLabel = labelForInsightCategory(item.category);
+    final kindEmoji = emojiForInsightKind(item.kind);
 
     final card = PremiumCard(
-      variant: widget.featured ? PremiumCardVariant.elevated : PremiumCardVariant.standard,
+      variant: widget.featured
+          ? PremiumCardVariant.elevated
+          : PremiumCardVariant.standard,
       accentColor: accent,
       tintColor: widget.featured ? accent : null,
       onTap: widget.compact
@@ -69,18 +74,34 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xxs,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _InsightBadge(
+                      label: '$kindEmoji ${labelForInsightKind(item.kind)}',
+                      color: accent,
+                    ),
+                    _InsightBadge(
+                      label:
+                          '${emojiForInsightCategory(item.category)} $categoryLabel',
+                      color: theme.colorScheme.onSurfaceVariant,
+                      filled: false,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: SingleLineLabel(
                         item.title,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
-                    if (item.kind == InsightKind.achievement)
-                      Icon(Icons.emoji_events_rounded, size: 18, color: accent),
                     if (!widget.compact && widget.onPin != null)
                       IconButton(
                         tooltip: widget.isPinned ? 'Unpin' : 'Pin',
@@ -127,8 +148,9 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                   maxLines: widget.compact || !_expanded ? 2 : null,
-                  overflow:
-                      widget.compact || !_expanded ? TextOverflow.ellipsis : null,
+                  overflow: widget.compact || !_expanded
+                      ? TextOverflow.ellipsis
+                      : null,
                 ),
                 if (!widget.compact &&
                     _expanded &&
@@ -164,10 +186,7 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: card,
     );
   }
@@ -182,6 +201,45 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
       };
 }
 
+class _InsightBadge extends StatelessWidget {
+  const _InsightBadge({
+    required this.label,
+    required this.color,
+    this.filled = true,
+  });
+
+  final String label;
+  final Color color;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
+      decoration: BoxDecoration(
+        color: filled
+            ? color.withValues(alpha: 0.12)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: filled
+            ? null
+            : Border.all(color: theme.dividerColor.withValues(alpha: 0.6)),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: filled ? color : theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
 class DailyTipCard extends StatelessWidget {
   const DailyTipCard({required this.tip, super.key});
 
@@ -190,51 +248,45 @@ class DailyTipCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final accent = theme.colorScheme.tertiary;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.xs,
-        AppSpacing.md,
-        AppSpacing.sm,
-      ),
-      child: PremiumCard(
-        variant: PremiumCardVariant.tinted,
-        tintColor: theme.colorScheme.tertiary,
-        accentColor: theme.colorScheme.tertiary,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.lightbulb_rounded, color: theme.colorScheme.tertiary),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Today's insight",
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.tertiary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    tip.title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    tip.body,
-                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
-                  ),
-                ],
-              ),
+    return PremiumCard(
+      variant: PremiumCardVariant.tinted,
+      tintColor: accent,
+      accentColor: accent,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
-          ],
-        ),
+            alignment: Alignment.center,
+            child: const Text('💡', style: TextStyle(fontSize: 20)),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SingleLineLabel(
+                  tip.title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  tip.body,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -250,40 +302,35 @@ class AchievementBanner extends StatelessWidget {
     if (items.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
+    const winColor = Color(0xFF10B981);
+
     return SizedBox(
-      height: 124,
+      height: 132,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         itemCount: items.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, index) {
           final item = items[index];
           return SizedBox(
-            width: 228,
+            width: 236,
             child: PremiumCard(
               variant: PremiumCardVariant.tinted,
-              tintColor: const Color(0xFF10B981),
-              accentColor: const Color(0xFF10B981),
+              tintColor: winColor,
+              accentColor: winColor,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        Icons.emoji_events_rounded,
-                        color: Color(0xFF10B981),
-                        size: 20,
-                      ),
+                      const Text('🏆', style: TextStyle(fontSize: 18)),
                       const SizedBox(width: AppSpacing.xs),
                       Expanded(
-                        child: Text(
+                        child: SingleLineLabel(
                           item.title,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

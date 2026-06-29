@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:rupee_track/core/design_system/compact_label.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
@@ -207,8 +208,8 @@ class _StatCard extends StatelessWidget {
           children: [
             Icon(icon, size: 18, color: theme.colorScheme.primary),
             const SizedBox(height: 4),
-            Text(label, style: theme.textTheme.labelSmall),
-            Text(
+            SingleLineLabel(label, style: theme.textTheme.labelSmall),
+            SingleLineLabel(
               value,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,

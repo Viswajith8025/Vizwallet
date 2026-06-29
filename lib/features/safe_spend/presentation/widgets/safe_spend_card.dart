@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rupee_track/core/branding/brand_colors.dart';
+import 'package:rupee_track/core/design_system/compact_label.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
-import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/progress_ring.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
@@ -29,7 +29,7 @@ class SafeSpendCard extends StatelessWidget {
                 Icon(Icons.shield_outlined, color: riskColor, size: 22),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
+                  child: SingleLineLabel(
                     'How much can I spend today?',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
@@ -249,14 +249,14 @@ class _MetricTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          FittingLabel(
             label,
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+          FittingLabel(
             value,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
@@ -264,7 +264,7 @@ class _MetricTile extends StatelessWidget {
             ),
           ),
           if (subtitle != null)
-            Text(
+            FittingLabel(
               subtitle!,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.error,
@@ -299,14 +299,14 @@ class _ProjectionRow extends StatelessWidget {
           Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
+            child: SingleLineLabel(
               label,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
-          Text(
+          SingleLineLabel(
             value,
             style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w700,

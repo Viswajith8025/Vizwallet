@@ -3,6 +3,7 @@ import 'package:rupee_track/core/branding/brand_colors.dart';
 import 'package:rupee_track/core/branding/brand_typography.dart';
 import 'package:rupee_track/core/design_system/animated_money_text.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
+import 'package:rupee_track/core/design_system/compact_label.dart';
 import 'package:rupee_track/core/design_system/greeting_utils.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/progress_ring.dart';
@@ -185,17 +186,15 @@ class _HeroStat extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: theme.colorScheme.primary),
           const SizedBox(height: AppSpacing.xs),
-          Text(
+          FittingLabel(
             value,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
               color: valueColor,
             ),
           ),
-          Text(
+          FittingLabel(
             label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

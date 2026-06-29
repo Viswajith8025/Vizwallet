@@ -158,22 +158,6 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
     }
   }
 
-  void _handleAction(QuickAddAction action) {
-    switch (action) {
-      case QuickAddAction.expense:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pick amount and category above'),
-            duration: Duration(seconds: 1),
-          ),
-        );
-        return;
-      case QuickAddAction.income:
-        Navigator.pop(context);
-        context.push(AppRoutes.salary);
-    }
-  }
-
   void _showSupport() {
     showDialog<void>(
       context: context,
@@ -555,10 +539,6 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                const _SectionLabel('Other things you can add'),
-                const SizedBox(height: 10),
-                _ActionGrid(onAction: _handleAction),
         ],
       ),
     );
@@ -758,62 +738,6 @@ class _SectionLabel extends StatelessWidget {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
           ),
-    );
-  }
-}
-
-class _ActionGrid extends StatelessWidget {
-  const _ActionGrid({required this.onAction});
-
-  final ValueChanged<QuickAddAction> onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final actions = <(QuickAddAction, IconData, String)>[
-      (QuickAddAction.expense, Icons.remove_circle_outline, 'Expense'),
-      (QuickAddAction.income, Icons.payments_outlined, 'Salary'),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = AppResponsive.gridColumns(
-          constraints.maxWidth,
-          compact: 2,
-          medium: 2,
-          expanded: 2,
-        );
-
-        return GridView.count(
-          crossAxisCount: columns,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 1.35,
-          children: actions.map((a) {
-        return Material(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(14),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: () => onAction(a.$1),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(a.$2, size: 22),
-                const SizedBox(height: 6),
-                Text(
-                  a.$3,
-                  style: Theme.of(context).textTheme.labelMedium,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-        );
-      },
     );
   }
 }

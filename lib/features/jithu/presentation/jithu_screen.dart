@@ -14,6 +14,8 @@ import 'package:rupee_track/features/jithu/domain/jithu_chat_message.dart';
 import 'package:rupee_track/features/jithu/domain/jithu_fallback_advisor.dart';
 import 'package:rupee_track/features/safe_spend/data/safe_spend_repository.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
+import 'package:rupee_track/core/design_system/responsive.dart';
+import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 
 class JithuScreen extends ConsumerStatefulWidget {
   const JithuScreen({super.key});
@@ -165,18 +167,18 @@ class _JithuBody extends StatelessWidget {
     final theme = Theme.of(context);
     final suggestions = JithuFallbackAdvisor.suggestions(summary);
 
-    return Column(
-      children: [
-        Expanded(
-          child: ListView(
-            controller: scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenHorizontal,
-              AppSpacing.sm,
-              AppSpacing.screenHorizontal,
-              AppSpacing.md,
-            ),
+    return ResponsiveBody(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              controller: scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(
+                top: AppSpacing.sm,
+                bottom: AppSpacing.md,
+              ),
             children: [
               _JithuSummaryCard(summary: summary, safeSpend: safeSpend),
               const SizedBox(height: AppSpacing.md),
@@ -207,15 +209,13 @@ class _JithuBody extends StatelessWidget {
             ],
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.sm,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: AppSpacing.sm,
+                bottom: ShellBottomInset.of(context) + AppSpacing.xs,
+              ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -264,10 +264,11 @@ class _JithuBody extends StatelessWidget {
                   ),
                 ),
               ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -88,7 +88,14 @@ class DashboardCanvas extends ConsumerWidget {
 }
 
 EdgeInsets _dashboardListPadding(BuildContext context) {
-  return ShellBottomInset.scrollPadding(context);
+  return const EdgeInsets.only(top: AppSpacing.sm);
+}
+
+Widget _dashboardScrollShell(BuildContext context, Widget child) {
+  return ResponsiveBody(
+    padding: ShellBottomInset.bottomOnly(context),
+    child: child,
+  );
 }
 
 class _EditModeBanner extends StatelessWidget {
@@ -137,23 +144,26 @@ class _SingleColumnBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final editMode = ref.watch(dashboardEditModeProvider);
 
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: _dashboardListPadding(context),
-      children: [
-        if (showQuickActions) ...[
-          const DashboardQuickActionsBar(),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-        ...visible.map(
-          (w) => DashboardWidgetShell(
-            key: ValueKey(w.id),
-            instance: w,
-            editMode: editMode,
-            density: layout.density,
+    return _dashboardScrollShell(
+      context,
+      ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: _dashboardListPadding(context),
+        children: [
+          if (showQuickActions) ...[
+            const DashboardQuickActionsBar(),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          ...visible.map(
+            (w) => DashboardWidgetShell(
+              key: ValueKey(w.id),
+              instance: w,
+              editMode: editMode,
+              density: layout.density,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -174,41 +184,44 @@ class _TwoColumnBody extends ConsumerWidget {
     final editMode = ref.watch(dashboardEditModeProvider);
     final rows = _chunkRows(visible);
 
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: _dashboardListPadding(context),
-      children: [
-        if (showQuickActions) ...[
-          const DashboardQuickActionsBar(),
-          const SizedBox(height: AppSpacing.sm),
+    return _dashboardScrollShell(
+      context,
+      ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: _dashboardListPadding(context),
+        children: [
+          if (showQuickActions) ...[
+            const DashboardQuickActionsBar(),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          ...rows.map((row) {
+            if (row.length == 1 || row.first.pinned) {
+              return DashboardWidgetShell(
+                key: ValueKey(row.first.id),
+                instance: row.first,
+                editMode: editMode,
+                density: layout.density,
+              );
+            }
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < row.length; i++)
+                    Expanded(
+                      child: DashboardWidgetShell(
+                        key: ValueKey(row[i].id),
+                        instance: row[i],
+                        editMode: editMode,
+                        density: layout.density,
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
         ],
-        ...rows.map((row) {
-        if (row.length == 1 || row.first.pinned) {
-          return DashboardWidgetShell(
-            key: ValueKey(row.first.id),
-            instance: row.first,
-            editMode: editMode,
-            density: layout.density,
-          );
-        }
-        return IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < row.length; i++)
-                Expanded(
-                  child: DashboardWidgetShell(
-                    key: ValueKey(row[i].id),
-                    instance: row[i],
-                    editMode: editMode,
-                    density: layout.density,
-                  ),
-                ),
-            ],
-          ),
-        );
-      }),
-      ],
+      ),
     );
   }
 
@@ -249,9 +262,11 @@ class _ReorderableList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ReorderableListView.builder(
-      padding: _dashboardListPadding(context),
-      buildDefaultDragHandles: false,
+    return _dashboardScrollShell(
+      context,
+      ReorderableListView.builder(
+        padding: _dashboardListPadding(context),
+        buildDefaultDragHandles: false,
       proxyDecorator: (child, index, animation) {
         return AnimatedBuilder(
           animation: animation,
@@ -281,6 +296,7 @@ class _ReorderableList extends ConsumerWidget {
           density: layout.density,
         );
       },
+      ),
     );
   }
 }

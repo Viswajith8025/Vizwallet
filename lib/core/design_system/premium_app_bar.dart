@@ -24,10 +24,37 @@ class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final horizontal = AppResponsive.horizontalPadding(
+      MediaQuery.sizeOf(context).width,
+    );
     final appBarActions = [
       ...?actions,
       const ThemeToggleButton(),
     ];
+    final titleWidget = subtitle == null
+        ? Text(
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                subtitle!,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          );
 
     return AppBar(
       toolbarHeight: subtitle != null ? 72 : kToolbarHeight,
@@ -36,29 +63,11 @@ class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: leading == null,
       centerTitle: centerTitle,
       actions: appBarActions,
-      title: subtitle == null
-          ? Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  subtitle!,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+      title: centerTitle
+          ? titleWidget
+          : Padding(
+              padding: EdgeInsets.only(left: leading == null ? horizontal : 0),
+              child: titleWidget,
             ),
     );
   }

@@ -177,3 +177,71 @@ IconData iconForInsightCategory(InsightCategory category) =>
       InsightCategory.safeSpend => Icons.shield_outlined,
       InsightCategory.tip => Icons.lightbulb_outline,
     };
+
+String emojiForInsightCategory(InsightCategory category) =>
+    switch (category) {
+      InsightCategory.spending => '💸',
+      InsightCategory.savings => '🐷',
+      InsightCategory.budget => '📊',
+      InsightCategory.goal => '🎯',
+      InsightCategory.subscription => '📺',
+      InsightCategory.loan => '🤝',
+      InsightCategory.wishlist => '💝',
+      InsightCategory.income => '💰',
+      InsightCategory.health => '❤️',
+      InsightCategory.calendar => '📅',
+      InsightCategory.merchant => '🏪',
+      InsightCategory.category => '🏷️',
+      InsightCategory.noSpend => '🌙',
+      InsightCategory.salaryCycle => '🔄',
+      InsightCategory.forecast => '📈',
+      InsightCategory.achievement => '🏆',
+      InsightCategory.behavioral => '🧠',
+      InsightCategory.safeSpend => '🛡️',
+      InsightCategory.tip => '💡',
+    };
+
+String labelForInsightCategory(InsightCategory category) =>
+    switch (category) {
+      InsightCategory.spending => 'Spending',
+      InsightCategory.savings => 'Savings',
+      InsightCategory.budget => 'Budget',
+      InsightCategory.goal => 'Goals',
+      InsightCategory.subscription => 'Subscriptions',
+      InsightCategory.loan => 'Loans',
+      InsightCategory.wishlist => 'Wishlist',
+      InsightCategory.income => 'Income',
+      InsightCategory.health => 'Health',
+      InsightCategory.calendar => 'Calendar',
+      InsightCategory.merchant => 'Merchant',
+      InsightCategory.category => 'Category',
+      InsightCategory.noSpend => 'No-spend',
+      InsightCategory.salaryCycle => 'Pay cycle',
+      InsightCategory.forecast => 'Forecast',
+      InsightCategory.achievement => 'Win',
+      InsightCategory.behavioral => 'Habits',
+      InsightCategory.safeSpend => 'Safe spend',
+      InsightCategory.tip => 'Tip',
+    };
+
+String labelForInsightKind(InsightKind kind) =>
+    switch (kind) {
+      InsightKind.insight => 'Insight',
+      InsightKind.warning => 'Alert',
+      InsightKind.achievement => 'Win',
+      InsightKind.recommendation => 'Tip',
+      InsightKind.trend => 'Trend',
+      InsightKind.opportunity => 'Opportunity',
+      InsightKind.tip => 'Daily tip',
+    };
+
+String emojiForInsightKind(InsightKind kind) =>
+    switch (kind) {
+      InsightKind.insight => '💡',
+      InsightKind.warning => '⚠️',
+      InsightKind.achievement => '🏆',
+      InsightKind.recommendation => '✨',
+      InsightKind.trend => '📉',
+      InsightKind.opportunity => '🌱',
+      InsightKind.tip => '💡',
+    };

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rupee_track/core/branding/brand_typography.dart';
+import 'package:rupee_track/core/design_system/compact_label.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 
@@ -29,47 +30,46 @@ class SummaryCard extends StatelessWidget {
     return PremiumCard(
       onTap: onTap,
       accentColor: accentColor,
-      padding: const EdgeInsets.all(AppSpacing.cardPadding),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              if (icon != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  child: Icon(icon, size: 18, color: color),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-              ],
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+          if (icon != null) ...[
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-            ],
+              child: Icon(icon, size: 18, color: color),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          FittingLabel(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          DefaultTextStyle(
-            style: BrandTypography.money(
-              context,
-              fontSize: 22,
-              color: theme.colorScheme.onSurface,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: DefaultTextStyle(
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              style: BrandTypography.money(
+                context,
+                fontSize: 22,
+                color: theme.colorScheme.onSurface,
+              ),
+              child: value,
             ),
-            child: value,
           ),
           if (subtitle != null) ...[
             const SizedBox(height: AppSpacing.xs),
-            Text(
+            FittingLabel(
               subtitle!,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
+import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/router/routes.dart';
@@ -9,6 +10,7 @@ import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/insights/data/insights_feed_repository.dart';
 import 'package:rupee_track/features/insights/domain/insights_feed_models.dart';
 import 'package:rupee_track/features/insights/presentation/widgets/insight_feed_card.dart';
+import 'package:rupee_track/features/insights/presentation/widgets/insights_section_header.dart';
 
 final dismissedInsightIdsProvider = StateProvider<Set<String>>((ref) => {});
 final pinnedInsightIdsProvider = StateProvider<Set<String>>((ref) => {});
@@ -21,17 +23,13 @@ class InsightsFeedSection extends ConsumerWidget {
     final feedAsync = ref.watch(insightsFeedProvider);
     final dismissed = ref.watch(dismissedInsightIdsProvider);
     final pinned = ref.watch(pinnedInsightIdsProvider);
-    final theme = Theme.of(context);
 
     return feedAsync.when(
       loading: () => Column(
         children: List.generate(
           3,
           (_) => const Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
-            ),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
             child: SkeletonCard(height: 88),
           ),
         ),
@@ -43,6 +41,7 @@ class InsightsFeedSection extends ConsumerWidget {
       data: (report) {
         final visible = report.heroItems
             .where((i) => !dismissed.contains(i.id))
+            .where((i) => i.kind != InsightKind.achievement)
             .toList()
           ..sort((a, b) {
             final aPin = pinned.contains(a.id);
@@ -51,124 +50,125 @@ class InsightsFeedSection extends ConsumerWidget {
             return b.rankScore.compareTo(a.rankScore);
           });
 
-        final topAlert = visible.isNotEmpty ? visible.first : null;
-        final rest = topAlert == null ? <InsightFeedItem>[] : visible.skip(1).toList();
+        final priority = visible
+            .where(
+              (i) =>
+                  i.severity == InsightSeverity.critical ||
+                  i.severity == InsightSeverity.warning,
+            )
+            .take(3)
+            .toList();
+        final priorityIds = priority.map((i) => i.id).toSet();
+        final regular =
+            visible.where((i) => !priorityIds.contains(i.id)).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.md,
-                AppSpacing.xs,
-              ),
-              child: Text(
-                'Today',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+            const InsightsSectionHeader(
+              emoji: '💡',
+              title: 'Daily insight',
+              subtitle: 'One quick read to start your day',
+              compactTop: true,
             ),
             DailyTipCard(tip: report.dailyTip),
-            if (topAlert != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: Text(
-                  'Most important',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
+            if (priority.isNotEmpty) ...[
+              InsightsSectionHeader(
+                emoji: '⚠️',
+                title: 'Needs attention',
+                subtitle: 'Alerts worth acting on now',
+                count: priority.length,
+                accentColor: Theme.of(context).colorScheme.error,
               ),
-              InsightFeedCard(
-                item: topAlert,
-                featured: true,
-                isPinned: pinned.contains(topAlert.id),
-                onPin: () {
-                  final next = Set<String>.from(pinned);
-                  if (next.contains(topAlert.id)) {
-                    next.remove(topAlert.id);
-                  } else {
-                    next.add(topAlert.id);
-                  }
-                  ref.read(pinnedInsightIdsProvider.notifier).state = next;
-                },
-                onDismiss: () {
-                  ref.read(dismissedInsightIdsProvider.notifier).state = {
-                    ...dismissed,
-                    topAlert.id,
-                  };
-                },
+              ...priority.map(
+                (item) => InsightFeedCard(
+                  item: item,
+                  featured: true,
+                  isPinned: pinned.contains(item.id),
+                  onPin: () => _togglePin(ref, pinned, item.id),
+                  onDismiss: () => _dismiss(ref, dismissed, item.id),
+                ),
               ),
             ],
             if (report.achievements.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: Text(
-                  'Wins',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.tertiary,
-                  ),
-                ),
+              InsightsSectionHeader(
+                emoji: '🏆',
+                title: 'Your wins',
+                subtitle: 'Progress you have already made',
+                count: report.achievements.length,
+                accentColor: const Color(0xFF10B981),
               ),
               AchievementBanner(items: report.achievements),
             ],
-            if (rest.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: Text(
-                  'For you',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+            if (regular.isNotEmpty) ...[
+              InsightsSectionHeader(
+                emoji: '✨',
+                title: 'More insights',
+                subtitle: 'Trends, tips, and opportunities',
+                count: regular.length,
               ),
-              ...rest.map(
+              ...regular.map(
                 (item) => InsightFeedCard(
                   item: item,
                   isPinned: pinned.contains(item.id),
-                  onPin: () {
-                    final next = Set<String>.from(pinned);
-                    if (next.contains(item.id)) {
-                      next.remove(item.id);
-                    } else {
-                      next.add(item.id);
-                    }
-                    ref.read(pinnedInsightIdsProvider.notifier).state = next;
-                  },
-                  onDismiss: () {
-                    ref.read(dismissedInsightIdsProvider.notifier).state = {
-                      ...dismissed,
-                      item.id,
-                    };
-                  },
+                  onPin: () => _togglePin(ref, pinned, item.id),
+                  onDismiss: () => _dismiss(ref, dismissed, item.id),
                 ),
               ),
             ],
-            if (visible.isEmpty)
+            if (priority.isEmpty &&
+                regular.isEmpty &&
+                report.achievements.isEmpty)
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Text(
-                  'You\'re all caught up. New insights appear as you spend and save.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.5,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                child: PremiumCard(
+                  child: Column(
+                    children: [
+                      const Text('✅', style: TextStyle(fontSize: 32)),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        'You\'re all caught up',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'New insights appear as you spend, save, and hit goals.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              height: 1.45,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
           ],
         );
       },
     );
+  }
+
+  void _togglePin(WidgetRef ref, Set<String> pinned, String id) {
+    final next = Set<String>.from(pinned);
+    if (next.contains(id)) {
+      next.remove(id);
+    } else {
+      next.add(id);
+    }
+    ref.read(pinnedInsightIdsProvider.notifier).state = next;
+  }
+
+  void _dismiss(WidgetRef ref, Set<String> dismissed, String id) {
+    ref.read(dismissedInsightIdsProvider.notifier).state = {
+      ...dismissed,
+      id,
+    };
   }
 }
 
@@ -186,21 +186,21 @@ class InsightsFeedCompactSection extends ConsumerWidget {
         onRetry: () => ref.invalidate(insightsFeedProvider),
       ),
       data: (report) {
-        final top = report.heroItems.take(2).toList();
+        final top = report.heroItems
+            .where((i) => i.kind != InsightKind.achievement)
+            .take(2)
+            .toList();
 
         return Column(
           children: [
             InsightFeedCard(item: report.dailyTip, compact: true),
             ...top.map((item) => InsightFeedCard(item: item, compact: true)),
             if (top.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: PremiumRowTile(
-                  title: 'See all insights',
-                  leading: const Icon(Icons.insights_outlined, size: 20),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => context.go(AppRoutes.insights),
-                ),
+              PremiumRowTile(
+                title: 'See all insights',
+                leading: const Icon(Icons.insights_outlined, size: 20),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.go(AppRoutes.insights),
               ),
           ],
         );

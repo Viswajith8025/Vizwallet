@@ -34,8 +34,3 @@ class QuickAddContext {
   final List<String> recentNotes;
   final List<RepeatExpenseTemplate> repeatTemplates;
 }
-
-enum QuickAddAction {
-  expense,
-  income,
-}

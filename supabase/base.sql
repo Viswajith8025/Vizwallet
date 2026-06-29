@@ -745,11 +745,11 @@ where very_large_expense_threshold_paise = 100000;
 --
 -- UPDATE subscriptions_table SET status = CASE
 --   WHEN is_active = 1 THEN 'active' ELSE 'cancelled' END;
--- UPDATE app_settings SET major_expense_threshold_paise = 50000
+-- UPDATE app_settings_table SET major_expense_threshold_paise = 50000
 --   WHERE major_expense_threshold_paise = 10000;
--- UPDATE app_settings SET large_expense_threshold_paise = 200000
+-- UPDATE app_settings_table SET large_expense_threshold_paise = 200000
 --   WHERE large_expense_threshold_paise = 50000;
--- UPDATE app_settings SET very_large_expense_threshold_paise = 1000000
+-- UPDATE app_settings_table SET very_large_expense_threshold_paise = 1000000
 --   WHERE very_large_expense_threshold_paise = 100000;
 --
 -- DELETE FROM expenses_table;

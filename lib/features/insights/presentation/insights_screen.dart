@@ -27,7 +27,7 @@ class InsightsScreen extends ConsumerWidget {
       return Scaffold(
         appBar: const PremiumAppBar(
           title: 'Insights',
-          subtitle: 'Your personalized financial feed',
+          subtitle: 'Daily feed · trends · charts',
         ),
         body: const DashboardSkeleton(),
       );
@@ -36,7 +36,7 @@ class InsightsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: PremiumAppBar(
         title: 'Insights',
-        subtitle: 'What matters most, right now',
+        subtitle: 'Daily feed · trends · charts',
         actions: [
           IconButton(
             tooltip: 'Search',
@@ -46,14 +46,16 @@ class InsightsScreen extends ConsumerWidget {
         ],
       ),
       body: trendsAsync.when(
-        loading: () => ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: ShellBottomInset.scrollPadding(context),
-          children: const [
-            InsightsFeedSection(),
-            SizedBox(height: AppSpacing.lg),
-            DashboardSkeleton(),
-          ],
+        loading: () => ResponsiveBody(
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: ShellBottomInset.bottomOnly(context),
+            children: const [
+              InsightsFeedSection(),
+              SizedBox(height: AppSpacing.lg),
+              DashboardSkeleton(),
+            ],
+          ),
         ),
         error: (e, _) => ErrorState(
           message: 'We couldn\'t load your insights.',
@@ -75,10 +77,9 @@ class InsightsScreen extends ConsumerWidget {
               padding: EdgeInsets.zero,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: ShellBottomInset.scrollPadding(context),
+                padding: ShellBottomInset.bottomOnly(context),
                 children: [
                   const InsightsFeedSection(),
-                  const SizedBox(height: AppSpacing.lg),
                   InsightsAnalyticsPanel(report: report),
                 ],
               ),

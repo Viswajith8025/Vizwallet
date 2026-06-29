@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rupee_track/core/design_system/compact_label.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
@@ -46,7 +47,7 @@ class CalendarMonthOverviewCard extends StatelessWidget {
             value: formatPaise(overview.budgetRemainingPaise),
           ),
           _OverviewRow(
-            label: 'Subscriptions / mo',
+            label: 'Subscriptions',
             value: formatPaise(overview.subscriptionMonthlyPaise),
           ),
           _OverviewRow(
@@ -101,8 +102,10 @@ class _OverviewRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-          Text(
+          Expanded(
+            child: SingleLineLabel(label, style: theme.textTheme.bodyMedium),
+          ),
+          SingleLineLabel(
             value,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w700,

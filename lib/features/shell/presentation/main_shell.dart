@@ -71,7 +71,8 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Widget _phoneBody(BuildContext context, {required bool showFab}) {
-    final bottomInset = ShellBottomInset.of(context);
+    // Jithu pins its own composer above the nav — skip shell bottom padding there.
+    final bottomInset = showFab ? ShellBottomInset.of(context) : 0.0;
 
     return Stack(
       clipBehavior: Clip.none,

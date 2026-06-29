@@ -22,10 +22,7 @@ class MoreScreen extends StatelessWidget {
       body: ResponsiveBody(
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.only(
-            bottom: ShellBottomInset.scrollBottom(context),
-            right: ShellBottomInset.fabZoneRight(context),
-          ),
+          padding: ShellBottomInset.bottomOnly(context),
           children: [
             const ContextBanner(
               icon: Icons.explore_outlined,

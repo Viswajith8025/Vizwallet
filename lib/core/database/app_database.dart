@@ -246,17 +246,26 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> _migrateExpenseAmountThresholds() async {
-    await customStatement(
-      'UPDATE app_settings SET major_expense_threshold_paise = 50000 '
-      'WHERE major_expense_threshold_paise = 10000',
+    await (update(appSettingsTable)
+          ..where((t) => t.majorExpenseThresholdPaise.equals(10000)))
+        .write(
+      const AppSettingsTableCompanion(
+        majorExpenseThresholdPaise: Value(50000),
+      ),
     );
-    await customStatement(
-      'UPDATE app_settings SET large_expense_threshold_paise = 200000 '
-      'WHERE large_expense_threshold_paise = 50000',
+    await (update(appSettingsTable)
+          ..where((t) => t.largeExpenseThresholdPaise.equals(50000)))
+        .write(
+      const AppSettingsTableCompanion(
+        largeExpenseThresholdPaise: Value(200000),
+      ),
     );
-    await customStatement(
-      'UPDATE app_settings SET very_large_expense_threshold_paise = 1000000 '
-      'WHERE very_large_expense_threshold_paise = 100000',
+    await (update(appSettingsTable)
+          ..where((t) => t.veryLargeExpenseThresholdPaise.equals(100000)))
+        .write(
+      const AppSettingsTableCompanion(
+        veryLargeExpenseThresholdPaise: Value(1000000),
+      ),
     );
   }
 
