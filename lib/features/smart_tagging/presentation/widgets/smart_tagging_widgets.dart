@@ -109,7 +109,9 @@ class SpendingByTagsSection extends ConsumerWidget {
         }
 
         final total = rows.fold<int>(0, (sum, r) => sum + r.totalPaise);
-        return Column(
+        return Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.xs),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -174,6 +176,7 @@ class SpendingByTagsSection extends ConsumerWidget {
               );
             }),
           ],
+        ),
         );
       },
     );

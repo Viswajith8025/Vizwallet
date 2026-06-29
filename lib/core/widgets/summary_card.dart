@@ -49,6 +49,8 @@ class SummaryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

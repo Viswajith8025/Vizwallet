@@ -1,34 +1,37 @@
-# Apply Vizwallet schema to your Supabase project
+# Vizwallet Supabase schema
 
-## Recommended — full schema (`base.sql`)
+## Single source of truth: `base.sql`
 
-Use this for a complete cloud schema (profiles, expenses, budgets, loans, etc.) with RLS.
+**All Supabase SQL lives in [`base.sql`](./base.sql)** — tables, indexes, RLS, triggers, RPCs, v10 backfills, maintenance queries, and a commented SQLite reference for the local Drift database.
+
+The `migrations/` folder is kept only for Supabase CLI history. Do **not** edit migrations for new schema changes; update `base.sql` instead.
+
+## Apply schema (recommended)
 
 **Supabase Dashboard**
 
 1. Open [SQL editor](https://supabase.com/dashboard/project/fuoczdljmzvcmkimlant/sql/new)
-2. Paste the contents of `supabase/base.sql`
+2. Paste the full contents of `supabase/base.sql`
 3. Click **Run**
-4. Apply follow-up migrations in order:
-   - `supabase/migrations/20260628000000_password_hint.sql` (if not already in `base.sql`)
-   - `supabase/migrations/20260629000000_secure_password_hint.sql`
+4. **Authentication → Providers → Email** — enable Email and Allow signups
+5. **Authentication → Providers → Email** — disable **Confirm email** (optional, for faster dev sign-up)
 
 **Supabase CLI** (linked project)
 
 ```bash
 npx supabase login
 npx supabase link --project-ref fuoczdljmzvcmkimlant
+# Prefer SQL editor + base.sql for full schema.
+# db push only applies no-op migration stubs if history already exists.
 npx supabase db push
 ```
 
-## Minimal schema (auth + profiles only)
+## What the app uses today
 
-If you only need sign-in today (app data stays on-device), you can run:
+| Layer | Storage | Schema file |
+|-------|---------|-------------|
+| Expenses, budgets, loans, etc. | **Local SQLite** (Drift v10) | Commented in `base.sql` §18 |
+| Sign-in, password hint | **Supabase Auth + `profiles`** | `base.sql` §1, §HELPERS |
+| Future cloud sync | **Supabase tables** | `base.sql` §2–§15 |
 
-- `supabase/migrations/20260617000000_initial_schema.sql`
-- `supabase/migrations/20260628000000_password_hint.sql`
-- `supabase/migrations/20260629000000_secure_password_hint.sql`
-
-The Flutter app uses **local SQLite** for expenses and budgets. Cloud tables beyond `profiles` are prepared for future sync.
-
-After migration, **Settings → Account** should show “Account service is online” when Supabase is reachable.
+After applying `base.sql`, **Settings → Cloud account** should show the account service as online when Supabase is reachable.

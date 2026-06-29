@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rupee_track/bootstrap.dart';
-import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_nav.dart';
 import 'package:rupee_track/core/design_system/premium_side_nav.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
@@ -21,17 +19,6 @@ class MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
-  static const _fabXKey = 'quick_add_fab_x';
-  static const _fabYKey = 'quick_add_fab_y';
-  static const _fabSize = 56.0;
-  static const _edgePadding = AppSpacing.md;
-
-  static double _bottomClearance(
-    BuildContext context, {
-    required bool hasBottomNav,
-  }) =>
-      ShellBottomInset.of(context, hasBottomNav: hasBottomNav) + _fabSize / 2;
-
   static const _destinations = [
     PremiumNavDestination(
       icon: Icons.home_outlined,
@@ -51,7 +38,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     PremiumNavDestination(
       icon: Icons.auto_awesome_outlined,
       selectedIcon: Icons.auto_awesome_rounded,
-      label: 'Jithu',
+      label: 'Ask Jithu',
     ),
     PremiumNavDestination(
       icon: Icons.grid_view_outlined,
@@ -59,18 +46,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'More',
     ),
   ];
-
-  Offset? _fabOffset;
-
-  @override
-  void initState() {
-    super.initState();
-    final x = sharedPreferences.getDouble(_fabXKey);
-    final y = sharedPreferences.getDouble(_fabYKey);
-    if (x != null && y != null) {
-      _fabOffset = Offset(x, y);
-    }
-  }
 
   int _indexForLocation(String location) {
     if (location.startsWith(AppRoutes.expenses)) return 1;
@@ -95,87 +70,24 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
   }
 
-  Widget _buildShellBody(BuildContext context, Size size, {required bool hasBottomNav}) {
-    final location = GoRouterState.of(context).uri.toString();
-    final showFab = !location.startsWith(AppRoutes.jithu);
-    final bottomInset = ShellBottomInset.of(context, hasBottomNav: hasBottomNav);
-    final offset = _clampFabOffset(
-      context,
-      _fabOffset ?? _defaultFabOffset(context, size, hasBottomNav: hasBottomNav),
-      size,
-      hasBottomNav: hasBottomNav,
-    );
+  Widget _phoneBody(BuildContext context, {required bool showFab}) {
+    final bottomInset = ShellBottomInset.of(context);
 
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         Padding(
           padding: EdgeInsets.only(bottom: bottomInset),
           child: widget.child,
         ),
-        Positioned(
-          left: offset.dx,
-          top: offset.dy,
-          child: GestureDetector(
-            onPanUpdate: showFab
-                ? (details) {
-                    setState(() {
-                      _fabOffset = _clampFabOffset(
-                        context,
-                        offset + details.delta,
-                        size,
-                        hasBottomNav: hasBottomNav,
-                      );
-                    });
-                  }
-                : null,
-            onPanEnd: showFab
-                ? (_) {
-                    final saved = _clampFabOffset(
-                      context,
-                      _fabOffset ?? offset,
-                      size,
-                      hasBottomNav: hasBottomNav,
-                    );
-                    _saveFabOffset(saved);
-                  }
-                : null,
-            child: showFab ? const QuickAddFab() : const SizedBox.shrink(),
+        if (showFab)
+          Positioned(
+            right: ShellBottomInset.fabMargin,
+            bottom: ShellBottomInset.fabBottom(context),
+            child: const QuickAddFab(),
           ),
-        ),
       ],
     );
-  }
-
-  Offset _defaultFabOffset(
-    BuildContext context,
-    Size size, {
-    required bool hasBottomNav,
-  }) {
-    final clearance = _bottomClearance(context, hasBottomNav: hasBottomNav);
-    return Offset(
-      size.width - _fabSize - _edgePadding,
-      size.height - _fabSize - clearance,
-    );
-  }
-
-  Offset _clampFabOffset(
-    BuildContext context,
-    Offset offset,
-    Size size, {
-    required bool hasBottomNav,
-  }) {
-    final clearance = _bottomClearance(context, hasBottomNav: hasBottomNav);
-    final maxX = size.width - _fabSize - _edgePadding;
-    final maxY = size.height - _fabSize - clearance;
-    return Offset(
-      offset.dx.clamp(_edgePadding, maxX),
-      offset.dy.clamp(_edgePadding, maxY),
-    );
-  }
-
-  Future<void> _saveFabOffset(Offset offset) async {
-    await sharedPreferences.setDouble(_fabXKey, offset.dx);
-    await sharedPreferences.setDouble(_fabYKey, offset.dy);
   }
 
   Future<void> _handleBackPress(BuildContext context, int tabIndex) async {
@@ -223,6 +135,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     final location = GoRouterState.of(context).uri.toString();
     final index = _indexForLocation(location);
     final useRail = AppResponsive.isMediumOrWider(context);
+    final showFab = !location.startsWith(AppRoutes.jithu);
 
     if (useRail) {
       return _wrapWithExitGuard(
@@ -238,18 +151,17 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
               const VerticalDivider(width: 1, thickness: 1),
               Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return _buildShellBody(
-                      context,
-                      constraints.biggest,
-                      hasBottomNav: false,
-                    );
-                  },
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: ShellBottomInset.of(context, hasBottomNav: false),
+                  ),
+                  child: widget.child,
                 ),
               ),
             ],
           ),
+          floatingActionButton: showFab ? const QuickAddFab() : null,
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         ),
       );
     }
@@ -259,15 +171,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       index,
       Scaffold(
         extendBody: true,
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            return _buildShellBody(
-              context,
-              constraints.biggest,
-              hasBottomNav: true,
-            );
-          },
-        ),
+        body: _phoneBody(context, showFab: showFab),
         bottomNavigationBar: PremiumBottomNav(
           selectedIndex: index,
           destinations: _destinations,

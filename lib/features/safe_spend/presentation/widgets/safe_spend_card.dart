@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rupee_track/core/branding/brand_colors.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
+import 'package:rupee_track/core/design_system/design_tokens.dart';
+import 'package:rupee_track/core/design_system/progress_ring.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
 
@@ -16,6 +18,8 @@ class SafeSpendCard extends StatelessWidget {
     final usage = snapshot.todayUsagePercent.clamp(0, 200) / 100;
 
     return PremiumCard(
+      variant: PremiumCardVariant.tinted,
+      tintColor: riskColor,
       accentColor: riskColor,
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -24,13 +28,14 @@ class SafeSpendCard extends StatelessWidget {
               children: [
                 Icon(Icons.shield_outlined, color: riskColor, size: 22),
                 const SizedBox(width: 8),
-                Text(
-                  'Today\'s spending guide',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Text(
+                    'How much can I spend today?',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-                const Spacer(),
                 _RiskChip(level: snapshot.riskLevel, color: riskColor),
               ],
             ),
@@ -43,7 +48,7 @@ class SafeSpendCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Suggested daily limit',
+                        'Safe to spend today',
                         style: theme.textTheme.labelLarge?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -59,26 +64,16 @@ class SafeSpendCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(
-                  width: 72,
-                  height: 72,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        value: usage > 1 ? 1 : usage,
-                        strokeWidth: 7,
-                        backgroundColor:
-                            theme.colorScheme.surfaceContainerHighest,
-                        color: riskColor,
-                      ),
-                      Text(
-                        '${snapshot.todayUsagePercent.round()}%',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+                ProgressRing(
+                  progress: usage > 1 ? 1 : usage,
+                  size: 72,
+                  strokeWidth: 7,
+                  color: riskColor,
+                  child: Text(
+                    '${snapshot.todayUsagePercent.round()}%',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],

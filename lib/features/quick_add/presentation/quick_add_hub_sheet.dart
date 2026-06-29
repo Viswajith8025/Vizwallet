@@ -15,6 +15,7 @@ import 'package:rupee_track/features/quick_add/presentation/widgets/quick_add_vo
 import 'package:rupee_track/features/smart_tagging/data/tagging_repository.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
+import 'package:rupee_track/core/design_system/app_scroll_behavior.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 
 Future<void> showQuickAddSheet(BuildContext context, WidgetRef ref) {
@@ -237,11 +238,22 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                      'Add expense quickly',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Add an expense',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            'Amount → category → save',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     IconButton(
@@ -298,32 +310,29 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                       children: [
                         const _SectionLabel('Repeat a recent expense'),
                         const SizedBox(height: 8),
-                        SizedBox(
+                        AppHorizontalChipList(
                           height: 44,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: ctx.repeatTemplates.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 8),
-                            itemBuilder: (context, i) {
-                              final t = ctx.repeatTemplates[i];
-                              return ActionChip(
-                                avatar: CircleAvatar(
-                                  radius: 10,
-                                  backgroundColor:
-                                      Color(t.colorValue).withValues(alpha: 0.2),
-                                  child: Icon(
-                                    Icons.replay,
-                                    size: 12,
-                                    color: Color(t.colorValue),
-                                  ),
+                          separatorWidth: 8,
+                          itemCount: ctx.repeatTemplates.length,
+                          itemBuilder: (context, i) {
+                            final t = ctx.repeatTemplates[i];
+                            return ActionChip(
+                              avatar: CircleAvatar(
+                                radius: 10,
+                                backgroundColor:
+                                    Color(t.colorValue).withValues(alpha: 0.2),
+                                child: Icon(
+                                  Icons.replay,
+                                  size: 12,
+                                  color: Color(t.colorValue),
                                 ),
-                                label: Text(
-                                  '${t.title} · ${formatPaise(t.amountPaise)}',
-                                ),
-                                onPressed: _saving ? null : () => _repeat(t),
-                              );
-                            },
-                          ),
+                              ),
+                              label: Text(
+                                '${t.title} · ${formatPaise(t.amountPaise)}',
+                              ),
+                              onPressed: _saving ? null : () => _repeat(t),
+                            );
+                          },
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -410,7 +419,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                                 final isSelected = _selectedCategoryId == cat.id;
                                 return SizedBox(
                                   width: tileExtent,
-                                  height: tileExtent * 0.92,
+                                  height: tileExtent,
                                   child: _CategoryTile(
                                     category: cat,
                                     isFavorite: isFavorite,
@@ -625,25 +634,22 @@ class _AmountSuggestions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return AppHorizontalChipList(
       height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: suggestions.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, i) {
-          final paise = suggestions[i];
-          final selected = paise == selectedPaise;
-          return ChoiceChip(
-            label: Text(formatPaise(paise)),
-            selected: selected,
-            onSelected: (_) {
-              HapticFeedback.selectionClick();
-              onTap(paise);
-            },
-          );
-        },
-      ),
+      itemCount: suggestions.length,
+      separatorWidth: 8,
+      itemBuilder: (context, i) {
+        final paise = suggestions[i];
+        final selected = paise == selectedPaise;
+        return ChoiceChip(
+          label: Text(formatPaise(paise)),
+          selected: selected,
+          onSelected: (_) {
+            HapticFeedback.selectionClick();
+            onTap(paise);
+          },
+        );
+      },
     );
   }
 }
@@ -695,10 +701,10 @@ class _CategoryTile extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       category.name,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),

@@ -9,12 +9,18 @@ class InsightFeedCard extends StatefulWidget {
     required this.item,
     super.key,
     this.onDismiss,
+    this.onPin,
     this.compact = false,
+    this.featured = false,
+    this.isPinned = false,
   });
 
   final InsightFeedItem item;
   final VoidCallback? onDismiss;
+  final VoidCallback? onPin;
   final bool compact;
+  final bool featured;
+  final bool isPinned;
 
   @override
   State<InsightFeedCard> createState() => _InsightFeedCardState();
@@ -31,7 +37,9 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
     final icon = item.icon ?? iconForInsightCategory(item.category);
 
     final card = PremiumCard(
+      variant: widget.featured ? PremiumCardVariant.elevated : PremiumCardVariant.standard,
       accentColor: accent,
+      tintColor: widget.featured ? accent : null,
       onTap: widget.compact
           ? (item.actionRoute != null
               ? () => navigateToInsightAction(context, item)
@@ -41,10 +49,17 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.12),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  accent.withValues(alpha: 0.2),
+                  accent.withValues(alpha: 0.08),
+                ],
+              ),
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Icon(icon, color: accent, size: 22),
@@ -60,19 +75,35 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
                       child: Text(
                         item.title,
                         style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
                     if (item.kind == InsightKind.achievement)
-                      Icon(
-                        Icons.emoji_events_rounded,
-                        size: 18,
-                        color: accent,
+                      Icon(Icons.emoji_events_rounded, size: 18, color: accent),
+                    if (!widget.compact && widget.onPin != null)
+                      IconButton(
+                        tooltip: widget.isPinned ? 'Unpin' : 'Pin',
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        onPressed: widget.onPin,
+                        icon: Icon(
+                          widget.isPinned
+                              ? Icons.push_pin_rounded
+                              : Icons.push_pin_outlined,
+                          size: 18,
+                          color: widget.isPinned
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     if (!widget.compact && widget.onDismiss != null)
                       IconButton(
-                        tooltip: 'Hide insight',
+                        tooltip: 'Dismiss',
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(
@@ -92,10 +123,10 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
                 Text(
                   item.body,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    height: 1.4,
+                    height: 1.45,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  maxLines: widget.compact || !_expanded ? 3 : null,
+                  maxLines: widget.compact || !_expanded ? 2 : null,
                   overflow:
                       widget.compact || !_expanded ? TextOverflow.ellipsis : null,
                 ),
@@ -107,7 +138,7 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
                     '${item.metricLabel ?? 'Metric'}: ${item.metricValue}',
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: accent,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -115,9 +146,9 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
                     _expanded &&
                     item.actionRoute != null) ...[
                   const SizedBox(height: AppSpacing.sm),
-                  TextButton(
+                  FilledButton.tonal(
                     onPressed: () => navigateToInsightAction(context, item),
-                    child: Text(item.actionLabel ?? 'Learn more'),
+                    child: Text(item.actionLabel ?? 'Take action'),
                   ),
                 ],
               ],
@@ -125,9 +156,7 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
           ),
           if (!widget.compact)
             Icon(
-              _expanded
-                  ? Icons.expand_less_rounded
-                  : Icons.expand_more_rounded,
+              _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
               color: theme.colorScheme.onSurfaceVariant,
             ),
         ],
@@ -146,9 +175,9 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
   Color _severityColor(InsightSeverity severity, ColorScheme scheme) =>
       switch (severity) {
         InsightSeverity.critical => scheme.error,
-        InsightSeverity.warning => const Color(0xFFFF9800),
+        InsightSeverity.warning => const Color(0xFFF59E0B),
         InsightSeverity.opportunity => scheme.tertiary,
-        InsightSeverity.achievement => const Color(0xFF43A047),
+        InsightSeverity.achievement => const Color(0xFF10B981),
         InsightSeverity.info => scheme.primary,
       };
 }
@@ -165,28 +194,35 @@ class DailyTipCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.md,
         AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.md,
       ),
       child: PremiumCard(
+        variant: PremiumCardVariant.tinted,
+        tintColor: theme.colorScheme.tertiary,
         accentColor: theme.colorScheme.tertiary,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.lightbulb_rounded,
-              color: theme.colorScheme.tertiary,
-            ),
+            Icon(Icons.lightbulb_rounded, color: theme.colorScheme.tertiary),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
+                    "Today's insight",
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.tertiary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
                     tip.title,
                     style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -215,7 +251,7 @@ class AchievementBanner extends StatelessWidget {
 
     final theme = Theme.of(context);
     return SizedBox(
-      height: 120,
+      height: 124,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -224,9 +260,11 @@ class AchievementBanner extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = items[index];
           return SizedBox(
-            width: 220,
+            width: 228,
             child: PremiumCard(
-              accentColor: const Color(0xFF43A047),
+              variant: PremiumCardVariant.tinted,
+              tintColor: const Color(0xFF10B981),
+              accentColor: const Color(0xFF10B981),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -234,7 +272,7 @@ class AchievementBanner extends StatelessWidget {
                     children: [
                       const Icon(
                         Icons.emoji_events_rounded,
-                        color: Color(0xFF43A047),
+                        color: Color(0xFF10B981),
                         size: 20,
                       ),
                       const SizedBox(width: AppSpacing.xs),

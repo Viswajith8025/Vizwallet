@@ -192,6 +192,7 @@ class _SummaryGridWidget extends ConsumerWidget {
       loading: () => const SkeletonCard(height: 120),
       error: (_, __) => const SizedBox.shrink(),
       data: (summary) => ResponsiveSummaryGrid(
+        childAspectRatio: 1.05,
         children: [
           SummaryCard(
             label: 'Salary',
@@ -212,7 +213,7 @@ class _SummaryGridWidget extends ConsumerWidget {
             subtitle: formatPercent(summary.savingsPercent),
           ),
           SummaryCard(
-            label: 'Subscriptions / mo',
+            label: 'Subs / mo',
             icon: Icons.subscriptions_outlined,
             value: MoneyText(summary.subscriptionMonthlyPaise),
             onTap: () => context.push(AppRoutes.subscriptions),

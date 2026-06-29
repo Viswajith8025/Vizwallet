@@ -27,7 +27,17 @@ class PremiumBottomNav extends StatelessWidget {
         AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            theme.cardColor,
+            Color.alphaBlend(
+              theme.colorScheme.primary.withValues(alpha: 0.04),
+              theme.cardColor,
+            ),
+          ],
+        ),
         borderRadius: BorderRadius.circular(AppRadius.xl),
         border: Border.all(color: theme.dividerColor),
         boxShadow: AppShadows.navBar(isDark),

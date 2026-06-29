@@ -94,8 +94,16 @@ class PremiumMenuTile extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.1),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      accent.withValues(alpha: 0.22),
+                      accent.withValues(alpha: 0.08),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
+                  border: Border.all(color: accent.withValues(alpha: 0.2)),
                 ),
                 child: Icon(icon, color: accent, size: 22),
               ),
@@ -220,6 +228,7 @@ class PremiumExpenseTile extends StatelessWidget {
     final color = Color(categoryColor);
 
     return PremiumCard(
+      variant: PremiumCardVariant.elevated,
       onTap: onTap,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
@@ -229,7 +238,14 @@ class PremiumExpenseTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withValues(alpha: 0.22),
+                  color.withValues(alpha: 0.08),
+                ],
+              ),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Icon(Icons.receipt_long_rounded, color: color, size: 22),
@@ -242,7 +258,7 @@ class PremiumExpenseTile extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 2),

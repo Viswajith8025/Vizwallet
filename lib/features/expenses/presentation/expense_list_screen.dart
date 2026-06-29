@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:rupee_track/core/branding/brand_typography.dart';
+import 'package:rupee_track/core/design_system/context_banner.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
+import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_chip.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
+import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/providers/settings_provider.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
+import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/core/widgets/empty_state.dart';
 import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/expenses/data/expense_repository.dart';
@@ -25,16 +31,17 @@ class ExpenseListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(expenseDateFilterProvider);
+    final salaryDay = ref.watch(salaryDayProvider);
     final settings = ref.watch(appSettingsProvider).valueOrNull;
     final expensesAsync = ref.watch(expensesForDateFilterProvider);
     final dateFormat = DateFormat('d MMM · h:mm a');
     final today = toIst(DateTime.now());
-    final headerDate = DateFormat('EEEE, d MMM yyyy').format(today);
+    final headerDate = DateFormat('EEEE, d MMM').format(today);
 
     return Scaffold(
       appBar: PremiumAppBar(
         title: 'Expenses',
-        subtitle: headerDate,
+        subtitle: 'Track what you spend · $headerDate',
         actions: [
           IconButton(
             icon: const Icon(Icons.add_rounded),
@@ -78,15 +85,14 @@ class ExpenseListScreen extends ConsumerWidget {
               ],
             ),
           ),
+          ContextBanner(
+            icon: Icons.filter_list_rounded,
+            message: _filterHint(filter, salaryDay),
+          ),
           Expanded(
             child: expensesAsync.when(
               loading: () => ListView.separated(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  ShellBottomInset.scrollBottom(context),
-                ),
+                padding: ShellBottomInset.scrollPadding(context),
                 itemCount: 8,
                 separatorBuilder: (_, __) =>
                     const SizedBox(height: AppSpacing.xs),
@@ -103,19 +109,30 @@ class ExpenseListScreen extends ConsumerWidget {
                   );
                 }
 
+                final totalPaise = expenses.fold<int>(
+                  0,
+                  (sum, e) => sum + e.expense.amountPaise,
+                );
+
                 return ListView.separated(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.xs,
-                    AppSpacing.md,
-                    ShellBottomInset.scrollBottom(context),
+                  padding: ShellBottomInset.scrollPadding(
+                    context,
+                    top: AppSpacing.xs,
                   ),
-                  itemCount: expenses.length,
+                  itemCount: expenses.length + 1,
                   separatorBuilder: (_, __) =>
                       const SizedBox(height: AppSpacing.xs),
                   itemBuilder: (context, index) {
-                    final item = expenses[index];
+                    if (index == 0) {
+                      return _ExpenseSummaryCard(
+                        totalPaise: totalPaise,
+                        count: expenses.length,
+                        periodLabel: filter.label(salaryDay: salaryDay),
+                      );
+                    }
+
+                    final item = expenses[index - 1];
                     final expense = item.expense;
                     final tags = parseTagsJson(expense.tags);
                     final amountLabels = settings == null
@@ -133,8 +150,7 @@ class ExpenseListScreen extends ConsumerWidget {
                     final subtitle = expenseDisplaySubtitle(
                       categoryName: item.category.name,
                       title: expense.title,
-                      meta:
-                          '${expense.paymentMethod} · ${dateFormat.format(expense.occurredAt.toLocal())}',
+                      meta: dateFormat.format(expense.occurredAt.toLocal()),
                     );
 
                     return Dismissible(
@@ -158,7 +174,7 @@ class ExpenseListScreen extends ConsumerWidget {
                               builder: (ctx) => AlertDialog(
                                 title: const Text('Delete expense?'),
                                 content: const Text(
-                                  'This will remove the transaction from your records.',
+                                  'This removes the transaction from your records.',
                                 ),
                                 actions: [
                                   TextButton(
@@ -210,6 +226,17 @@ class ExpenseListScreen extends ConsumerWidget {
     );
   }
 
+  String _filterHint(ExpenseDateFilter filter, int salaryDay) {
+    return switch (filter.mode) {
+      ExpenseDateFilterMode.today =>
+        'Showing everything you spent today. Swipe left on a row to delete.',
+      ExpenseDateFilterMode.pickDate =>
+        'Showing spending on ${filter.label(salaryDay: salaryDay)}.',
+      ExpenseDateFilterMode.payCycle =>
+        'Showing this pay cycle (${filter.label(salaryDay: salaryDay)}).',
+    };
+  }
+
   Future<void> _pickDate(
     BuildContext context,
     WidgetRef ref,
@@ -225,5 +252,70 @@ class ExpenseListScreen extends ConsumerWidget {
     if (picked != null) {
       ref.read(expenseDateFilterProvider.notifier).setPickedDate(picked);
     }
+  }
+}
+
+class _ExpenseSummaryCard extends StatelessWidget {
+  const _ExpenseSummaryCard({
+    required this.totalPaise,
+    required this.count,
+    required this.periodLabel,
+  });
+
+  final int totalPaise;
+  final int count;
+  final String periodLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return PremiumCard(
+      variant: PremiumCardVariant.tinted,
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  periodLabel,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  formatPaise(totalPaise),
+                  style: BrandTypography.moneyHero(
+                    context,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              '$count ${count == 1 ? 'item' : 'items'}',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

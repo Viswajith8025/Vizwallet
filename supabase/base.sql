@@ -115,6 +115,9 @@ alter table public.categories
 create index if not exists categories_user_idx
   on public.categories (user_id);
 
+create index if not exists categories_user_deleted_idx
+  on public.categories (user_id, is_deleted, deleted_at);
+
 -- -----------------------------------------------------------------------------
 -- 6. EXPENSES
 -- -----------------------------------------------------------------------------
@@ -662,8 +665,110 @@ create policy "Users update own activity_log undo"
   with check (auth.uid() = user_id);
 
 -- -----------------------------------------------------------------------------
+-- 16. SCHEMA BACKFILL (app v10 — expense thresholds)
+-- Safe to re-run; only updates rows still on legacy defaults.
+-- -----------------------------------------------------------------------------
+update public.user_settings
+set major_expense_threshold_paise = 50000
+where major_expense_threshold_paise = 10000;
+
+update public.user_settings
+set large_expense_threshold_paise = 200000
+where large_expense_threshold_paise = 50000;
+
+update public.user_settings
+set very_large_expense_threshold_paise = 1000000
+where very_large_expense_threshold_paise = 100000;
+
+-- -----------------------------------------------------------------------------
+-- 17. DATA MAINTENANCE (mirrors app Settings → App management)
+-- Per-user deletes; use in SQL editor while signed in, or wrap in RPC later.
+-- Uncomment the block you need — each respects RLS via auth.uid().
+-- -----------------------------------------------------------------------------
+-- delete from public.expenses where user_id = auth.uid();
+-- delete from public.budget_buckets where user_id = auth.uid();
+-- delete from public.budget_plans where user_id = auth.uid();
+-- delete from public.savings_goals where user_id = auth.uid() and is_wishlist = false;
+-- delete from public.savings_goals where user_id = auth.uid() and is_wishlist = true;
+-- delete from public.subscription_payments where user_id = auth.uid();
+-- delete from public.subscriptions where user_id = auth.uid();
+-- delete from public.loan_payments where user_id = auth.uid();
+-- delete from public.loans where user_id = auth.uid();
+-- delete from public.activity_log where user_id = auth.uid();
+-- delete from public.tagging_rules where user_id = auth.uid();
+-- delete from public.monthly_salaries where user_id = auth.uid();
+-- delete from public.categories where user_id = auth.uid() and is_system = false;
+
+-- Factory reset (cloud data only — does not touch auth.users):
+-- delete from public.activity_log where user_id = auth.uid();
+-- delete from public.tagging_rules where user_id = auth.uid();
+-- delete from public.budget_buckets where user_id = auth.uid();
+-- delete from public.budget_plans where user_id = auth.uid();
+-- delete from public.savings_goals where user_id = auth.uid();
+-- delete from public.subscription_payments where user_id = auth.uid();
+-- delete from public.subscriptions where user_id = auth.uid();
+-- delete from public.loan_payments where user_id = auth.uid();
+-- delete from public.loans where user_id = auth.uid();
+-- delete from public.expenses where user_id = auth.uid();
+-- delete from public.monthly_salaries where user_id = auth.uid();
+-- delete from public.income_sources where user_id = auth.uid();
+-- delete from public.categories where user_id = auth.uid() and is_system = false;
+-- update public.user_settings set
+--   theme_mode = 'system',
+--   major_expense_threshold_paise = 50000,
+--   large_expense_threshold_paise = 200000,
+--   very_large_expense_threshold_paise = 1000000,
+--   major_purchase_threshold_paise = 500000,
+--   recycle_bin_retention_days = 30,
+--   pin_enabled = false,
+--   pin_hash = null,
+--   updated_at = now()
+-- where user_id = auth.uid();
+
+-- -----------------------------------------------------------------------------
+-- 18. LOCAL SQLITE REFERENCE (device-only — not executed on Supabase)
+-- The Flutter app uses Drift/SQLite with _table suffix names. Kept here so
+-- all project SQL lives in one file. Do not run this block on Postgres.
+--
+-- PRAGMA foreign_keys = ON;
+--
+-- CREATE INDEX IF NOT EXISTS idx_expenses_month_deleted
+--   ON expenses_table (month_key, is_deleted);
+-- CREATE INDEX IF NOT EXISTS idx_expenses_occurred_at ON expenses_table (occurred_at);
+-- CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses_table (category_id);
+-- CREATE INDEX IF NOT EXISTS idx_expenses_title ON expenses_table (title);
+-- CREATE INDEX IF NOT EXISTS idx_expenses_payment_method ON expenses_table (payment_method);
+-- CREATE INDEX IF NOT EXISTS idx_activity_occurred_at ON activity_log_table (occurred_at DESC);
+-- CREATE INDEX IF NOT EXISTS idx_activity_module_action ON activity_log_table (module, action);
+-- CREATE INDEX IF NOT EXISTS idx_expenses_deleted_at ON expenses_table (is_deleted, deleted_at);
+-- CREATE INDEX IF NOT EXISTS idx_loans_deleted_at ON loans_table (is_deleted, deleted_at);
+--
+-- UPDATE subscriptions_table SET status = CASE
+--   WHEN is_active = 1 THEN 'active' ELSE 'cancelled' END;
+-- UPDATE app_settings SET major_expense_threshold_paise = 50000
+--   WHERE major_expense_threshold_paise = 10000;
+-- UPDATE app_settings SET large_expense_threshold_paise = 200000
+--   WHERE large_expense_threshold_paise = 50000;
+-- UPDATE app_settings SET very_large_expense_threshold_paise = 1000000
+--   WHERE very_large_expense_threshold_paise = 100000;
+--
+-- DELETE FROM expenses_table;
+-- DELETE FROM budget_buckets_table;
+-- DELETE FROM budget_plans_table;
+-- DELETE FROM savings_goals_table WHERE is_wishlist = 0;
+-- DELETE FROM savings_goals_table WHERE is_wishlist = 1;
+-- DELETE FROM subscription_payments_table;
+-- DELETE FROM subscriptions_table;
+-- DELETE FROM loan_payments_table;
+-- DELETE FROM loans_table;
+-- DELETE FROM activity_log_table;
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
 -- DONE — 15 tables under public schema:
 --   profiles, user_settings, income_sources, monthly_salaries, categories,
 --   expenses, subscriptions, subscription_payments, loans, loan_payments,
 --   budget_plans, budget_buckets, savings_goals, tagging_rules, activity_log
+--
+-- Single source of truth: supabase/base.sql (migrations folder is CLI history only)
 -- -----------------------------------------------------------------------------

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rupee_track/core/design_system/context_banner.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
+import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
+import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/router/routes.dart';
 
@@ -14,83 +17,152 @@ class MoreScreen extends StatelessWidget {
     return Scaffold(
       appBar: const PremiumAppBar(
         title: 'More',
-        subtitle: 'Reports, help, and settings',
+        subtitle: 'Everything else in one place',
       ),
-      body: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.only(
-          top: AppSpacing.sm,
-          bottom: ShellBottomInset.scrollBottom(context),
+      body: ResponsiveBody(
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.only(
+            bottom: ShellBottomInset.scrollBottom(context),
+            right: ShellBottomInset.fabZoneRight(context),
+          ),
+          children: [
+            const ContextBanner(
+              icon: Icons.explore_outlined,
+              message:
+                  'Reports, planning tools, and account settings live here. Pick what you need — no hunting through menus.',
+            ),
+            _Section(
+              title: 'See your money',
+              subtitle: 'Visualize spending over time',
+              children: [
+                PremiumMenuTile(
+                  icon: Icons.calendar_month_rounded,
+                  title: 'Financial calendar',
+                  subtitle: 'Salary days, bills, and spending on a timeline',
+                  onTap: () => context.push(AppRoutes.calendar),
+                ),
+                PremiumMenuTile(
+                  icon: Icons.grid_on_rounded,
+                  title: 'Expense heatmap',
+                  subtitle: 'Which days you spend the most',
+                  onTap: () => context.push(AppRoutes.expenseHeatmap),
+                ),
+                PremiumMenuTile(
+                  icon: Icons.search_rounded,
+                  title: 'Search',
+                  subtitle: 'Find any expense, sub, or goal instantly',
+                  onTap: () => context.push(AppRoutes.search),
+                ),
+              ],
+            ),
+            _Section(
+              title: 'Plan ahead',
+              subtitle: 'Budgets, forecasts, and reviews',
+              children: [
+                PremiumMenuTile(
+                  icon: Icons.pie_chart_outline,
+                  title: 'Budget planner',
+                  subtitle: 'Split salary into Food, Bills, Fun, and more',
+                  onTap: () => context.push(AppRoutes.budget),
+                ),
+                PremiumMenuTile(
+                  icon: Icons.category_outlined,
+                  title: 'Category budgets',
+                  subtitle: 'Set limits per category and get alerts',
+                  onTap: () => context.push(AppRoutes.categoryBudget),
+                ),
+                PremiumMenuTile(
+                  icon: Icons.trending_up_rounded,
+                  title: 'Savings forecast',
+                  subtitle: 'Where your money could be in 12 months',
+                  onTap: () => context.push(AppRoutes.savingsForecast),
+                ),
+                PremiumMenuTile(
+                  icon: Icons.auto_awesome_rounded,
+                  title: 'AI monthly review',
+                  subtitle: 'Highlights from your month, explained simply',
+                  onTap: () => context.push(AppRoutes.monthlyReport),
+                ),
+              ],
+            ),
+            _Section(
+              title: 'History & safety',
+              subtitle: 'Undo mistakes and recover data',
+              children: [
+                PremiumMenuTile(
+                  icon: Icons.history_rounded,
+                  title: 'Activity history',
+                  subtitle: 'See every change with undo support',
+                  onTap: () => context.push(AppRoutes.activityHistory),
+                ),
+                PremiumMenuTile(
+                  icon: Icons.delete_sweep_outlined,
+                  title: 'Recycle bin',
+                  subtitle: 'Restore deleted expenses and loans',
+                  onTap: () => context.push(AppRoutes.recycleBin),
+                ),
+              ],
+            ),
+            _Section(
+              title: 'App',
+              subtitle: 'Help and preferences',
+              children: [
+                PremiumMenuTile(
+                  icon: Icons.help_outline_rounded,
+                  title: 'Help & support',
+                  subtitle: 'Quick answers when you\'re stuck',
+                  onTap: () => context.push(AppRoutes.helpSupport),
+                ),
+                PremiumMenuTile(
+                  icon: Icons.settings_outlined,
+                  title: 'Settings',
+                  subtitle: 'Theme, salary day, lock, and data',
+                  onTap: () => context.push(AppRoutes.settings),
+                ),
+              ],
+            ),
+          ],
         ),
-        children: [
-          PremiumMenuTile(
-            icon: Icons.calendar_month_rounded,
-            title: 'Financial calendar',
-            subtitle: 'Your money timeline — salary, bills, goals & more',
-            onTap: () => context.push(AppRoutes.calendar),
-          ),
-          PremiumMenuTile(
-            icon: Icons.search_rounded,
-            title: 'Search',
-            subtitle: 'Find expenses, goals, subscriptions & more',
-            onTap: () => context.push(AppRoutes.search),
-          ),
-          PremiumMenuTile(
-            icon: Icons.grid_on_rounded,
-            title: 'Expense heatmap',
-            subtitle: 'GitHub-style view of your spending habits',
-            onTap: () => context.push(AppRoutes.expenseHeatmap),
-          ),
-          PremiumMenuTile(
-            icon: Icons.trending_up_rounded,
-            title: 'Savings Forecast',
-            subtitle: 'See where your money is headed',
-            onTap: () => context.push(AppRoutes.savingsForecast),
-          ),
-          PremiumMenuTile(
-            icon: Icons.auto_awesome_rounded,
-            title: 'AI Monthly Review',
-            subtitle: 'Your Spotify Wrapped for personal finance',
-            onTap: () => context.push(AppRoutes.monthlyReport),
-          ),
-          PremiumMenuTile(
-            icon: Icons.category_outlined,
-            title: 'Category budgets',
-            subtitle: 'Set a limit for Food, Travel, Bills, and more',
-            onTap: () => context.push(AppRoutes.categoryBudget),
-          ),
-          PremiumMenuTile(
-            icon: Icons.pie_chart_outline,
-            title: 'Budget planner',
-            subtitle: 'Split salary into spending groups',
-            onTap: () => context.push(AppRoutes.budget),
-          ),
-          PremiumMenuTile(
-            icon: Icons.history_rounded,
-            title: 'Activity history',
-            subtitle: 'Full audit trail with undo support',
-            onTap: () => context.push(AppRoutes.activityHistory),
-          ),
-          PremiumMenuTile(
-            icon: Icons.delete_sweep_outlined,
-            title: 'Recycle bin',
-            subtitle: 'Restore deleted expenses, loans & more',
-            onTap: () => context.push(AppRoutes.recycleBin),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          PremiumMenuTile(
-            icon: Icons.help_outline_rounded,
-            title: 'Help & support',
-            subtitle: 'Answers to common questions',
-            onTap: () => context.push(AppRoutes.helpSupport),
-          ),
-          PremiumMenuTile(
-            icon: Icons.settings_outlined,
-            title: 'Settings',
-            subtitle: 'Theme, salary date, alerts, and account',
-            onTap: () => context.push(AppRoutes.settings),
-          ),
-        ],
+      ),
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: PremiumCard(
+        variant: PremiumCardVariant.elevated,
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.sm,
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.sm,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ScreenSectionHeader(
+              title: title,
+              subtitle: subtitle,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            ),
+            ...children,
+          ],
+        ),
       ),
     );
   }

@@ -5,8 +5,11 @@ import 'package:rupee_track/core/design_system/animated_money_text.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/greeting_utils.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
+import 'package:rupee_track/core/design_system/progress_ring.dart';
+import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/dashboard/domain/monthly_summary.dart';
 
+/// Financial command-center hero — money left, cycle progress, key stats.
 class DashboardHero extends StatelessWidget {
   const DashboardHero({
     required this.summary,
@@ -22,27 +25,58 @@ class DashboardHero extends StatelessWidget {
     final moneyColor = isPositive
         ? theme.colorScheme.onSurface
         : theme.colorScheme.error;
+    final spentProgress = summary.salaryPaise > 0
+        ? (summary.spentPaise / summary.salaryPaise).clamp(0.0, 1.0)
+        : 0.0;
+    final ringColor = spentProgress > 0.85
+        ? theme.colorScheme.error
+        : spentProgress > 0.65
+            ? BrandColors.warning
+            : theme.colorScheme.primary;
 
     return PremiumCard(
-      showShadow: true,
-      accentColor: isPositive ? BrandColors.secondary : BrandColors.error,
+      variant: PremiumCardVariant.hero,
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            GreetingUtils.timeOfDayGreeting(),
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'How you\'re doing',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      GreetingUtils.timeOfDayGreeting(),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Your financial snapshot',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ProgressRing(
+                progress: spentProgress,
+                size: 64,
+                strokeWidth: 5,
+                color: ringColor,
+                child: Text(
+                  '${(spentProgress * 100).round()}%',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.xl),
           Text(
@@ -56,7 +90,7 @@ class DashboardHero extends StatelessWidget {
             summary.moneyLeftPaise,
             style: BrandTypography.moneyHero(context, color: moneyColor),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             GreetingUtils.motivationalLine(
               moneyLeftPaise: summary.moneyLeftPaise,
@@ -73,20 +107,25 @@ class DashboardHero extends StatelessWidget {
             builder: (context, constraints) {
               final stats = [
                 _HeroStat(
-                  label: 'Cycle spent',
-                  value: _formatCompact(summary.spentPaise),
+                  label: 'Spent',
+                  value: formatPaise(summary.spentPaise),
                   icon: Icons.trending_down_rounded,
+                ),
+                _HeroStat(
+                  label: 'Safe daily',
+                  value: summary.daysToSalary > 0
+                      ? formatPaise(
+                          (summary.moneyLeftPaise / summary.daysToSalary)
+                              .round(),
+                        )
+                      : '—',
+                  icon: Icons.shield_outlined,
+                  valueColor: theme.colorScheme.tertiary,
                 ),
                 _HeroStat(
                   label: 'Days to salary',
                   value: '${summary.daysToSalary}',
                   icon: Icons.calendar_today_outlined,
-                ),
-                _HeroStat(
-                  label: 'Savings',
-                  value: '${summary.savingsPercent.round()}%',
-                  icon: Icons.savings_outlined,
-                  valueColor: BrandColors.secondary,
                 ),
               ];
 
@@ -106,22 +145,13 @@ class DashboardHero extends StatelessWidget {
               }
 
               return Row(
-                children: stats
-                    .map((stat) => Expanded(child: stat))
-                    .toList(),
+                children: stats.map((s) => Expanded(child: s)).toList(),
               );
             },
           ),
         ],
       ),
     );
-  }
-
-  static String _formatCompact(int paise) {
-    final rupees = paise / 100;
-    if (rupees >= 100000) return '₹${(rupees / 100000).toStringAsFixed(1)}L';
-    if (rupees >= 1000) return '₹${(rupees / 1000).toStringAsFixed(1)}K';
-    return '₹${rupees.round()}';
   }
 }
 
@@ -142,21 +172,23 @@ class _HeroStat extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest
-            .withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        color: theme.colorScheme.surface.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: theme.dividerColor.withValues(alpha: 0.6),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(height: 6),
+          Icon(icon, size: 18, color: theme.colorScheme.primary),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             value,
             style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               color: valueColor,
             ),
           ),

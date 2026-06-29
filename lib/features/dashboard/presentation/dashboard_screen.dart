@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/branding/vis_wallet_logo.dart';
 import 'package:rupee_track/core/constants/app_constants.dart';
+import 'package:rupee_track/core/design_system/design_tokens.dart';
+import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
-import 'package:rupee_track/core/widgets/theme_toggle_button.dart';
 import 'package:rupee_track/features/custom_dashboard/data/dashboard_layout_repository.dart';
 import 'package:rupee_track/features/custom_dashboard/presentation/sheets/dashboard_add_widget_sheet.dart';
 import 'package:rupee_track/features/custom_dashboard/presentation/sheets/dashboard_widget_edit_sheet.dart';
@@ -15,24 +16,15 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final editMode = ref.watch(dashboardEditModeProvider);
-    final theme = Theme.of(context);
     final compact = AppResponsive.isCompact(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const VisWalletLogo(size: 28),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                AppConstants.appName,
-                style: theme.textTheme.titleLarge,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+      appBar: PremiumAppBar(
+        title: AppConstants.appName,
+        subtitle: 'Your money at a glance',
+        leading: const Padding(
+          padding: EdgeInsets.only(left: AppSpacing.sm),
+          child: VisWalletLogo(size: 28),
         ),
         actions: [
           if (compact && editMode)
@@ -49,8 +41,8 @@ class DashboardScreen extends ConsumerWidget {
                     showDashboardCustomizeSheet(context, ref);
                 }
               },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
+              itemBuilder: (context) => const [
+                PopupMenuItem(
                   value: 'done',
                   child: ListTile(
                     leading: Icon(Icons.check_rounded),
@@ -58,7 +50,7 @@ class DashboardScreen extends ConsumerWidget {
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'add',
                   child: ListTile(
                     leading: Icon(Icons.add_box_outlined),
@@ -66,7 +58,7 @@ class DashboardScreen extends ConsumerWidget {
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'settings',
                   child: ListTile(
                     leading: Icon(Icons.tune_rounded),
@@ -101,7 +93,6 @@ class DashboardScreen extends ConsumerWidget {
                 onPressed: () => showDashboardCustomizeSheet(context, ref),
               ),
           ],
-          const ThemeToggleButton(),
         ],
       ),
       body: const DashboardCanvas(),

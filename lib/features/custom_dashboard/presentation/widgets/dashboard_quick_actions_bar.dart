@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rupee_track/core/design_system/app_scroll_behavior.dart';
+import 'package:rupee_track/core/design_system/context_banner.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/features/quick_add/presentation/quick_add_hub_sheet.dart';
@@ -11,38 +13,55 @@ class DashboardQuickActionsBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return AppHorizontalScrollRow(
-      padding: EdgeInsets.zero,
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _QuickAction(
-          icon: Icons.add_rounded,
-          label: 'Expense',
-          onTap: () => showQuickAddSheet(context, ref),
+        const ScreenSectionHeader(
+          title: 'Quick actions',
+          subtitle: 'Tap to add money or jump somewhere',
         ),
-        _QuickAction(
-          icon: Icons.payments_outlined,
-          label: 'Income',
-          onTap: () => context.push(AppRoutes.salary),
-        ),
-        _QuickAction(
-          icon: Icons.calendar_month_outlined,
-          label: 'Calendar',
-          onTap: () => context.push(AppRoutes.calendar),
-        ),
-        _QuickAction(
-          icon: Icons.search_rounded,
-          label: 'Search',
-          onTap: () => context.push(AppRoutes.search),
-        ),
-        _QuickAction(
-          icon: Icons.subscriptions_outlined,
-          label: 'Subs',
-          onTap: () => context.push(AppRoutes.subscriptions),
-        ),
-        _QuickAction(
-          icon: Icons.favorite_border,
-          label: 'Wishlist',
-          onTap: () => context.push(AppRoutes.more),
+        AppHorizontalScrollRow(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          children: [
+            _QuickAction(
+              icon: Icons.add_rounded,
+              label: 'Expense',
+              color: theme.colorScheme.primary,
+              onTap: () => showQuickAddSheet(context, ref),
+            ),
+            _QuickAction(
+              icon: Icons.payments_outlined,
+              label: 'Income',
+              color: theme.colorScheme.tertiary,
+              onTap: () => context.push(AppRoutes.salary),
+            ),
+            _QuickAction(
+              icon: Icons.calendar_month_outlined,
+              label: 'Calendar',
+              color: theme.colorScheme.secondary,
+              onTap: () => context.push(AppRoutes.calendar),
+            ),
+            _QuickAction(
+              icon: Icons.search_rounded,
+              label: 'Search',
+              color: theme.colorScheme.primary,
+              onTap: () => context.push(AppRoutes.search),
+            ),
+            _QuickAction(
+              icon: Icons.subscriptions_outlined,
+              label: 'Subs',
+              color: theme.colorScheme.tertiary,
+              onTap: () => context.push(AppRoutes.subscriptions),
+            ),
+            _QuickAction(
+              icon: Icons.flag_outlined,
+              label: 'Goals',
+              color: const Color(0xFF10B981),
+              onTap: () => context.push(AppRoutes.savingsForecast),
+            ),
+          ],
         ),
       ],
     );
@@ -53,22 +72,67 @@ class _QuickAction extends StatelessWidget {
   const _QuickAction({
     required this.icon,
     required this.label,
+    required this.color,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final Color color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
-      padding: const EdgeInsets.only(right: AppSpacing.sm),
-      child: ActionChip(
-        avatar: Icon(icon, size: 18, color: theme.colorScheme.primary),
-        label: Text(label),
-        onPressed: onTap,
+      padding: const EdgeInsets.only(right: AppSpacing.md),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onTap();
+              },
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: Ink(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: isDark ? 0.35 : 0.18),
+                      color.withValues(alpha: isDark ? 0.15 : 0.08),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: color.withValues(alpha: 0.25)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: color, size: 26),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

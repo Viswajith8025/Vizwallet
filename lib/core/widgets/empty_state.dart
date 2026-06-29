@@ -120,7 +120,7 @@ abstract final class EmptyStates {
         title: 'No expenses yet',
         message:
             'Add the money you spend, one entry at a time.\nStart with your latest purchase.',
-        accentColor: BrandColors.secondary,
+        accentColor: BrandColors.accentLight,
         action: FilledButton.icon(
           onPressed: onAdd,
           icon: const Icon(Icons.add_rounded, size: 20),
@@ -136,7 +136,7 @@ abstract final class EmptyStates {
       title: 'No subscriptions yet',
       message:
           'Add monthly payments like Netflix, Spotify, internet, or recharge plans.\nVizwallet will track what is coming.',
-      accentColor: BrandColors.accent,
+      accentColor: BrandColors.accentLight,
       action: onAdd == null
           ? null
           : FilledButton.icon(
@@ -153,7 +153,7 @@ abstract final class EmptyStates {
       title: 'No borrowed money',
       message:
           'Track money you borrowed from someone or lent to someone.\nYou will always know what is pending.',
-      accentColor: BrandColors.primaryLight,
+      accentColor: BrandColors.primaryLightDeep,
       action: onAdd == null
           ? null
           : FilledButton.icon(

@@ -30,7 +30,10 @@ class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
     ];
 
     return AppBar(
+      toolbarHeight: subtitle != null ? 72 : kToolbarHeight,
+      titleSpacing: leading == null ? 0 : null,
       leading: leading,
+      automaticallyImplyLeading: leading == null,
       centerTitle: centerTitle,
       actions: appBarActions,
       title: subtitle == null

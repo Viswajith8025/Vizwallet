@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
+import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/widgets/error_state.dart';
@@ -25,7 +26,7 @@ class DashboardCanvas extends ConsumerWidget {
     final summaryAsync = ref.watch(monthlySummaryProvider(cycleKey));
 
     return summaryAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const DashboardSkeleton(),
       error: (e, _) => ErrorState(
         message: "We couldn't load your dashboard.",
         onRetry: () => ref.invalidate(monthlySummaryProvider(cycleKey)),
@@ -87,10 +88,7 @@ class DashboardCanvas extends ConsumerWidget {
 }
 
 EdgeInsets _dashboardListPadding(BuildContext context) {
-  return AppResponsive.screenPadding(
-    context,
-    bottom: ShellBottomInset.scrollBottom(context),
-  );
+  return ShellBottomInset.scrollPadding(context);
 }
 
 class _EditModeBanner extends StatelessWidget {

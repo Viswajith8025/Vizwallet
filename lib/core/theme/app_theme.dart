@@ -121,18 +121,18 @@ abstract final class AppTheme {
         space: 1,
       ),
       scrollbarTheme: ScrollbarThemeData(
-        thumbVisibility: WidgetStateProperty.all(true),
-        trackVisibility: WidgetStateProperty.all(true),
+        thumbVisibility: WidgetStateProperty.resolveWith((states) {
+          return states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.dragged);
+        }),
+        trackVisibility: const WidgetStatePropertyAll(false),
         interactive: true,
         radius: const Radius.circular(8),
-        thickness: WidgetStateProperty.all(6),
-        crossAxisMargin: 2,
-        mainAxisMargin: 2,
+        thickness: WidgetStateProperty.all(5),
+        crossAxisMargin: 4,
+        mainAxisMargin: 8,
         thumbColor: WidgetStateProperty.all(
-          scheme.onSurfaceVariant.withValues(alpha: 0.55),
-        ),
-        trackColor: WidgetStateProperty.all(
-          scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+          scheme.onSurfaceVariant.withValues(alpha: 0.45),
         ),
       ),
       chipTheme: ChipThemeData(

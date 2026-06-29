@@ -50,28 +50,49 @@ abstract final class AppShadows {
   static List<BoxShadow> card(bool isDark) => [
         BoxShadow(
           color: isDark
+              ? const Color(0xFF5B3FA6).withValues(alpha: 0.12)
+              : const Color(0xFF2563EB).withValues(alpha: 0.06),
+          blurRadius: isDark ? 20 : 28,
+          offset: const Offset(0, 10),
+        ),
+        BoxShadow(
+          color: isDark
               ? Colors.black.withValues(alpha: 0.35)
-              : const Color(0xFF1A2F5C).withValues(alpha: 0.06),
-          blurRadius: isDark ? 16 : 24,
-          offset: const Offset(0, 8),
+              : const Color(0xFF0F172A).withValues(alpha: 0.04),
+          blurRadius: isDark ? 12 : 16,
+          offset: const Offset(0, 4),
+        ),
+      ];
+
+  static List<BoxShadow> elevated(bool isDark) => [
+        ...card(isDark),
+        BoxShadow(
+          color: isDark
+              ? const Color(0xFF9B6DFF).withValues(alpha: 0.08)
+              : const Color(0xFF4A9FD9).withValues(alpha: 0.1),
+          blurRadius: 40,
+          spreadRadius: -4,
+          offset: const Offset(0, 16),
         ),
       ];
 
   static List<BoxShadow> navBar(bool isDark) => [
         BoxShadow(
           color: isDark
-              ? Colors.black.withValues(alpha: 0.5)
-              : const Color(0xFF1A2F5C).withValues(alpha: 0.08),
+              ? Colors.black.withValues(alpha: 0.55)
+              : const Color(0xFF2563EB).withValues(alpha: 0.1),
           blurRadius: 32,
-          offset: const Offset(0, -4),
+          offset: const Offset(0, -6),
         ),
       ];
 
   static List<BoxShadow> fab(bool isDark) => [
         BoxShadow(
-          color: const Color(0xFF1A2F5C).withValues(alpha: isDark ? 0.45 : 0.22),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
+          color: isDark
+              ? const Color(0xFF9B6DFF).withValues(alpha: 0.4)
+              : const Color(0xFF2563EB).withValues(alpha: 0.28),
+          blurRadius: 24,
+          offset: const Offset(0, 10),
         ),
       ];
 }

@@ -7,9 +7,11 @@ import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/insights/data/insights_feed_repository.dart';
+import 'package:rupee_track/features/insights/domain/insights_feed_models.dart';
 import 'package:rupee_track/features/insights/presentation/widgets/insight_feed_card.dart';
 
 final dismissedInsightIdsProvider = StateProvider<Set<String>>((ref) => {});
+final pinnedInsightIdsProvider = StateProvider<Set<String>>((ref) => {});
 
 class InsightsFeedSection extends ConsumerWidget {
   const InsightsFeedSection({super.key});
@@ -18,6 +20,7 @@ class InsightsFeedSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final feedAsync = ref.watch(insightsFeedProvider);
     final dismissed = ref.watch(dismissedInsightIdsProvider);
+    final pinned = ref.watch(pinnedInsightIdsProvider);
     final theme = Theme.of(context);
 
     return feedAsync.when(
@@ -40,63 +43,126 @@ class InsightsFeedSection extends ConsumerWidget {
       data: (report) {
         final visible = report.heroItems
             .where((i) => !dismissed.contains(i.id))
-            .toList();
+            .toList()
+          ..sort((a, b) {
+            final aPin = pinned.contains(a.id);
+            final bPin = pinned.contains(b.id);
+            if (aPin != bPin) return aPin ? -1 : 1;
+            return b.rankScore.compareTo(a.rankScore);
+          });
+
+        final topAlert = visible.isNotEmpty ? visible.first : null;
+        final rest = topAlert == null ? <InsightFeedItem>[] : visible.skip(1).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DailyTipCard(tip: report.dailyTip),
-            if (report.achievements.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  0,
-                  AppSpacing.md,
-                  AppSpacing.sm,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.xs,
+              ),
+              child: Text(
+                'Today',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
+              ),
+            ),
+            DailyTipCard(tip: report.dailyTip),
+            if (topAlert != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Text(
-                  'Achievements',
-                  style: theme.textTheme.titleSmall?.copyWith(
+                  'Most important',
+                  style: theme.textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.primary,
                   ),
                 ),
               ),
-              AchievementBanner(items: report.achievements),
-              const SizedBox(height: AppSpacing.md),
+              InsightFeedCard(
+                item: topAlert,
+                featured: true,
+                isPinned: pinned.contains(topAlert.id),
+                onPin: () {
+                  final next = Set<String>.from(pinned);
+                  if (next.contains(topAlert.id)) {
+                    next.remove(topAlert.id);
+                  } else {
+                    next.add(topAlert.id);
+                  }
+                  ref.read(pinnedInsightIdsProvider.notifier).state = next;
+                },
+                onDismiss: () {
+                  ref.read(dismissedInsightIdsProvider.notifier).state = {
+                    ...dismissed,
+                    topAlert.id,
+                  };
+                },
+              ),
             ],
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text(
-                'For you',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.primary,
+            if (report.achievements.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Text(
+                  'Wins',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.tertiary,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            if (visible.isEmpty)
+              AchievementBanner(items: report.achievements),
+            ],
+            if (rest.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Text(
-                  'You\'re all caught up. Check back after your next transaction.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  'For you',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              )
-            else
-              ...visible.map(
+              ),
+              ...rest.map(
                 (item) => InsightFeedCard(
                   item: item,
+                  isPinned: pinned.contains(item.id),
+                  onPin: () {
+                    final next = Set<String>.from(pinned);
+                    if (next.contains(item.id)) {
+                      next.remove(item.id);
+                    } else {
+                      next.add(item.id);
+                    }
+                    ref.read(pinnedInsightIdsProvider.notifier).state = next;
+                  },
                   onDismiss: () {
                     ref.read(dismissedInsightIdsProvider.notifier).state = {
                       ...dismissed,
                       item.id,
                     };
                   },
+                ),
+              ),
+            ],
+            if (visible.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Text(
+                  'You\'re all caught up. New insights appear as you spend and save.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
           ],
@@ -120,16 +186,13 @@ class InsightsFeedCompactSection extends ConsumerWidget {
         onRetry: () => ref.invalidate(insightsFeedProvider),
       ),
       data: (report) {
-        final top = report.heroItems.take(3).toList();
-        if (top.isEmpty) {
-          return InsightFeedCard(item: report.dailyTip, compact: true);
-        }
+        final top = report.heroItems.take(2).toList();
 
         return Column(
           children: [
             InsightFeedCard(item: report.dailyTip, compact: true),
             ...top.map((item) => InsightFeedCard(item: item, compact: true)),
-            if (top.length >= 3)
+            if (top.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: PremiumRowTile(
