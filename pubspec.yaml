@@ -1,5 +1,5 @@
 name: rupee_track
-description: "Vizwallet — premium personal finance tracker."
+description: "Viswallet — premium personal finance tracker."
 publish_to: "none"
 version: 1.0.0+1
 
@@ -44,6 +44,8 @@ dependencies:
   pdf: ^3.11.3
   printing: ^5.14.2
   share_plus: ^10.1.4
+  package_info_plus: ^8.3.0
+  url_launcher: ^6.3.1
   supabase_flutter: ^2.15.0
   home_widget: ^0.7.0
   http: ^1.4.0
@@ -66,12 +68,15 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/brand/
 
 flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/icon/icon.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#1A2F5C"
+  adaptive_icon_background: "#2E1F5C"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  adaptive_icon_foreground_inset: 0
   remove_alpha_ios: true

@@ -73,16 +73,10 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Widget _phoneBody(BuildContext context, {required bool showFab}) {
-    // Jithu pins its own composer above the nav — skip shell bottom padding there.
-    final bottomInset = showFab ? ShellBottomInset.of(context) : 0.0;
-
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Padding(
-          padding: EdgeInsets.only(bottom: bottomInset),
-          child: widget.child,
-        ),
+        widget.child,
         if (showFab)
           Positioned(
             right: ShellBottomInset.fabMargin,
@@ -101,7 +95,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     final shouldExit = await showPremiumConfirmDialog(
       context: context,
-      title: 'Exit Vizwallet?',
+      title: 'Exit Viswallet?',
       message: 'Are you sure you want to close the app?',
       confirmLabel: 'Exit',
       cancelLabel: 'Stay',

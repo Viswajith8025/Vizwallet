@@ -468,7 +468,7 @@ abstract final class SavingsForecastEngine {
       recs.add(const ForecastRecommendation(
         title: 'Investment potential',
         detail:
-            'With a solid buffer, consider SIPs or mutual funds (coming soon).',
+            'With a solid buffer, consider setting aside more in your savings goals.',
         actionKind: 'invest',
       ));
     }

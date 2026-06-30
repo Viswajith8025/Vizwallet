@@ -32,9 +32,44 @@ class LoansDao extends DatabaseAccessor<AppDatabase> with _$LoansDaoMixin {
     final now = DateTime.now().toUtc();
     return (select(loansTable)
           ..where((t) => t.isDeleted.equals(false))
+          ..where((t) => t.direction.equals('borrowed_by_me'))
+          ..where((t) => t.balancePaise.isBiggerThanValue(0))
           ..where((t) => t.status.isNotIn(['returned', 'cancelled']))
           ..where((t) => t.expectedReturnAt.isSmallerThanValue(now)))
         .get();
+  }
+
+  Future<void> recordPayment({
+    required int loanId,
+    required int amountPaise,
+    String? notes,
+  }) async {
+    if (amountPaise <= 0) return;
+    final loan = await getLoanById(loanId);
+    if (loan == null) return;
+
+    final paidAt = DateTime.now().toUtc();
+    final applied = amountPaise.clamp(0, loan.balancePaise);
+    final newBalance = loan.balancePaise - applied;
+    final newStatus = newBalance <= 0 ? 'returned' : loan.status;
+
+    await transaction(() async {
+      await into(loanPaymentsTable).insert(
+        LoanPaymentsTableCompanion.insert(
+          loanId: loanId,
+          amountPaise: applied,
+          paidAt: paidAt,
+          notes: Value(notes?.trim()),
+        ),
+      );
+      await (update(loansTable)..where((t) => t.id.equals(loanId))).write(
+        LoansTableCompanion(
+          balancePaise: Value(newBalance),
+          status: Value(newStatus),
+          updatedAt: Value(paidAt),
+        ),
+      );
+    });
   }
 
   Future<int> insertLoan(LoansTableCompanion loan) {

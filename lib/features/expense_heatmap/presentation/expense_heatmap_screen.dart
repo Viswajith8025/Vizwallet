@@ -155,16 +155,6 @@ class ExpenseHeatmapScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 HeatmapStatsCard(stats: report.statistics),
-                const SizedBox(height: AppSpacing.lg),
-                PremiumCard(
-                  child: Text(
-                    'Coming soon: AI pattern detection · bank import · '
-                    'location heatmap · travel spending · habit analysis · cloud sync',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),

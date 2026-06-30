@@ -151,8 +151,6 @@ class SavingsForecastScreen extends ConsumerWidget {
                     onTap: () => _openRecommendation(context, r.actionKind),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                _FutureBanner(),
               ],
             ),
           ),
@@ -483,21 +481,6 @@ class _LegendDot extends StatelessWidget {
         const SizedBox(width: 6),
         Text(label, style: Theme.of(context).textTheme.labelSmall),
       ],
-    );
-  }
-}
-
-class _FutureBanner extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return PremiumCard(
-      child: Text(
-        'Coming soon: AI forecasting · inflation adjustment · investment returns · '
-        'mutual funds · retirement & tax planning · bank integration',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-      ),
     );
   }
 }

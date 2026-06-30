@@ -109,7 +109,7 @@ class OnboardingScreen extends HookConsumerWidget {
                         0 =>
                           'Create your account once. You stay signed in until you choose to log out.',
                         _ =>
-                          'Add your monthly salary so Vizwallet can show how much you can spend each day.',
+                          'Add your monthly salary so Viswallet can show how much you can spend each day.',
                       },
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
@@ -213,6 +213,15 @@ class OnboardingScreen extends HookConsumerWidget {
                       ? null
                       : () => finishOnboarding(saveSalary: false),
                   child: const Text('Skip salary for now'),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'You can add it anytime from Home → Salary tile or Settings → Monthly salary.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.45,
+                  ),
                 ),
               ],
                     const SizedBox(height: AppSpacing.xl),

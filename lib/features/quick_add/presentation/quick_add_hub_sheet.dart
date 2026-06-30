@@ -393,6 +393,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                             final tileExtent =
                                 AppResponsive.categoryTileExtent(
                               constraints.maxWidth,
+                              subtractHorizontalPadding: false,
                             );
                             return Wrap(
                               spacing: 10,

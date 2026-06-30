@@ -1,6 +1,6 @@
 {
-    "name": "Vizwallet",
-    "short_name": "Vizwallet",
+    "name": "Viswallet",
+    "short_name": "Viswallet",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

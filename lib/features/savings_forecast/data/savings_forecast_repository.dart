@@ -4,6 +4,7 @@ import 'package:rupee_track/core/providers/database_provider.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/salary_cycle/salary_cycle_engine.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
+import 'package:rupee_track/core/utils/savings_rate_utils.dart';
 import 'package:rupee_track/features/budget/data/budget_repository.dart';
 import 'package:rupee_track/features/dashboard/data/dashboard_repository.dart';
 import 'package:rupee_track/features/health_score/data/financial_health_repository.dart';
@@ -133,16 +134,20 @@ class SavingsForecastRepository {
     final plan = await budgetRepo.getPlanStatus(cycleKey);
     final budgetAdherence = MonthlyReportEngine.budgetOnTrackPercent(plan);
 
-    final salary = summary.salaryPaise > 0 ? summary.salaryPaise : avgSalary;
-    final netSavings = salary - avgSpent;
-    final savingsRate = salary > 0 ? (netSavings / salary) * 100 : 0.0;
-
-  final previousKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
+    final previousKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
     final prevSalary = await db.salaryDao.getSalaryForMonth(previousKey);
     final prevSpent = await db.expensesDao.sumSpentForMonth(previousKey);
     final carryOver = SalaryCycleEngine.carryOverBalance(
       previousSalaryPaise: prevSalary?.amountPaise ?? 0,
       previousSpentPaise: prevSpent,
+    );
+
+    final salary = summary.salaryPaise > 0 ? summary.salaryPaise : avgSalary;
+    final netSavings = salary - avgSpent;
+    final savingsRate = SavingsRateUtils.displayPercent(
+      salaryPaise: summary.salaryPaise,
+      spentPaise: summary.spentPaise,
+      carryOverPaise: carryOver,
     );
     final currentBalance = SalaryCycleEngine.effectiveMoneyLeft(
       salaryPaise: summary.salaryPaise,
@@ -164,7 +169,7 @@ class SavingsForecastRepository {
 
     return SavingsForecastInput(
       cycleKey: cycleKey,
-      currentBalancePaise: currentBalance.clamp(0, 99999999999),
+      currentBalancePaise: currentBalance.clamp(-99999999999, 99999999999),
       monthlySalaryPaise: salary,
       avgMonthlySpentPaise: avgSpent,
       avgMonthlyNetSavingsPaise: netSavings,

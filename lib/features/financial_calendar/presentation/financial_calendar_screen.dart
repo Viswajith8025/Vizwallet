@@ -125,8 +125,6 @@ class FinancialCalendarScreen extends ConsumerWidget {
                         ),
                     },
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  _FutureReadyStrip(theme: theme),
                   const SizedBox(height: AppSpacing.md),
                   _QuickLinks(theme: theme),
                 ],
@@ -288,40 +286,6 @@ class _MonthNavigator extends StatelessWidget {
         TextButton(onPressed: onToday, child: const Text('Today')),
         IconButton(onPressed: onNext, icon: const Icon(Icons.chevron_right)),
       ],
-    );
-  }
-}
-
-class _FutureReadyStrip extends StatelessWidget {
-  const _FutureReadyStrip({required this.theme});
-
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Coming soon',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Google Calendar sync · bank holidays · shared family calendar · cloud sync',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.45,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

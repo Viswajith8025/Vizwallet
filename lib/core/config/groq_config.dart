@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:rupee_track/core/config/groq_local.example.dart'
     if (dart.library.io) 'package:rupee_track/core/config/groq_local.dart';
 
@@ -7,8 +8,12 @@ import 'package:rupee_track/core/config/groq_local.example.dart'
 abstract final class GroqConfig {
   static const _fromEnv = String.fromEnvironment('GROQ_API_KEY');
 
-  static String get apiKey =>
-      _fromEnv.isNotEmpty ? _fromEnv : GroqLocal.apiKey;
+  static String get apiKey {
+    if (_fromEnv.isNotEmpty) return _fromEnv;
+    // Release builds must inject GROQ_API_KEY via CI — never embed dev keys.
+    if (kReleaseMode) return '';
+    return GroqLocal.apiKey;
+  }
 
   static bool get isConfigured => apiKey.isNotEmpty;
 

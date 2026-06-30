@@ -105,7 +105,7 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
                       child: SearchBar(
                         controller: _controller,
                         focusNode: _focusNode,
-                        hintText: 'Search anything in Vizwallet…',
+                        hintText: 'Search anything in Viswallet…',
                         leading: const Icon(Icons.search_rounded),
                         trailing: [
                           if (filters.hasActiveFilters)
@@ -248,7 +248,7 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 child: Text(
-                  'Voice & OCR search coming soon · AI semantic search ready',
+                  'Tip: use filters to narrow by date, category, or amount.',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

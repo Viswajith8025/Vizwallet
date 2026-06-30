@@ -5,7 +5,6 @@ abstract final class DashboardTemplates {
         widgets: [
           DashboardWidgetInstance.create(DashboardWidgetType.cycleHeader),
           DashboardWidgetInstance.create(DashboardWidgetType.currentBalance),
-          DashboardWidgetInstance.create(DashboardWidgetType.budgetSetup),
           DashboardWidgetInstance.create(DashboardWidgetType.safeDailySpend),
           DashboardWidgetInstance.create(DashboardWidgetType.financialHealth),
           DashboardWidgetInstance.create(DashboardWidgetType.monthlyReport),

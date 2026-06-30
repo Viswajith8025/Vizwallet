@@ -10,7 +10,7 @@ class HomeWidgetSnapshot {
     required this.goalProgressPercent,
     required this.upcomingSubscriptionsCount,
     required this.upcomingSubscriptionsLabel,
-    required this.upcomingBillsCount,
+    required this.overdueLoansCount,
     required this.recentTransactionTitle,
     required this.recentTransactionAmount,
     required this.cycleLabel,
@@ -28,7 +28,7 @@ class HomeWidgetSnapshot {
   final int goalProgressPercent;
   final int upcomingSubscriptionsCount;
   final String upcomingSubscriptionsLabel;
-  final int upcomingBillsCount;
+  final int overdueLoansCount;
   final String recentTransactionTitle;
   final String recentTransactionAmount;
   final String cycleLabel;
@@ -46,7 +46,8 @@ class HomeWidgetSnapshot {
         'goal_progress': goalProgressPercent.toString(),
         'upcoming_subs_count': upcomingSubscriptionsCount.toString(),
         'upcoming_subs_label': upcomingSubscriptionsLabel,
-        'upcoming_bills_count': upcomingBillsCount.toString(),
+        'overdue_loans_count': overdueLoansCount.toString(),
+        'upcoming_bills_count': overdueLoansCount.toString(),
         'recent_tx_title': recentTransactionTitle,
         'recent_tx_amount': recentTransactionAmount,
         'cycle_label': cycleLabel,

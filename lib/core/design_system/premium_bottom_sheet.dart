@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 
+import 'package:rupee_track/core/design_system/premium_snackbar.dart';
+
 Future<T?> showPremiumBottomSheet<T>({
   required BuildContext context,
   required Widget child,
@@ -68,26 +70,5 @@ Future<T?> showPremiumBottomSheet<T>({
         ),
       );
     },
-  );
-}
-
-void showPremiumSnackBar(
-  BuildContext context, {
-  required String message,
-  String? actionLabel,
-  VoidCallback? onAction,
-  Duration duration = const Duration(seconds: 3),
-}) {
-  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      behavior: SnackBarBehavior.floating,
-      duration: duration,
-      margin: const EdgeInsets.all(AppSpacing.md),
-      content: Text(message),
-      action: actionLabel != null && onAction != null
-          ? SnackBarAction(label: actionLabel, onPressed: onAction)
-          : null,
-    ),
   );
 }

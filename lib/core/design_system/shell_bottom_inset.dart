@@ -7,23 +7,27 @@ abstract final class ShellBottomInset {
   static const fabSize = 56.0;
   static const fabMargin = AppSpacing.md;
 
+  /// Floating [PremiumBottomNav] height (margin + chrome, excluding gesture inset).
+  static double navBarHeight(BuildContext context) {
+    final compact = AppResponsive.useCompactNav(context);
+    const outerMargin = AppSpacing.md;
+    const innerPadding = AppSpacing.xs * 2;
+    final itemHeight = compact ? 48.0 : 56.0;
+    return outerMargin + innerPadding + itemHeight;
+  }
+
   /// Height to keep scrollable content clear of [PremiumBottomNav].
   static double of(BuildContext context, {bool hasBottomNav = true}) {
     final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
     if (!hasBottomNav) {
       return safeBottom + AppSpacing.md;
     }
-    // PremiumBottomNav: outer margin + inner padding + icon/label column.
-    const navChrome = AppSpacing.md + AppSpacing.md + 56.0;
-    return safeBottom + navChrome + AppSpacing.sm;
+    return safeBottom + navBarHeight(context);
   }
 
   /// Extra list padding so the FAB does not cover the last items.
-  static const fabClearance = fabSize + AppSpacing.lg;
-
-  /// Bottom padding for scroll views inside the main shell (phone layout).
   static double scrollBottom(BuildContext context) =>
-      fabClearance + AppSpacing.md;
+      fabBottom(context) + fabSize + AppSpacing.xs;
 
   /// Symmetric horizontal + bottom padding for shell tab scroll views.
   static EdgeInsets scrollPadding(
@@ -45,8 +49,11 @@ abstract final class ShellBottomInset {
     return EdgeInsets.only(bottom: scrollBottom(context));
   }
 
+  /// Pinned composer (e.g. Jithu chat input) above the floating nav — no FAB.
+  static double composerBottom(BuildContext context) => of(context);
+
   /// Bottom offset for the anchored quick-add FAB above the nav bar.
   static double fabBottom(BuildContext context, {bool hasBottomNav = true}) {
-    return of(context, hasBottomNav: hasBottomNav) + AppSpacing.sm;
+    return of(context, hasBottomNav: hasBottomNav);
   }
 }

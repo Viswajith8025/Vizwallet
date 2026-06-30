@@ -1,4 +1,4 @@
-# Vizwallet
+# Viswallet
 
 Premium personal finance tracker — understand where every rupee goes.
 

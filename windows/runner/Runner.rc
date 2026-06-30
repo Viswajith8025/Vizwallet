@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.viswajith" "\0"
-            VALUE "FileDescription", "Vizwallet" "\0"
+            VALUE "FileDescription", "Viswallet" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "rupee_track" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.viswajith. All rights reserved." "\0"
             VALUE "OriginalFilename", "rupee_track.exe" "\0"
-            VALUE "ProductName", "Vizwallet" "\0"
+            VALUE "ProductName", "Viswallet" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

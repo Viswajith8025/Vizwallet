@@ -20,7 +20,12 @@ class DashboardQuickActionsBar extends ConsumerWidget {
       children: [
         const ScreenSectionHeader(
           title: 'Quick actions',
-          subtitle: 'Tap to add money or jump somewhere',
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.md,
+            AppSpacing.xxs,
+          ),
         ),
         AppHorizontalScrollRow(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),

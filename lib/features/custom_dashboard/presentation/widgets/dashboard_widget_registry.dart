@@ -8,6 +8,8 @@ import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
+import 'package:rupee_track/core/database/app_database.dart';
+import 'package:rupee_track/core/providers/database_provider.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
@@ -74,7 +76,7 @@ class _BalanceWidget extends ConsumerWidget {
     final cycleKey = _cycleKey(ref);
     final async = ref.watch(monthlySummaryProvider(cycleKey));
     return async.when(
-      loading: () => const SkeletonCard(height: 200),
+      loading: () => const SkeletonCard(height: 120),
       error: (_, __) => CompactWidgetError(
         message: "Couldn't load balance",
         onRetry: () => ref.invalidate(monthlySummaryProvider(cycleKey)),
@@ -157,27 +159,27 @@ class _BudgetSetupWidget extends ConsumerWidget {
         onRetry: () => ref.invalidate(monthlySummaryProvider(cycleKey)),
       ),
       data: (summary) {
-        if (summary.salaryEntered) return const SizedBox.shrink();
+        if (!summary.salaryEntered) return const SizedBox.shrink();
         final theme = Theme.of(context);
         return PremiumCard(
-          accentColor: theme.colorScheme.primary,
+          accentColor: theme.colorScheme.tertiary,
           onTap: () => context.push(AppRoutes.budgetSetup),
           child: Row(
             children: [
-              Icon(Icons.info_outline_rounded, color: theme.colorScheme.primary),
+              Icon(Icons.tune_rounded, color: theme.colorScheme.tertiary),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Set up your budget',
+                      'Set up spending groups',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      'Split your salary into spending groups.',
+                      'Split your salary into Food, Bills, and more.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -215,6 +217,7 @@ class _SummaryGridWidget extends ConsumerWidget {
             label: 'Salary',
             icon: Icons.payments_outlined,
             value: MoneyText(summary.salaryPaise),
+            subtitle: summary.salaryEntered ? null : 'Tap to add',
             onTap: () => context.push(AppRoutes.salary),
           ),
           SummaryCard(
@@ -576,28 +579,63 @@ class _AchievementsWidget extends ConsumerWidget {
   }
 }
 
-class _WishlistWidget extends StatelessWidget {
+class _WishlistWidget extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    return PremiumCard(
-      child: Row(
-        children: [
-          Icon(Icons.favorite_border, color: theme.colorScheme.primary),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              'Wishlist tracking — coming soon',
-              style: theme.textTheme.bodyMedium?.copyWith(
+    final goalsAsync = ref.watch(_wishlistGoalsProvider);
+
+    return goalsAsync.when(
+      loading: () => const SkeletonCard(height: 72),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        final top = items.first;
+        return PremiumCard(
+          onTap: () => context.push(AppRoutes.savingsForecast),
+          child: Row(
+            children: [
+              Icon(Icons.favorite_rounded, color: theme.colorScheme.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Wishlist · ${items.length} item${items.length == 1 ? '' : 's'}',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '${top.name} · ${formatPaise(top.savedPaise)} saved',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
+
+final _wishlistGoalsProvider =
+    FutureProvider<List<SavingsGoalsTableData>>((ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  final goals = await db.savingsGoalsDao.listActiveGoals();
+  return goals.where((g) => g.isWishlist).toList();
+});
 
 class _RecentTransactionsWidget extends ConsumerWidget {
   @override

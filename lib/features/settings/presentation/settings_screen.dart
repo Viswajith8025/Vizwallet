@@ -7,6 +7,7 @@ import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
+import 'package:rupee_track/core/design_system/settings_section.dart';
 import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/providers/settings_provider.dart';
@@ -15,6 +16,7 @@ import 'package:rupee_track/features/settings/presentation/widgets/salary_cycle_
 import 'package:rupee_track/features/app_lock/presentation/widgets/app_lock_settings_card.dart';
 import 'package:rupee_track/features/auth/presentation/widgets/cloud_account_panel.dart';
 import 'package:rupee_track/features/settings/presentation/widgets/app_management_settings_card.dart';
+import 'package:rupee_track/core/widgets/legal_links.dart';
 import 'package:rupee_track/features/expenses/presentation/widgets/expense_swipe_lock_settings.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -23,12 +25,11 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: const PremiumAppBar(
         title: 'Settings',
-        subtitle: 'Preferences & data',
+        subtitle: 'Your preferences, your data',
       ),
       body: ResponsiveBody(
         child: ListView(
@@ -38,26 +39,13 @@ class SettingsScreen extends ConsumerWidget {
             bottom: ShellBottomInset.scrollBottom(context),
           ),
           children: [
-            PremiumCard(
-              variant: PremiumCardVariant.elevated,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Appearance',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Light feels calm · Dark feels luxurious',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  SegmentedButton<ThemeMode>(
+            SettingsGroup(
+              title: 'Appearance',
+              subtitle: 'How Viswallet looks and feels',
+              children: [
+                PremiumCard(
+                  variant: PremiumCardVariant.elevated,
+                  child: SegmentedButton<ThemeMode>(
                     segments: const [
                       ButtonSegment(
                         value: ThemeMode.system,
@@ -82,37 +70,80 @@ class SettingsScreen extends ConsumerWidget {
                           .setThemeMode(set.first);
                     },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-            const AppLockSettingsCard(),
-            const SizedBox(height: AppSpacing.lg),
-            const SalaryCycleSettings(),
-            const SizedBox(height: AppSpacing.lg),
-            const ExpenseSwipeLockSettings(),
-            const SizedBox(height: AppSpacing.lg),
-            const BudgetAlertSettings(),
-            const SizedBox(height: AppSpacing.lg),
-            const CloudAccountPanel(),
-            const SizedBox(height: AppSpacing.lg),
-            const AppManagementSettingsCard(),
-            const SizedBox(height: AppSpacing.lg),
-            PremiumMenuTile(
-              icon: Icons.help_outline_rounded,
-              title: 'Help & support',
-              subtitle: 'Answers to common questions',
-              onTap: () => context.push(AppRoutes.helpSupport),
+            const SettingsGroup(
+              title: 'Security',
+              subtitle: 'Protect your financial data',
+              children: [
+                AppLockSettingsCard(),
+                SizedBox(height: AppSpacing.sm),
+                ExpenseSwipeLockSettings(),
+              ],
             ),
-            PremiumMenuTile(
-              icon: Icons.info_outline_rounded,
-              title: 'About ${AppConstants.appName}',
-              subtitle: 'Version, mission & brand',
-              onTap: () => context.push(AppRoutes.about),
+            const SettingsGroup(
+              title: 'Money cycle',
+              subtitle: 'Salary amount, pay date, and budget alerts',
+              children: [
+                _MonthlySalaryTile(),
+                SizedBox(height: AppSpacing.sm),
+                SalaryCycleSettings(),
+                SizedBox(height: AppSpacing.sm),
+                BudgetAlertSettings(),
+              ],
+            ),
+            const SettingsGroup(
+              title: 'Account',
+              subtitle: 'Sign in and cloud profile',
+              children: [
+                CloudAccountPanel(),
+              ],
+            ),
+            const SettingsGroup(
+              title: 'Data',
+              subtitle: 'Export, reset, and legal',
+              children: [
+                AppManagementSettingsCard(),
+                SizedBox(height: AppSpacing.sm),
+                LegalLinksCard(),
+              ],
+            ),
+            SettingsGroup(
+              title: 'Support',
+              subtitle: 'Help and app info',
+              children: [
+                PremiumMenuTile(
+                  icon: Icons.help_outline_rounded,
+                  title: 'Help & support',
+                  subtitle: 'Answers to common questions',
+                  onTap: () => context.push(AppRoutes.helpSupport),
+                ),
+                PremiumMenuTile(
+                  icon: Icons.info_outline_rounded,
+                  title: 'About ${AppConstants.appName}',
+                  subtitle: 'Version, mission & brand',
+                  onTap: () => context.push(AppRoutes.about),
+                ),
+              ],
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MonthlySalaryTile extends StatelessWidget {
+  const _MonthlySalaryTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return PremiumMenuTile(
+      icon: Icons.payments_outlined,
+      title: 'Monthly salary',
+      subtitle: 'Set or update your income for this pay cycle',
+      onTap: () => context.push(AppRoutes.salary),
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
+import 'package:rupee_track/core/design_system/premium_snackbar.dart';
 import 'package:rupee_track/features/expenses/data/expense_repository.dart';
 
 Future<bool> confirmDeleteExpense(BuildContext context) async {

@@ -135,7 +135,7 @@ abstract final class EmptyStates {
       icon: Icons.subscriptions_outlined,
       title: 'No subscriptions yet',
       message:
-          'Add monthly payments like Netflix, Spotify, internet, or recharge plans.\nVizwallet will track what is coming.',
+          'Add monthly payments like Netflix, Spotify, internet, or recharge plans.\nViswallet will track what is coming.',
       accentColor: BrandColors.accentLight,
       action: onAdd == null
           ? null
@@ -161,6 +161,64 @@ abstract final class EmptyStates {
               icon: const Icon(Icons.add_rounded, size: 20),
               label: const Text('Add loan'),
             ),
+    );
+  }
+
+  static Widget goals({VoidCallback? onAdd}) {
+    return EmptyState(
+      icon: Icons.flag_outlined,
+      title: 'No savings goals yet',
+      message:
+          'Set a target — a trip, emergency fund, or gadget.\n'
+          'Viswallet tracks your progress every cycle.',
+      accentColor: BrandColors.success,
+      action: onAdd == null
+          ? null
+          : FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: const Text('Create goal'),
+            ),
+    );
+  }
+
+  static Widget wishlist({VoidCallback? onAdd}) {
+    return EmptyState(
+      icon: Icons.favorite_border_rounded,
+      title: 'Your wishlist is empty',
+      message:
+          'Save for things you want — not just things you need.\n'
+          'Add a wishlist item from Savings forecast.',
+      accentColor: BrandColors.accentLight,
+      action: onAdd == null
+          ? null
+          : FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: const Text('Add to wishlist'),
+            ),
+    );
+  }
+
+  static Widget search({String? query}) {
+    return EmptyState(
+      icon: Icons.search_rounded,
+      title: query == null ? 'Search everything' : 'No results found',
+      message: query == null
+          ? 'Find expenses, subscriptions, goals, and more in one place.'
+          : 'Try a different keyword or clear your filters.',
+      accentColor: BrandColors.primaryLightDeep,
+    );
+  }
+
+  static Widget reports() {
+    return const EmptyState(
+      icon: Icons.summarize_outlined,
+      title: 'Reports unlock with data',
+      message:
+          'Add your salary and a few expenses.\n'
+          'Your monthly closing report will appear here.',
+      accentColor: BrandColors.primaryLightDeep,
     );
   }
 }

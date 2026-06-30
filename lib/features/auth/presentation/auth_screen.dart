@@ -5,6 +5,7 @@ import 'package:rupee_track/core/constants/app_constants.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/features/auth/data/auth_repository.dart';
+import 'package:rupee_track/features/auth/domain/auth_error_utils.dart';
 
 class AuthScreen extends HookConsumerWidget {
   const AuthScreen({super.key, this.initialSignUp = false});
@@ -21,28 +22,6 @@ class AuthScreen extends HookConsumerWidget {
     final hintController = useTextEditingController();
     final isLoading = useState(false);
     final obscurePassword = useState(true);
-
-    String friendlyAuthError(Object error) {
-      final message = error.toString();
-      final lower = message.toLowerCase();
-
-      if (lower.contains('email signups are disabled') ||
-          lower.contains('signup is disabled') ||
-          lower.contains('signups are disabled')) {
-        return 'New account creation is temporarily unavailable. Please try again later.';
-      }
-      if (lower.contains('invalid login credentials')) {
-        return 'Incorrect email or password.';
-      }
-      if (lower.contains('email not confirmed')) {
-        return 'This account needs activation before you can sign in.';
-      }
-      if (lower.contains('network') || lower.contains('socket')) {
-        return 'Could not reach the account service. Check your internet and try again.';
-      }
-
-      return 'Account service error. Please try again.';
-    }
 
     Future<void> submit() async {
       final email = emailController.text.trim();
@@ -105,9 +84,14 @@ class AuthScreen extends HookConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
+          final message = AuthErrorUtils.friendlyMessage(e);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(friendlyAuthError(e))),
+            SnackBar(content: Text(message)),
           );
+          if (isSignUp.value &&
+              message.contains('already has an account')) {
+            isSignUp.value = false;
+          }
         }
       } finally {
         isLoading.value = false;

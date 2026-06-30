@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
-import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
@@ -18,6 +18,7 @@ import 'package:rupee_track/features/safe_spend/data/safe_spend_repository.dart'
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
+import 'package:rupee_track/core/router/routes.dart';
 
 class JithuScreen extends ConsumerStatefulWidget {
   const JithuScreen({super.key});
@@ -29,13 +30,7 @@ class JithuScreen extends ConsumerStatefulWidget {
 class _JithuScreenState extends ConsumerState<JithuScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
-  final _messages = <JithuChatMessage>[
-    const JithuChatMessage(
-      fromUser: false,
-      text:
-          'Ask me how much you can spend today, where your money is going, or how to save more.',
-    ),
-  ];
+  final _messages = <JithuChatMessage>[];
   bool _isLoading = false;
 
   @override
@@ -111,9 +106,30 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
     final safeSpendAsync = ref.watch(safeSpendProvider(cycleKey));
 
     return Scaffold(
-      appBar: const PremiumAppBar(
+      appBar: PremiumAppBar(
         title: JithuBranding.displayName,
-        subtitle: 'Ask anything about your money',
+        subtitle: 'Your money assistant',
+        leading: Padding(
+          padding: const EdgeInsets.only(left: AppSpacing.sm),
+          child: Center(
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Icon(
+                Icons.auto_awesome_rounded,
+                size: 20,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+        ),
       ),
       body: summaryAsync.when(
         loading: () => const ResponsiveBody(child: DashboardSkeleton()),
@@ -144,6 +160,20 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
             summary: summary,
             safeSpend: safeSpend,
             onAsk: (text) => _ask(text, summary, safeSpend),
+            onSeedWelcome: () {
+              if (_messages.isNotEmpty) return;
+              setState(() {
+                _messages.add(
+                  JithuChatMessage(
+                    fromUser: false,
+                    text: summary.salaryEntered
+                        ? 'Ask me how much you can spend today, where your money is going, how to save more, or where to find anything in Viswallet.'
+                        : 'I can help with budgets and spending — but first add your monthly salary. '
+                            'Tap the strip above or ask "Where do I add my salary?"',
+                  ),
+                );
+              });
+            },
           ),
         ),
       ),
@@ -151,7 +181,7 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
   }
 }
 
-class _JithuBody extends StatelessWidget {
+class _JithuBody extends StatefulWidget {
   const _JithuBody({
     required this.controller,
     required this.scrollController,
@@ -160,6 +190,7 @@ class _JithuBody extends StatelessWidget {
     required this.summary,
     required this.safeSpend,
     required this.onAsk,
+    required this.onSeedWelcome,
   });
 
   final TextEditingController controller;
@@ -169,11 +200,26 @@ class _JithuBody extends StatelessWidget {
   final CycleSummary summary;
   final SafeSpendSnapshot safeSpend;
   final ValueChanged<String> onAsk;
+  final VoidCallback onSeedWelcome;
+
+  @override
+  State<_JithuBody> createState() => _JithuBodyState();
+}
+
+class _JithuBodyState extends State<_JithuBody> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onSeedWelcome();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final suggestions = JithuFallbackAdvisor.suggestions(summary);
+    final suggestions = JithuFallbackAdvisor.suggestions(widget.summary);
+    final showPrompts = widget.messages.length <= 1;
 
     return ResponsiveBody(
       padding: EdgeInsets.zero,
@@ -181,60 +227,68 @@ class _JithuBody extends StatelessWidget {
         children: [
           Expanded(
             child: ListView(
-              controller: scrollController,
+              controller: widget.scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.only(
-                top: AppSpacing.sm,
-                bottom: AppSpacing.md,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
               ),
-            children: [
-              _JithuSummaryCard(summary: summary, safeSpend: safeSpend),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                'Try asking',
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurfaceVariant,
+              children: [
+                _JithuSummaryStrip(
+                  summary: widget.summary,
+                  safeSpend: widget.safeSpend,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              ...suggestions.map(
-                (s) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Tooltip(
-                      message: s,
-                      child: ActionChip(
-                        label: Text(s),
-                        avatar:
-                            const Icon(Icons.auto_awesome_rounded, size: 16),
-                        onPressed: isLoading ? null : () => onAsk(s),
-                      ),
+                if (showPrompts) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Try asking',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              ...messages.map((m) => _MessageBubble(message: m)),
-              if (isLoading) const _TypingBubble(),
-            ],
+                  const SizedBox(height: AppSpacing.xs),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: suggestions
+                        .map(
+                          (s) => ActionChip(
+                            label: Text(s),
+                            visualDensity: VisualDensity.compact,
+                            avatar: const Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 14,
+                            ),
+                            onPressed:
+                                widget.isLoading ? null : () => widget.onAsk(s),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.md),
+                ...widget.messages.map((m) => _MessageBubble(message: m)),
+                if (widget.isLoading) const _TypingBubble(),
+              ],
+            ),
           ),
-        ),
           SafeArea(
             top: false,
             child: Padding(
-              padding: EdgeInsets.only(
-                top: AppSpacing.sm,
-                bottom: ShellBottomInset.of(context) + AppSpacing.xs,
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                ShellBottomInset.composerBottom(context),
               ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: TextField(
-                    controller: controller,
-                    enabled: !isLoading,
+                    controller: widget.controller,
+                    enabled: !widget.isLoading,
                     textInputAction: TextInputAction.send,
                     minLines: 1,
                     maxLines: 3,
@@ -245,7 +299,7 @@ class _JithuBody extends StatelessWidget {
                         vertical: AppSpacing.sm,
                       ),
                     ),
-                    onSubmitted: isLoading ? null : onAsk,
+                    onSubmitted: widget.isLoading ? null : widget.onAsk,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -256,14 +310,16 @@ class _JithuBody extends StatelessWidget {
                     height: 48,
                     width: 48,
                     child: FilledButton(
-                      onPressed: isLoading ? null : () => onAsk(controller.text),
+                      onPressed: widget.isLoading
+                          ? null
+                          : () => widget.onAsk(widget.controller.text),
                       style: FilledButton.styleFrom(
                         padding: EdgeInsets.zero,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
                         ),
                       ),
-                      child: isLoading
+                      child: widget.isLoading
                           ? SizedBox(
                               width: 22,
                               height: 22,
@@ -289,8 +345,8 @@ class _JithuBody extends StatelessWidget {
   }
 }
 
-class _JithuSummaryCard extends StatelessWidget {
-  const _JithuSummaryCard({
+class _JithuSummaryStrip extends StatelessWidget {
+  const _JithuSummaryStrip({
     required this.summary,
     required this.safeSpend,
   });
@@ -305,74 +361,79 @@ class _JithuSummaryCard extends StatelessWidget {
         ? null
         : summary.categoryBreakdown.first;
 
-    return PremiumCard(
-      variant: PremiumCardVariant.tinted,
-      tintColor: theme.colorScheme.primary,
-      accentColor: theme.colorScheme.primary,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: InkWell(
+        onTap: summary.salaryEntered
+            ? null
+            : () => context.push(AppRoutes.salary),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                height: 42,
-                width: 42,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  color: theme.colorScheme.onSecondaryContainer,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Your snapshot',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
                       summary.salaryEntered
-                          ? '${safeSpend.riskLevel.label} today'
-                          : 'Add salary to unlock advice',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                          ? safeSpend.riskLevel.label
+                          : 'Tap to add salary',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  if (!summary.salaryEntered)
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: [
+                  Expanded(
+                    child: _CompactMetric(
+                      label: 'Left',
+                      value: formatPaise(summary.moneyLeftPaise),
+                    ),
+                  ),
+                  Expanded(
+                    child: _CompactMetric(
+                      label: 'Safe today',
+                      value: formatPaise(
+                        safeSpend.remainingSafeSpendTodayPaise,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: _CompactMetric(
+                      label: 'Top',
+                      value: topCategory == null
+                          ? '—'
+                          : topCategory.categoryName,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          _MetricLine(
-            label: 'Money left',
-            value: formatPaise(summary.moneyLeftPaise),
-          ),
-          _MetricLine(
-            label: 'Safe today',
-            value: formatPaise(safeSpend.remainingSafeSpendTodayPaise),
-          ),
-          _MetricLine(
-            label: 'Top spend',
-            value: topCategory == null
-                ? 'No spending yet'
-                : '${topCategory.categoryName} · ${formatPaise(topCategory.totalPaise)}',
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _MetricLine extends StatelessWidget {
-  const _MetricLine({
+class _CompactMetric extends StatelessWidget {
+  const _CompactMetric({
     required this.label,
     required this.value,
   });
@@ -383,26 +444,25 @@ class _MetricLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xs),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 10,
           ),
-          Text(
-            value,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+        ),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w700,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

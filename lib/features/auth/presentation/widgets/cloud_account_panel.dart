@@ -49,7 +49,7 @@ class _CloudAccountPanelState extends ConsumerState<CloudAccountPanel> {
       children: [
         const ListTile(
           title: Text('Account'),
-          subtitle: Text('Secure access for your Vizwallet profile.'),
+          subtitle: Text('Secure access for your Viswallet profile.'),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

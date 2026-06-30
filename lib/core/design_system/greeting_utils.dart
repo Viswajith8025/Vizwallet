@@ -14,17 +14,20 @@ abstract final class GreetingUtils {
     required bool isOverBudget,
   }) {
     if (moneyLeftPaise < 0) {
-      return 'Tight cycle — small steps bring balance back.';
+      return 'A tight cycle — you\'re still in control. Small choices add up.';
     }
     if (isOverBudget) {
-      return 'You\'re spending faster than planned. A pause helps.';
+      return 'Spending picked up lately. A lighter day helps you reset.';
     }
     if (savingsPercent >= 20) {
-      return 'Strong savings rhythm. Keep it up.';
+      return 'Excellent rhythm — you\'re building real momentum.';
     }
     if (savingsPercent >= 10) {
-      return 'Steady progress — you\'re on track.';
+      return 'Steady progress. You\'re moving in the right direction.';
     }
-    return 'Every rupee tracked is a step toward control.';
+    if (savingsPercent > 0) {
+      return 'You\'re saving this cycle. Keep tracking — awareness is power.';
+    }
+    return 'Every rupee you track is a step toward clarity.';
   }
 }

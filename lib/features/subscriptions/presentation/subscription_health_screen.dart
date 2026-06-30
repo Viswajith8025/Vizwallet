@@ -125,8 +125,6 @@ class SubscriptionHealthScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  _FutureReadyBanner(),
                 ],
               ),
             );
@@ -548,30 +546,3 @@ class _SuggestionTile extends StatelessWidget {
   }
 }
 
-class _FutureReadyBanner extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return PremiumCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Coming soon',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Bank detection · Play Store sync · Apple subscription import · '
-            'Email parsing · AI usage detection',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

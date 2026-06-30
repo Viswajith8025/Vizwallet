@@ -1,5 +1,6 @@
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/dashboard/domain/monthly_summary.dart';
+import 'package:rupee_track/features/jithu/domain/jithu_app_guide.dart';
 import 'package:rupee_track/features/jithu/domain/jithu_branding.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
 
@@ -8,9 +9,10 @@ abstract final class JithuFallbackAdvisor {
   static List<String> suggestions(CycleSummary summary) {
     if (!summary.salaryEntered) {
       return const [
+        'Where do I add my salary?',
         'What should I set up first?',
+        'How do I add an expense?',
         'How do budgets work?',
-        'How can I start tracking?',
       ];
     }
 
@@ -30,7 +32,7 @@ abstract final class JithuFallbackAdvisor {
     final q = question.toLowerCase();
 
     if (q.contains('name') && (q.contains('your') || q.contains('who'))) {
-      return 'I am ${JithuBranding.displayName}, your Vizwallet money assistant. Ask me about spending, savings, or your budget anytime.';
+      return 'I am ${JithuBranding.displayName}, your Viswallet money assistant. Ask me about spending, savings, budgets, or where to find anything in the app.';
     }
 
     if (q == 'hello' ||
@@ -38,11 +40,18 @@ abstract final class JithuFallbackAdvisor {
         q == 'hey' ||
         q.startsWith('hello ') ||
         q.startsWith('hi ')) {
+      if (!summary.salaryEntered) {
+        return 'Hello! I am ${JithuBranding.displayName}. To get started, add your monthly salary from Home → Salary tile (or Quick actions → Income). Then I can guide your daily spending.';
+      }
       return 'Hello! I am ${JithuBranding.displayName}. I can help with today\'s safe spend, where your money is going, and quick saving tips.';
     }
 
+    final nav = JithuAppGuide.navigationAnswer(question);
+    if (nav != null) return nav.replaceAll('**', '');
+
     if (!summary.salaryEntered) {
-      return 'Start by setting your monthly salary. After that I can calculate safe daily spending, savings pace, and category advice for you.';
+      return 'Add your monthly salary first so I can calculate safe daily spending and savings. '
+          'Go to Home → tap the Salary tile in the summary grid, or Quick actions → Income.';
     }
 
     if (q.contains('today') ||
@@ -61,7 +70,7 @@ abstract final class JithuFallbackAdvisor {
         q.contains('money going') ||
         q.contains('top')) {
       if (summary.categoryBreakdown.isEmpty) {
-        return 'No spending pattern yet this month. Add a few expenses and I will show your biggest category.';
+        return 'No spending pattern yet this month. Add a few expenses with the + button and I will show your biggest category.';
       }
       final top = summary.categoryBreakdown.first;
       return 'Your biggest spending area this month is ${top.categoryName} at ${formatPaise(top.totalPaise)}. If you want quick control, try reducing this by 10-15%.';

@@ -153,7 +153,7 @@ class _AppLockSettingsCardState extends ConsumerState<AppLockSettingsCard> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Require a PIN when opening Vizwallet',
+            'Require a PIN when opening Viswallet',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

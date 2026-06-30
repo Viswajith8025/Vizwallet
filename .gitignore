@@ -25,10 +25,14 @@ android/key.properties
 # Generated — run: dart run build_runner build
 # *.g.dart
 
+# Node (Supabase CLI)
+node_modules/
+
 # Env
 .env
 .env.local
 supabase/.env.local
+supabase/.temp/
 lib/core/config/groq_local.dart
 *.keystore
 

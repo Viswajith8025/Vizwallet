@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/salary_cycle/salary_cycle_engine.dart';
+import 'package:rupee_track/core/utils/date_utils.dart';
+import 'package:rupee_track/core/utils/savings_rate_utils.dart';
 import 'package:rupee_track/features/budget/data/budget_repository.dart';
 import 'package:rupee_track/features/health_score/data/financial_health_repository.dart';
 import 'package:rupee_track/features/insights/domain/insights_feed_engine.dart';
@@ -185,8 +187,19 @@ class InsightsFeedRepository {
     final salary = await db.salaryDao.getSalaryForMonth(cycleKey);
     final spent = await db.expensesDao.sumSpentForMonth(cycleKey);
     final salaryPaise = salary?.amountPaise ?? trends.salaryPaise;
-    final savingsRate =
-        salaryPaise > 0 ? ((salaryPaise - spent) / salaryPaise) * 100 : 0.0;
+
+    final previousKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
+    final prevSalary = await db.salaryDao.getSalaryForMonth(previousKey);
+    final prevSpent = await db.expensesDao.sumSpentForMonth(previousKey);
+    final carryOver = SalaryCycleEngine.carryOverBalance(
+      previousSalaryPaise: prevSalary?.amountPaise ?? 0,
+      previousSpentPaise: prevSpent,
+    );
+    final savingsRate = SavingsRateUtils.displayPercent(
+      salaryPaise: salaryPaise,
+      spentPaise: spent,
+      carryOverPaise: carryOver,
+    );
 
     final daysUntilSalary = SalaryCycleEngine.daysUntilNextSalary(
       salaryDay: salaryDay,

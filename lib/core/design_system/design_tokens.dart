@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 8-point spacing system and premium design tokens for Vizwallet.
+/// 8-point spacing system and premium design tokens for Viswallet.
 abstract final class AppSpacing {
   static const xxs = 4.0;
   static const xs = 8.0;

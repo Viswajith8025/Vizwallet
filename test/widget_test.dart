@@ -4,7 +4,7 @@ import 'package:rupee_track/core/branding/vis_wallet_logo.dart';
 import 'package:rupee_track/features/splash/presentation/splash_screen.dart';
 
 void main() {
-  testWidgets('Vizwallet splash shows brand', (tester) async {
+  testWidgets('Viswallet splash shows brand', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(home: SplashScreen()),
     );

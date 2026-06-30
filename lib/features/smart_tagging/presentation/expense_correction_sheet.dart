@@ -103,7 +103,7 @@ class _ExpenseCorrectionSheetState extends ConsumerState<ExpenseCorrectionSheet>
             ),
             const SizedBox(height: AppSpacing.xxs),
             Text(
-              'Vizwallet will remember this for similar expenses',
+              'Viswallet will remember this for similar expenses',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

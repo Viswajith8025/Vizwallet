@@ -56,7 +56,7 @@ class AppLockService {
 
     try {
       return await _localAuth.authenticate(
-        localizedReason: 'Unlock Vizwallet to view your finances',
+        localizedReason: 'Unlock Viswallet to view your finances',
         options: const AuthenticationOptions(
           stickyAuth: true,
           biometricOnly: false,

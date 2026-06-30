@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Vis Wallet — premium fintech palette.
+/// Viswallet — premium fintech palette.
 ///
 /// Dark: luxurious deep purple · Light: calm sky blue
 abstract final class BrandColors {

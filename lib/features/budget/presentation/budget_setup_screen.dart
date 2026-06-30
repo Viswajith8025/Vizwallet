@@ -69,7 +69,7 @@ class BudgetSetupScreen extends HookConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tell Vizwallet how you want to divide your salary. We will track each expense against the right spending group.',
+            'Tell Viswallet how you want to divide your salary. We will track each expense against the right spending group.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -251,7 +251,7 @@ class _ModeCard extends StatelessWidget {
         AllocationMode.perCategory =>
           'Set a separate monthly limit for each category.',
         AllocationMode.aiSuggested =>
-          'Vizwallet suggests a split from your spending habits.',
+          'Viswallet suggests a split from your spending habits.',
       };
 
   IconData get _icon => switch (mode) {

@@ -83,6 +83,29 @@ class LoansRepository {
           );
     }
   }
+
+  Future<void> recordPayment({
+    required int loanId,
+    required int amountPaise,
+    String? notes,
+  }) async {
+    final dao = await _ref.read(loansDaoProvider.future);
+    final existing = await dao.getLoanById(loanId);
+    if (existing == null) return;
+
+    await dao.recordPayment(
+      loanId: loanId,
+      amountPaise: amountPaise,
+      notes: notes,
+    );
+    await _ref.read(activityLogServiceProvider).log(
+          action: ActivityAction.updated,
+          module: ActivityModule.loan,
+          entityId: loanId,
+          entityLabel: existing.personName,
+          newValue: {'paymentPaise': amountPaise, 'notes': notes},
+        );
+  }
 }
 
 final activeLoansProvider = StreamProvider<List<LoansTableData>>((ref) {

@@ -1,9 +1,10 @@
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/dashboard/domain/monthly_summary.dart';
+import 'package:rupee_track/features/jithu/domain/jithu_app_guide.dart';
 import 'package:rupee_track/features/jithu/domain/jithu_branding.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
 
-/// Builds the system prompt with live Vizwallet financial context.
+/// Builds the system prompt with live Viswallet financial context.
 abstract final class JithuContextBuilder {
   static String systemPrompt({
     required CycleSummary summary,
@@ -20,7 +21,7 @@ abstract final class JithuContextBuilder {
             .join('\n');
 
     return '''
-You are ${JithuBranding.displayName}, the friendly personal finance assistant inside Vizwallet — a premium Indian budget app. Currency is always Indian Rupees (₹). The user sees you in a chat on their phone.
+You are ${JithuBranding.displayName}, the friendly personal finance assistant inside Viswallet — a premium Indian budget app. Currency is always Indian Rupees (₹). The user sees you in a chat on their phone.
 
 Personality:
 - Warm, clear, and practical — like a smart friend who knows their numbers.
@@ -30,9 +31,12 @@ Personality:
 
 Rules:
 - Use ONLY the financial data below. Never invent transactions, balances, or categories.
-- If salary is not set, tell them to add salary in Vizwallet first.
+- For "how do I…" or "where is…" questions about the app, use the navigation map below — give exact tap paths, not generic advice.
+- If salary is not set, direct them to Home → Salary tile or Quick actions → Income (not Settings alone).
 - Give actionable advice tied to their real numbers.
 - Do not mention Groq, APIs, or that you are an LLM unless asked directly.
+
+${JithuAppGuide.promptBlock}
 
 Current pay cycle: ${summary.cycleKey}
 Salary entered: ${summary.salaryEntered ? 'yes' : 'no'}
@@ -56,7 +60,7 @@ ${safeSpend.recommendation != null ? '- Tip: ${safeSpend.recommendation}' : ''}
 
 Top spending categories this cycle:
 $categoryLines
-''' : 'User has not set salary yet — guide them to add it in Settings or onboarding.'}
+''' : 'User has not set salary yet — guide them: Home → Salary tile, or Quick actions → Income, or Settings → Monthly salary.'}
 '''.trim();
   }
 }

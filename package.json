@@ -1,0 +1,20 @@
+{
+  "name": "Viswallet",
+  "private": true,
+  "description": "Supabase CLI tooling for Viswallet (Flutter app)",
+  "scripts": {
+    "supabase": "supabase",
+    "db:push": "supabase db push",
+    "db:pull": "supabase db pull",
+    "db:reset": "supabase db reset",
+    "db:migrations": "supabase migration list --linked",
+    "db:query": "supabase db query --linked",
+    "db:fresh-start": "supabase db query --linked --file supabase/fresh_start.sql",
+    "icons": "python tool/make_icons.py && dart run flutter_launcher_icons",
+    "link": "supabase link --project-ref fuoczdljmzvcmkimlant",
+    "login": "supabase login"
+  },
+  "devDependencies": {
+    "supabase": "^2.109.0"
+  }
+}

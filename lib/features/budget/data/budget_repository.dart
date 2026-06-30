@@ -267,7 +267,10 @@ class BudgetRepository {
   }) async {
     final buckets = await db.budgetDao.getBucketsForPlan(plan.id);
     final spentByCategory = await db.expensesDao.sumByCategoryForMonth(monthKey);
-    final daysRemaining = daysRemainingInCycle(salaryDay: salaryDay);
+    final currentCycle = currentCycleKey(salaryDay: salaryDay);
+    final daysRemaining = monthKey == currentCycle
+        ? daysRemainingInCycle(salaryDay: salaryDay)
+        : 0;
     final categories = await db.categoriesDao.getActiveCategories();
     final colorByBucketKey = {
       for (final category in categories) category.slug: category.colorValue,

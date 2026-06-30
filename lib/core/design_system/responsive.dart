@@ -64,12 +64,16 @@ abstract final class AppResponsive {
     return EdgeInsets.fromLTRB(horizontal, 0, horizontal, bottom);
   }
 
-  static double categoryTileExtent(double width) {
+  static double categoryTileExtent(
+    double width, {
+    bool subtractHorizontalPadding = true,
+  }) {
     final columns = gridColumns(width, compact: 3, medium: 4, expanded: 5);
     const spacing = 10.0;
-    final horizontal = horizontalPadding(width) * 2;
-    final innerWidth = contentMaxWidth(width).clamp(0, width) - horizontal;
-    return (innerWidth - spacing * (columns - 1)) / columns;
+    final effectiveWidth = subtractHorizontalPadding
+        ? contentMaxWidth(width).clamp(0, width) - horizontalPadding(width) * 2
+        : width;
+    return (effectiveWidth - spacing * (columns - 1)) / columns;
   }
 
   static double gridChildAspectRatio(double width) =>

@@ -10,6 +10,7 @@ import 'package:rupee_track/core/widgets/empty_state.dart';
 import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/loans/data/loans_repository.dart';
 import 'package:rupee_track/features/loans/presentation/add_loan_sheet.dart';
+import 'package:rupee_track/features/loans/presentation/record_loan_payment_sheet.dart';
 
 class LoansScreen extends ConsumerWidget {
   const LoansScreen({super.key});
@@ -67,6 +68,9 @@ class LoansScreen extends ConsumerWidget {
                     loan.status != 'returned';
 
                 return PremiumCard(
+                  onTap: loan.balancePaise > 0
+                      ? () => showRecordLoanPaymentSheet(context, ref, loan)
+                      : null,
                   accentColor: isOverdue
                       ? theme.colorScheme.error
                       : theme.colorScheme.primary,

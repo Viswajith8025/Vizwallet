@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:rupee_track/core/database/app_database.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
+import 'package:rupee_track/core/utils/backup_sanitizer.dart';
 import 'package:share_plus/share_plus.dart';
 
 final appManagementServiceProvider = Provider<AppManagementService>((ref) {
@@ -31,16 +32,16 @@ class AppManagementService {
     final loans = await db.select(db.loansTable).get();
     final settings = await db.settingsDao.getSettings();
 
-    return {
+    return BackupSanitizer.sanitizeBackup({
       'version': 1,
       'exportedAt': DateTime.now().toUtc().toIso8601String(),
-      'app': 'Vizwallet',
+      'app': 'Viswallet',
       'expenses': expenses.map((e) => e.toJson()).toList(),
       'goals': goals.map((g) => g.toJson()).toList(),
       'subscriptions': subs.map((s) => s.toJson()).toList(),
       'loans': loans.map((l) => l.toJson()).toList(),
       'settings': settings.toJson(),
-    };
+    });
   }
 
   Future<void> shareExport() async {
@@ -50,14 +51,14 @@ class AppManagementService {
     final file = File(
       p.join(
         dir.path,
-        'vizwallet_backup_${DateTime.now().millisecondsSinceEpoch}.json',
+        'Viswallet_backup_${DateTime.now().millisecondsSinceEpoch}.json',
       ),
     );
     await file.writeAsString(json);
     await Share.shareXFiles(
       [XFile(file.path)],
-      subject: 'Vizwallet backup',
-      text: 'Your Vizwallet data export',
+      subject: 'Viswallet backup',
+      text: 'Your Viswallet data export',
     );
   }
 

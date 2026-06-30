@@ -33,7 +33,7 @@ abstract final class HelpFaqData {
     HelpFaqEntry(
       category: 'Getting started',
       icon: Icons.person_add_outlined,
-      question: 'Do I need an account to use Vizwallet?',
+      question: 'Do I need an account to use Viswallet?',
       answer:
           'Yes. Create an account once during setup, or sign in if you already have one. '
           'You stay signed in until you choose to log out from Settings.',
@@ -41,9 +41,18 @@ abstract final class HelpFaqData {
     HelpFaqEntry(
       category: 'Getting started',
       icon: Icons.person_add_outlined,
+      question: 'I skipped salary during setup — where do I add it now?',
+      answer:
+          'Open Home and tap the **Salary** tile in the summary grid (it shows "Tap to add" if empty). '
+          'You can also use Home → Quick actions → **Income**, or More → Settings → Money cycle → **Monthly salary**. '
+          'A banner at the top of Home also appears until salary is set.',
+    ),
+    HelpFaqEntry(
+      category: 'Getting started',
+      icon: Icons.person_add_outlined,
       question: 'Why do I need to enter my salary?',
       answer:
-          'Your salary helps Vizwallet calculate how much you can spend each day, '
+          'Your salary helps Viswallet calculate how much you can spend each day, '
           'how much you are saving, and whether you are on track. '
           'You can skip salary during onboarding, but many features work better after you add it.',
     ),
@@ -89,7 +98,7 @@ abstract final class HelpFaqData {
       question: 'Can I use voice to add an expense?',
       answer:
           'Yes. In Quick Add, tap the microphone and say something like '
-          '"250 lunch" or "500 Swiggy". Vizwallet fills the amount and shop name when it can.',
+          '"250 lunch" or "500 Swiggy". Viswallet fills the amount and shop name when it can.',
     ),
     HelpFaqEntry(
       category: 'Adding expenses',
@@ -107,7 +116,7 @@ abstract final class HelpFaqData {
       question: 'What is a spending group?',
       answer:
           'A spending group is a part of your salary — like food, travel, or savings. '
-          'When you add an expense, Vizwallet tracks it against the right group so you know what is left.',
+          'When you add an expense, Viswallet tracks it against the right group so you know what is left.',
     ),
     HelpFaqEntry(
       category: 'Budget & salary',
@@ -140,7 +149,8 @@ abstract final class HelpFaqData {
       icon: Icons.pie_chart_outline,
       question: 'Where do I change my salary?',
       answer:
-          'Tap Salary on the Home screen, or open Quick Add → Salary. '
+          'Home → tap the **Salary** tile in the summary grid, or Quick actions → **Income**. '
+          'You can also open More → Settings → Money cycle → **Monthly salary**. '
           'Update the amount whenever your income changes.',
     ),
     HelpFaqEntry(
@@ -149,7 +159,7 @@ abstract final class HelpFaqData {
       question: 'What is the salary date / salary cycle?',
       answer:
           'This is the day you usually get paid each month. '
-          'Vizwallet uses it to define "this month" — from one salary date to the day before the next. '
+          'Viswallet uses it to define "this month" — from one salary date to the day before the next. '
           'Change it in Settings → Salary cycle.',
     ),
     HelpFaqEntry(
@@ -184,7 +194,7 @@ abstract final class HelpFaqData {
       question: 'What is the + button and can I move it?',
       answer:
           'The + button opens Quick Add. Press and drag it to any corner you like — '
-          'Vizwallet remembers the position.',
+          'Viswallet remembers the position.',
     ),
     HelpFaqEntry(
       category: 'Home screen',
@@ -201,8 +211,8 @@ abstract final class HelpFaqData {
       icon: Icons.auto_awesome_outlined,
       question: 'Who is ${JithuBranding.displayName}?',
       answer:
-          '${JithuBranding.displayName} is your AI money assistant in Vizwallet. Ask about safe daily spending, '
-          'where your money is going, or saving tips. Answers use your real Vizwallet numbers.',
+          '${JithuBranding.displayName} is your AI money assistant in Viswallet. Ask about safe daily spending, '
+          'where your money is going, or saving tips. Answers use your real Viswallet numbers.',
     ),
     HelpFaqEntry(
       category: JithuBranding.displayName,
@@ -210,7 +220,7 @@ abstract final class HelpFaqData {
       question: 'Why does ${JithuBranding.displayName} say "Add salary to unlock advice"?',
       answer:
           '${JithuBranding.displayName} needs your salary and some spending data to give useful answers. '
-          'Add salary in onboarding or tap Salary on the Home screen.',
+          'Add salary from Home → Salary tile, Quick actions → Income, or Settings → Monthly salary.',
     ),
     HelpFaqEntry(
       category: JithuBranding.displayName,
@@ -257,7 +267,7 @@ abstract final class HelpFaqData {
       answer:
           'On the sign-in screen, enter your email and tap "Forgot password? Show hint". '
           'If you added a hint during signup, it will appear. '
-          'Vizwallet does not email a reset link — the hint is what you saved yourself.',
+          'Viswallet does not email a reset link — the hint is what you saved yourself.',
     ),
     HelpFaqEntry(
       category: 'Account & settings',

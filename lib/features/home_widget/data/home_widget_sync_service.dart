@@ -9,6 +9,7 @@ import 'package:rupee_track/core/providers/settings_provider.dart';
 import 'package:rupee_track/core/salary_cycle/salary_cycle_engine.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
+import 'package:rupee_track/core/utils/savings_rate_utils.dart';
 import 'package:rupee_track/features/budget/data/budget_repository.dart';
 import 'package:rupee_track/features/health_score/data/financial_health_repository.dart';
 import 'package:rupee_track/features/home_widget/domain/home_widget_snapshot.dart';
@@ -81,13 +82,31 @@ class HomeWidgetSyncService {
       moneyLeftPaise: moneyLeft,
       daysRemaining: daysLeft,
     );
-    final savingsPercent =
-        salaryPaise > 0 ? (moneyLeft / salaryPaise) * 100 : 0.0;
+    final savingsPercent = SavingsRateUtils.displayPercent(
+      salaryPaise: salaryPaise,
+      spentPaise: spentPaise,
+      carryOverPaise: carryOver,
+    );
 
     final plan =
         await _ref.read(budgetRepositoryProvider).getPlanStatus(cycleKey);
     final budgetProgress =
         MonthlyReportEngine.budgetOnTrackPercent(plan).round();
+
+    final goals = await db.savingsGoalsDao.listActiveGoals();
+    final goalProgress = SavingsRateUtils.goalsProgressPercent(
+      goals: goals.map(
+        (g) => (
+          savedPaise: g.savedPaise,
+          targetPaise: g.targetPaise,
+          isWishlist: g.isWishlist,
+        ),
+      ),
+    );
+    final wishlistGoals = goals.where((g) => g.isWishlist).toList();
+    final wishlistNote = wishlistGoals.isEmpty
+        ? 'No wishlist items yet'
+        : '${wishlistGoals.length} wishlist item${wishlistGoals.length == 1 ? '' : 's'}';
 
     var healthScore = 0;
     try {
@@ -125,10 +144,10 @@ class HomeWidgetSyncService {
       budgetProgressPercent: budgetProgress,
       healthScore: healthScore,
       savingsPercent: savingsPercent,
-      goalProgressPercent: budgetProgress,
+      goalProgressPercent: goalProgress,
       upcomingSubscriptionsCount: upcomingSubs.length,
       upcomingSubscriptionsLabel: subsLabel,
-      upcomingBillsCount: overdueLoans.length,
+      overdueLoansCount: overdueLoans.length,
       recentTransactionTitle: recentRow?.expense.title ?? 'No transactions yet',
       recentTransactionAmount: recentRow != null
           ? formatPaise(recentRow.expense.amountPaise)
@@ -136,7 +155,7 @@ class HomeWidgetSyncService {
       cycleLabel: formatCycleLabel(cycleKey, salaryDay: salaryDay),
       themeMode: themeLabel,
       lastUpdatedIso: DateTime.now().toUtc().toIso8601String(),
-      wishlistNote: 'Wishlist tracking coming soon',
+      wishlistNote: wishlistNote,
     );
   }
 }

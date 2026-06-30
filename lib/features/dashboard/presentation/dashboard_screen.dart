@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/branding/vis_wallet_logo.dart';
-import 'package:rupee_track/core/constants/app_constants.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
@@ -20,11 +19,18 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: PremiumAppBar(
-        title: AppConstants.appName,
-        subtitle: 'Your money at a glance',
-        leading: const Padding(
-          padding: EdgeInsets.only(left: AppSpacing.sm),
-          child: VisWalletLogo(size: 28),
+        title: 'Your money at a glance',
+        leading: Padding(
+          padding: const EdgeInsets.only(left: AppSpacing.sm),
+          child: Center(
+            child: VisWalletLogo(
+              size: 38,
+              showShadow: true,
+              variant: Theme.of(context).brightness == Brightness.dark
+                  ? VisWalletLogoVariant.dark
+                  : VisWalletLogoVariant.brand,
+            ),
+          ),
         ),
         actions: [
           if (compact && editMode)

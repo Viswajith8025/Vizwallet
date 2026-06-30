@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -31,7 +32,7 @@ abstract final class PinHasher {
     final existing = await _storage.read(key: _saltKey);
     if (existing != null && existing.isNotEmpty) return existing;
     final salt = base64Url.encode(
-      List<int>.generate(32, (i) => (i * 17 + 91) % 256),
+      List<int>.generate(32, (_) => Random.secure().nextInt(256)),
     );
     await _storage.write(key: _saltKey, value: salt);
     return salt;

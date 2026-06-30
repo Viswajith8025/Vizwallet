@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
-import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/core/design_system/premium_list_tile.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/router/routes.dart';
+import 'package:rupee_track/core/widgets/empty_state.dart';
 import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/insights/data/insights_feed_repository.dart';
 import 'package:rupee_track/features/insights/domain/insights_feed_models.dart';
@@ -100,52 +100,24 @@ class InsightsFeedSection extends ConsumerWidget {
               ),
               AchievementBanner(items: report.achievements),
             ],
-            if (regular.isNotEmpty) ...[
-              InsightsSectionHeader(
-                emoji: '✨',
-                title: 'More insights',
-                subtitle: 'Trends, tips, and opportunities',
-                count: regular.length,
+            if (regular.isNotEmpty)
+              _CollapsibleInsightList(
+                items: regular,
+                pinned: pinned,
+                onPin: (id) => _togglePin(ref, pinned, id),
+                onDismiss: (id) => _dismiss(ref, dismissed, id),
               ),
-              ...regular.map(
-                (item) => InsightFeedCard(
-                  item: item,
-                  isPinned: pinned.contains(item.id),
-                  onPin: () => _togglePin(ref, pinned, item.id),
-                  onDismiss: () => _dismiss(ref, dismissed, item.id),
-                ),
-              ),
-            ],
             if (priority.isEmpty &&
                 regular.isEmpty &&
                 report.achievements.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                child: PremiumCard(
-                  child: Column(
-                    children: [
-                      const Text('✅', style: TextStyle(fontSize: 32)),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'You\'re all caught up',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'New insights appear as you spend, save, and hit goals.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                              height: 1.45,
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
+                child: EmptyState(
+                  icon: Icons.auto_awesome_rounded,
+                  title: 'You\'re all caught up',
+                  message:
+                      'New insights appear as you spend, save, and reach goals. Check back tomorrow.',
+                  accentColor: Theme.of(context).colorScheme.tertiary,
                 ),
               ),
           ],
@@ -169,6 +141,78 @@ class InsightsFeedSection extends ConsumerWidget {
       ...dismissed,
       id,
     };
+  }
+}
+
+class _CollapsibleInsightList extends StatefulWidget {
+  const _CollapsibleInsightList({
+    required this.items,
+    required this.pinned,
+    required this.onPin,
+    required this.onDismiss,
+  });
+
+  final List<InsightFeedItem> items;
+  final Set<String> pinned;
+  final ValueChanged<String> onPin;
+  final ValueChanged<String> onDismiss;
+
+  @override
+  State<_CollapsibleInsightList> createState() =>
+      _CollapsibleInsightListState();
+}
+
+class _CollapsibleInsightListState extends State<_CollapsibleInsightList> {
+  static const _previewCount = 3;
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasMore = widget.items.length > _previewCount;
+    final visible = _expanded || !hasMore
+        ? widget.items
+        : widget.items.take(_previewCount).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InsightsSectionHeader(
+          emoji: '✨',
+          title: 'More insights',
+          subtitle: 'Trends, tips, and opportunities',
+          count: widget.items.length,
+        ),
+        ...visible.map(
+          (item) => InsightFeedCard(
+            item: item,
+            isPinned: widget.pinned.contains(item.id),
+            onPin: () => widget.onPin(item.id),
+            onDismiss: () => widget.onDismiss(item.id),
+          ),
+        ),
+        if (hasMore)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: TextButton.icon(
+              onPressed: () => setState(() => _expanded = !_expanded),
+              icon: Icon(
+                _expanded
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+              ),
+              label: Text(
+                _expanded
+                    ? 'Show less'
+                    : 'Show ${widget.items.length - _previewCount} more',
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 

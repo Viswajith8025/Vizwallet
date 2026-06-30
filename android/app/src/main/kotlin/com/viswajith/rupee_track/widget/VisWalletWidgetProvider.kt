@@ -48,7 +48,7 @@ abstract class VisWalletWidgetProvider(
         views.setTextViewText(R.id.widget_money_left, data.getString("money_left", "—"))
         views.setTextViewText(R.id.widget_today_spent, data.getString("today_spent", "—"))
         views.setTextViewText(R.id.widget_safe_daily, data.getString("safe_daily", "—"))
-        views.setTextViewText(R.id.widget_cycle_label, data.getString("cycle_label", "Vizwallet"))
+        views.setTextViewText(R.id.widget_cycle_label, data.getString("cycle_label", "Viswallet"))
         views.setTextViewText(
             R.id.widget_health_score,
             data.getString("health_score", "—"),
@@ -72,8 +72,9 @@ abstract class VisWalletWidgetProvider(
             R.id.widget_subs_line,
             "Subs: $subsCount · ${data.getString("upcoming_subs_label", "")}",
         )
-        val bills = data.getString("upcoming_bills_count", "0") ?: "0"
-        views.setTextViewText(R.id.widget_bills_line, "Bills due: $bills")
+        val bills = data.getString("overdue_loans_count", "0")
+            ?: data.getString("upcoming_bills_count", "0") ?: "0"
+        views.setTextViewText(R.id.widget_bills_line, "Overdue loans: $bills")
 
         views.setTextViewText(
             R.id.widget_wishlist,
