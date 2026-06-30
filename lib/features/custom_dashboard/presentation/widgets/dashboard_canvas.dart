@@ -21,8 +21,7 @@ class DashboardCanvas extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final layout = ref.watch(dashboardLayoutProvider);
     final editMode = ref.watch(dashboardEditModeProvider);
-    final salaryDay = ref.watch(salaryDayProvider);
-    final cycleKey = currentCycleKey(salaryDay: salaryDay);
+    final cycleKey = ref.watch(selectedCycleKeyProvider);
     final summaryAsync = ref.watch(monthlySummaryProvider(cycleKey));
 
     return summaryAsync.when(

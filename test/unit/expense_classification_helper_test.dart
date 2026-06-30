@@ -76,15 +76,27 @@ void main() {
   });
 
   group('mergeExpenseTags', () {
-    test('always includes category name and deduplicates', () {
+    test('deduplicates and drops category-redundant tags', () {
       final tags = mergeExpenseTags(
-        userTags: ['Food', 'lunch'],
-        classifiedTags: ['delivery', 'lunch'],
+        userTags: ['lunch'],
+        classifiedTags: ['delivery', 'lunch', 'Subscription'],
+        categoryName: 'Subscriptions',
+      );
+
+      expect(tags, containsAll(['lunch', 'delivery']));
+      expect(tags, isNot(contains('Subscription')));
+      expect(tags.length, 2);
+    });
+
+    test('does not auto-include category name', () {
+      final tags = mergeExpenseTags(
+        userTags: ['lunch'],
+        classifiedTags: ['delivery'],
         categoryName: 'Food',
       );
 
-      expect(tags, containsAll(['Food', 'lunch', 'delivery']));
-      expect(tags.length, 3);
+      expect(tags, containsAll(['lunch', 'delivery']));
+      expect(tags, isNot(contains('Food')));
     });
   });
 }

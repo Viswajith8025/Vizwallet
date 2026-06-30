@@ -18,13 +18,13 @@
 
 ## 3. Groq API (AI Jithu)
 
-Release builds **do not** embed `groq_local.dart` keys. Inject at build time:
+For personal builds, copy `groq_local.example.dart` → `groq_local.dart` and paste your Groq key (gitignored). It is included in release APKs.
+
+For Play Store / CI, prefer `--dart-define=GROQ_API_KEY=...` or a server-side proxy instead of committing keys.
 
 ```bash
-flutter build appbundle --dart-define=GROQ_API_KEY=your_server_proxy_key
+flutter build appbundle --dart-define=GROQ_API_KEY=gsk_...
 ```
-
-For production, prefer a Supabase Edge Function proxy instead of client keys.
 
 ## 4. Play Store
 

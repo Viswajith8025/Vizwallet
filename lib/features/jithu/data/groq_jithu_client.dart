@@ -35,8 +35,9 @@ class GroqJithuClient {
           (m) => {'role': m.role, 'content': m.content},
         ),
       ],
-      'temperature': 0.65,
-      'max_tokens': 700,
+      'temperature': 0.75,
+      'max_tokens': 2048,
+      'top_p': 0.9,
     };
 
     final response = await _client.post(

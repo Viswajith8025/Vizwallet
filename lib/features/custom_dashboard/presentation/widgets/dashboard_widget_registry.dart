@@ -65,10 +65,7 @@ abstract final class DashboardWidgetRegistry {
   }
 }
 
-String _cycleKey(WidgetRef ref) {
-  final salaryDay = ref.watch(salaryDayProvider);
-  return currentCycleKey(salaryDay: salaryDay);
-}
+String _cycleKey(WidgetRef ref) => ref.watch(selectedCycleKeyProvider);
 
 class _BalanceWidget extends ConsumerWidget {
   @override
@@ -210,7 +207,14 @@ class _SummaryGridWidget extends ConsumerWidget {
         message: "Couldn't load summary",
         onRetry: () => ref.invalidate(monthlySummaryProvider(_cycleKey(ref))),
       ),
-      data: (summary) => ResponsiveSummaryGrid(
+      data: (summary) {
+        final foodPaise = summary.categoryBreakdown
+            .where(
+              (c) => c.categoryName.toLowerCase().contains('food'),
+            )
+            .fold<int>(0, (sum, c) => sum + c.totalPaise);
+
+        return ResponsiveSummaryGrid(
         childAspectRatio: 0.96,
         children: [
           SummaryCard(
@@ -233,13 +237,15 @@ class _SummaryGridWidget extends ConsumerWidget {
             subtitle: formatPercent(summary.savingsPercent),
           ),
           SummaryCard(
-            label: 'Subscriptions',
-            icon: Icons.subscriptions_outlined,
-            value: MoneyText(summary.subscriptionMonthlyPaise),
-            onTap: () => context.push(AppRoutes.subscriptions),
+            label: 'Food',
+            icon: Icons.restaurant_rounded,
+            value: MoneyText(foodPaise),
+            accentColor: const Color(0xFFEF4444),
+            onTap: () => context.push(AppRoutes.expenses),
           ),
         ],
-      ),
+      );
+      },
     );
   }
 }

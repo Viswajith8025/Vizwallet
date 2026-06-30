@@ -4,10 +4,12 @@ import 'package:rupee_track/core/database/daos/expenses_dao.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
+import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/features/expenses/data/expense_repository.dart';
+import 'package:rupee_track/features/expenses/domain/expense_classification_helper.dart';
 import 'package:rupee_track/features/expenses/presentation/widgets/expense_delete_utils.dart';
+import 'package:rupee_track/core/database/app_database.dart';
 import 'package:rupee_track/features/smart_tagging/domain/classification_models.dart';
-import 'package:rupee_track/features/smart_tagging/domain/default_tagging_rules.dart';
 
 Future<void> showExpenseCorrectionSheet(
   BuildContext context,
@@ -35,7 +37,8 @@ class ExpenseCorrectionSheet extends ConsumerStatefulWidget {
 class _ExpenseCorrectionSheetState extends ConsumerState<ExpenseCorrectionSheet> {
   late int _categoryId;
   late TextEditingController _titleController;
-  late Set<String> _selectedTags;
+  final _merchantKey = GlobalKey();
+  final _merchantFocus = FocusNode();
   bool _saving = false;
 
   @override
@@ -43,23 +46,44 @@ class _ExpenseCorrectionSheetState extends ConsumerState<ExpenseCorrectionSheet>
     super.initState();
     _categoryId = widget.item.expense.categoryId;
     _titleController = TextEditingController(text: widget.item.expense.title);
-    _selectedTags = parseTagsJson(widget.item.expense.tags).toSet();
   }
 
   @override
   void dispose() {
     _titleController.dispose();
+    _merchantFocus.dispose();
     super.dispose();
   }
 
-  Future<void> _save() async {
+  void _onCategorySelected(int categoryId) {
+    setState(() => _categoryId = categoryId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _merchantKey.currentContext;
+      if (target != null) {
+        Scrollable.ensureVisible(
+          target,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+          alignment: 0.12,
+        );
+      }
+      _merchantFocus.requestFocus();
+    });
+  }
+
+  Future<void> _save(List<CategoriesTableData> categories) async {
+    final category = categories.firstWhere((c) => c.id == _categoryId);
+    final cleanedTags = parseTagsJson(widget.item.expense.tags)
+        .where((t) => !tagRedundantWithCategory(t, category.name))
+        .toList();
+
     setState(() => _saving = true);
     try {
       await ref.read(expenseRepositoryProvider).updateExpenseClassification(
             expenseId: widget.item.expense.id,
             categoryId: _categoryId,
             title: _titleController.text.trim(),
-            tags: _selectedTags.toList(),
+            tags: cleanedTags,
             notes: widget.item.expense.notes,
             monthKey: widget.item.expense.monthKey,
           );
@@ -93,7 +117,10 @@ class _ExpenseCorrectionSheetState extends ConsumerState<ExpenseCorrectionSheet>
       ),
       data: (categories) {
         return ListView(
-          padding: AppResponsive.screenPadding(context, bottom: AppSpacing.xl),
+          padding: AppResponsive.screenPadding(
+            context,
+            bottom: ShellBottomInset.scrollBottom(context) + AppSpacing.lg,
+          ),
           children: [
             Text(
               'Fix category',
@@ -109,13 +136,6 @@ class _ExpenseCorrectionSheetState extends ConsumerState<ExpenseCorrectionSheet>
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Merchant / title',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
             Text('Category', style: theme.textTheme.titleSmall),
             const SizedBox(height: AppSpacing.xs),
             Wrap(
@@ -126,36 +146,25 @@ class _ExpenseCorrectionSheetState extends ConsumerState<ExpenseCorrectionSheet>
                 return FilterChip(
                   label: Text(cat.name),
                   selected: selected,
-                  onSelected: (_) => setState(() => _categoryId = cat.id),
+                  onSelected: (_) => _onCategorySelected(cat.id),
                 );
               }).toList(),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text('Tags', style: theme.textTheme.titleSmall),
-            const SizedBox(height: AppSpacing.xs),
-            Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              children: suggestedSpendingTags.map((tag) {
-                final selected = _selectedTags.contains(tag);
-                return FilterChip(
-                  label: Text(tag),
-                  selected: selected,
-                  onSelected: (_) {
-                    setState(() {
-                      if (selected) {
-                        _selectedTags.remove(tag);
-                      } else {
-                        _selectedTags.add(tag);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
+            KeyedSubtree(
+              key: _merchantKey,
+              child: TextField(
+                controller: _titleController,
+                focusNode: _merchantFocus,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Merchant / title',
+                ),
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             FilledButton(
-              onPressed: _saving ? null : _save,
+              onPressed: _saving ? null : () => _save(categories),
               child: Text(_saving ? 'Saving…' : 'Save & remember'),
             ),
             const SizedBox(height: AppSpacing.sm),

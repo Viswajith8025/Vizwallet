@@ -1,5 +1,6 @@
 import 'package:rupee_track/core/database/app_database.dart';
 import 'package:rupee_track/core/utils/auto_label_utils.dart';
+import 'package:rupee_track/features/expenses/domain/expense_classification_helper.dart';
 
 String _norm(String value) => value.trim().toLowerCase();
 
@@ -28,7 +29,11 @@ List<String> expenseDisplayTags({
     final trimmed = tag.trim();
     if (trimmed.isEmpty) continue;
     final key = _norm(trimmed);
-    if (skip.contains(key) || seen.contains(key)) continue;
+    if (skip.contains(key) ||
+        seen.contains(key) ||
+        tagRedundantWithCategory(trimmed, categoryName)) {
+      continue;
+    }
     seen.add(key);
     out.add(trimmed);
   }

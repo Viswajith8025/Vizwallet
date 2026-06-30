@@ -40,8 +40,8 @@ class JithuRepository {
         systemPrompt: systemPrompt,
         messages: apiMessages,
       );
-    } on GroqJithuException {
-      return '${JithuFallbackAdvisor.reply(question: question, summary: summary, safeSpend: safeSpend)}\n\n(Cloud AI is temporarily unavailable — showing offline answer.)';
+    } on GroqJithuException catch (e) {
+      return '${JithuFallbackAdvisor.reply(question: question, summary: summary, safeSpend: safeSpend)}\n\n(AI is temporarily offline — error ${e.statusCode}.)';
     } catch (_) {
       return JithuFallbackAdvisor.reply(
         question: question,

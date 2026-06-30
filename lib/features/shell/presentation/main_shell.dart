@@ -9,6 +9,7 @@ import 'package:rupee_track/features/jithu/domain/jithu_branding.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/router/routes.dart';
+import 'package:rupee_track/features/quick_add/presentation/positioned_quick_add_fab.dart';
 import 'package:rupee_track/features/quick_add/presentation/quick_add_fab.dart';
 
 class MainShell extends ConsumerStatefulWidget {
@@ -77,12 +78,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       clipBehavior: Clip.none,
       children: [
         widget.child,
-        if (showFab)
-          Positioned(
-            right: ShellBottomInset.fabMargin,
-            bottom: ShellBottomInset.fabBottom(context),
-            child: const QuickAddFab(),
-          ),
+        if (showFab) const PositionedQuickAddFab(),
       ],
     );
   }
@@ -148,7 +144,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
             ],
           ),
-          floatingActionButton: showFab ? const QuickAddFab() : null,
+          floatingActionButton: showFab ? QuickAddFab() : null,
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         ),
       );

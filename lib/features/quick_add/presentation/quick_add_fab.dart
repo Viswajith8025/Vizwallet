@@ -54,7 +54,7 @@ class _QuickAddFabState extends ConsumerState<QuickAddFab>
           elevation: 0,
           highlightElevation: 0,
           onPressed: _open,
-          tooltip: 'Quick Add',
+          tooltip: 'Quick Add — hold, then drag to move',
           child: const Icon(Icons.add_rounded, size: 26),
         ),
       ),

@@ -17,6 +17,7 @@ import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_bottom_sheet.dart';
 import 'package:rupee_track/core/design_system/app_scroll_behavior.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
+import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 
 Future<void> showQuickAddSheet(BuildContext context, WidgetRef ref) {
   return showPremiumBottomSheet<void>(
@@ -36,6 +37,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
   String _amountDigits = '';
   int? _selectedCategoryId;
   final _labelController = TextEditingController();
+  final _labelSectionKey = GlobalKey();
   String? _note;
   bool _showCalculator = false;
   bool _saving = false;
@@ -118,6 +120,16 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
   void _selectCategory(int categoryId) {
     HapticFeedback.selectionClick();
     setState(() => _selectedCategoryId = categoryId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _labelSectionKey.currentContext;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+        alignment: 0.12,
+      );
+    });
   }
 
   CategoriesTableData? _selectedCategory(List<CategoriesTableData> categories) {
@@ -217,7 +229,10 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
     return Material(
       color: theme.scaffoldBackgroundColor,
       child: ListView(
-        padding: AppResponsive.screenPadding(context, bottom: AppSpacing.xl),
+        padding: AppResponsive.screenPadding(
+          context,
+          bottom: ShellBottomInset.scrollBottom(context) + AppSpacing.lg,
+        ),
         children: [
                 Row(
                   children: [
@@ -451,17 +466,27 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
                         ),
                         if (selected != null) ...[
                           const SizedBox(height: AppSpacing.lg),
-                          const _SectionLabel('2 · Add a label (optional)'),
-                          const SizedBox(height: AppSpacing.sm),
-                          TextField(
-                            controller: _labelController,
-                            textCapitalization: TextCapitalization.sentences,
-                            decoration: InputDecoration(
-                              labelText: 'Label',
-                              hintText: _labelHintFor(selected),
-                              border: const OutlineInputBorder(),
+                          KeyedSubtree(
+                            key: _labelSectionKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const _SectionLabel('2 · Add a label (optional)'),
+                                const SizedBox(height: AppSpacing.sm),
+                                TextField(
+                                  controller: _labelController,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  autofocus: true,
+                                  decoration: InputDecoration(
+                                    labelText: 'Label',
+                                    hintText: _labelHintFor(selected),
+                                    border: const OutlineInputBorder(),
+                                  ),
+                                  onChanged: (_) => setState(() {}),
+                                ),
+                              ],
                             ),
-                            onChanged: (_) => setState(() {}),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           SizedBox(

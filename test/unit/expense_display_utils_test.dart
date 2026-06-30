@@ -23,4 +23,16 @@ void main() {
 
     expect(tags, ['Major Expense', 'UPI']);
   });
+
+  test('expenseDisplayTags hides singular/plural category tags', () {
+    final tags = expenseDisplayTags(
+      title: 'Spotify',
+      categoryName: 'Subscriptions',
+      amountLabels: const [],
+      classificationTags: const ['Subscription', 'entertainment'],
+    );
+
+    expect(tags, ['entertainment']);
+    expect(tags, isNot(contains('Subscription')));
+  });
 }

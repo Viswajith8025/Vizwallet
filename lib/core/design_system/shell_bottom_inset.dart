@@ -12,7 +12,8 @@ abstract final class ShellBottomInset {
     final compact = AppResponsive.useCompactNav(context);
     const outerMargin = AppSpacing.md;
     const innerPadding = AppSpacing.xs * 2;
-    final itemHeight = compact ? 48.0 : 56.0;
+    // Icon + label nav is taller than icon-only compact mode.
+    final itemHeight = compact ? 48.0 : 64.0;
     return outerMargin + innerPadding + itemHeight;
   }
 
@@ -25,9 +26,14 @@ abstract final class ShellBottomInset {
     return safeBottom + navBarHeight(context);
   }
 
-  /// Extra list padding so the FAB does not cover the last items.
+  /// Bottom padding for lists — clears the nav bar only (FAB is draggable overlay).
   static double scrollBottom(BuildContext context) =>
-      fabBottom(context) + fabSize + AppSpacing.xs;
+      of(context) + AppSpacing.xs;
+
+  /// Pinned composer flush above floating nav (Jithu chat input).
+  static double composerBottom(BuildContext context) {
+    return of(context) + AppSpacing.md;
+  }
 
   /// Symmetric horizontal + bottom padding for shell tab scroll views.
   static EdgeInsets scrollPadding(
@@ -49,11 +55,8 @@ abstract final class ShellBottomInset {
     return EdgeInsets.only(bottom: scrollBottom(context));
   }
 
-  /// Pinned composer (e.g. Jithu chat input) above the floating nav — no FAB.
-  static double composerBottom(BuildContext context) => of(context);
-
   /// Bottom offset for the anchored quick-add FAB above the nav bar.
   static double fabBottom(BuildContext context, {bool hasBottomNav = true}) {
-    return of(context, hasBottomNav: hasBottomNav);
+    return of(context, hasBottomNav: hasBottomNav) + fabMargin;
   }
 }

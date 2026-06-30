@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rupee_track/core/config/groq_config.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
@@ -108,7 +109,9 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
     return Scaffold(
       appBar: PremiumAppBar(
         title: JithuBranding.displayName,
-        subtitle: 'Your money assistant',
+        subtitle: GroqConfig.isConfigured
+            ? 'AI assistant · powered by Groq'
+            : 'Offline mode · add Groq API key',
         leading: Padding(
           padding: const EdgeInsets.only(left: AppSpacing.sm),
           child: Center(
@@ -167,7 +170,7 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
                   JithuChatMessage(
                     fromUser: false,
                     text: summary.salaryEntered
-                        ? 'Ask me how much you can spend today, where your money is going, how to save more, or where to find anything in Viswallet.'
+                        ? 'Ask me anything — your spending, saving tips, life questions, or where to find things in Viswallet.'
                         : 'I can help with budgets and spending — but first add your monthly salary. '
                             'Tap the strip above or ask "Where do I add my salary?"',
                   ),
@@ -275,6 +278,7 @@ class _JithuBodyState extends State<_JithuBody> {
           ),
           SafeArea(
             top: false,
+            bottom: false,
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 AppSpacing.md,

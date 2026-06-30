@@ -19,7 +19,7 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: PremiumAppBar(
-        title: 'Your money at a glance',
+        title: 'Your Financial Snapshot',
         leading: Padding(
           padding: const EdgeInsets.only(left: AppSpacing.sm),
           child: Center(

@@ -66,7 +66,7 @@ class InsightsFeedSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const InsightsSectionHeader(
-              emoji: '💡',
+              icon: Icons.lightbulb_outline_rounded,
               title: 'Daily insight',
               subtitle: 'One quick read to start your day',
               compactTop: true,
@@ -74,7 +74,7 @@ class InsightsFeedSection extends ConsumerWidget {
             DailyTipCard(tip: report.dailyTip),
             if (priority.isNotEmpty) ...[
               InsightsSectionHeader(
-                emoji: '⚠️',
+                icon: Icons.warning_amber_rounded,
                 title: 'Needs attention',
                 subtitle: 'Alerts worth acting on now',
                 count: priority.length,
@@ -92,7 +92,7 @@ class InsightsFeedSection extends ConsumerWidget {
             ],
             if (report.achievements.isNotEmpty) ...[
               InsightsSectionHeader(
-                emoji: '🏆',
+                icon: Icons.emoji_events_outlined,
                 title: 'Your wins',
                 subtitle: 'Progress you have already made',
                 count: report.achievements.length,
@@ -178,7 +178,7 @@ class _CollapsibleInsightListState extends State<_CollapsibleInsightList> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         InsightsSectionHeader(
-          emoji: '✨',
+          icon: Icons.auto_awesome_outlined,
           title: 'More insights',
           subtitle: 'Trends, tips, and opportunities',
           count: widget.items.length,

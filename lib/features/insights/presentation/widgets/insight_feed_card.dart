@@ -37,7 +37,6 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
     final accent = _severityColor(item.severity, theme.colorScheme);
     final icon = item.icon ?? iconForInsightCategory(item.category);
     final categoryLabel = labelForInsightCategory(item.category);
-    final kindEmoji = emojiForInsightKind(item.kind);
 
     final card = PremiumCard(
       variant: widget.featured
@@ -80,12 +79,11 @@ class _InsightFeedCardState extends State<InsightFeedCard> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     _InsightBadge(
-                      label: '$kindEmoji ${labelForInsightKind(item.kind)}',
+                      label: labelForInsightKind(item.kind),
                       color: accent,
                     ),
                     _InsightBadge(
-                      label:
-                          '${emojiForInsightCategory(item.category)} $categoryLabel',
+                      label: categoryLabel,
                       color: theme.colorScheme.onSurfaceVariant,
                       filled: false,
                     ),
@@ -264,8 +262,11 @@ class DailyTipCard extends StatelessWidget {
               color: accent.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
-            alignment: Alignment.center,
-            child: const Text('💡', style: TextStyle(fontSize: 20)),
+            child: Icon(
+              Icons.tips_and_updates_outlined,
+              color: accent,
+              size: 22,
+            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -323,7 +324,11 @@ class AchievementBanner extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Text('🏆', style: TextStyle(fontSize: 18)),
+                      Icon(
+                        Icons.emoji_events_outlined,
+                        size: 18,
+                        color: winColor,
+                      ),
                       const SizedBox(width: AppSpacing.xs),
                       Expanded(
                         child: SingleLineLabel(

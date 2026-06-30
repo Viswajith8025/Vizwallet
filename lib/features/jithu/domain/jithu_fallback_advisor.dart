@@ -43,7 +43,25 @@ abstract final class JithuFallbackAdvisor {
       if (!summary.salaryEntered) {
         return 'Hello! I am ${JithuBranding.displayName}. To get started, add your monthly salary from Home → Salary tile (or Quick actions → Income). Then I can guide your daily spending.';
       }
-      return 'Hello! I am ${JithuBranding.displayName}. I can help with today\'s safe spend, where your money is going, and quick saving tips.';
+      return 'Hello! I am ${JithuBranding.displayName}. Ask me anything — money, life, or where to find things in Viswallet.';
+    }
+
+    if (q.contains('love you') || q.contains('i love')) {
+      return 'That is sweet! I am ${JithuBranding.displayName}, your money assistant — here whenever you need help with spending, saving, or just a chat.';
+    }
+
+    if (q.contains('enough to live') ||
+        q.contains('live on') ||
+        q.contains('cost of living')) {
+      final amountMatch = RegExp(r'(\d+)\s*k').firstMatch(q);
+      if (amountMatch != null) {
+        final thousands = int.tryParse(amountMatch.group(1) ?? '') ?? 0;
+        final monthly = thousands * 1000;
+        return '₹${thousands}k/month (~${formatPaise(monthly * 100)}) depends heavily on your city and lifestyle. '
+            'In many Indian cities it can cover basics for one person but leaves little room for savings or emergencies. '
+            'Your current salary in Viswallet is ${formatPaise(summary.salaryPaise)} — I can help you plan around that if you want.';
+      }
+      return 'Cost of living varies a lot by city in India. Tell me your monthly budget and city, or check your salary and spending in Viswallet and I can give more specific advice.';
     }
 
     final nav = JithuAppGuide.navigationAnswer(question);
@@ -96,6 +114,8 @@ abstract final class JithuFallbackAdvisor {
       return 'This month you spent ${formatPaise(summary.spentPaise)} and have ${formatPaise(summary.moneyLeftPaise)} left. Your suggested daily limit is ${formatPaise(summary.safeDailyLimitPaise)} for the remaining ${summary.daysLeftInCycle} day(s).';
     }
 
-    return 'Here is my quick view: money left is ${formatPaise(summary.moneyLeftPaise)}, today\'s remaining limit is ${formatPaise(safeSpend.remainingSafeSpendTodayPaise)}, and your current status is ${safeSpend.riskLevel.label}.';
+    return 'I am in offline mode right now, so I cannot give a full AI answer. '
+        'For money: you have ${formatPaise(summary.moneyLeftPaise)} left this cycle and can spend about ${formatPaise(safeSpend.remainingSafeSpendTodayPaise)} more today. '
+        'Rebuild the app with Groq configured, or ask a specific money question.';
   }
 }

@@ -15,6 +15,9 @@ class AppLockGate extends ConsumerStatefulWidget {
 
 class _AppLockGateState extends ConsumerState<AppLockGate>
     with WidgetsBindingObserver {
+  DateTime? _pausedAt;
+  static const _lockAfterBackground = Duration(minutes: 2);
+
   @override
   void initState() {
     super.initState();
@@ -29,9 +32,16 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Lock when backgrounded; avoid `inactive` so biometric prompts don't re-lock.
     if (state == AppLifecycleState.paused) {
-      ref.read(appLockProvider.notifier).lock();
+      _pausedAt = DateTime.now();
+      return;
+    }
+    if (state == AppLifecycleState.resumed && _pausedAt != null) {
+      final away = DateTime.now().difference(_pausedAt!);
+      if (away >= _lockAfterBackground) {
+        ref.read(appLockProvider.notifier).lock();
+      }
+      _pausedAt = null;
     }
   }
 
