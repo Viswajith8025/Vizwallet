@@ -36,7 +36,7 @@ class GroqJithuClient {
         ),
       ],
       'temperature': 0.75,
-      'max_tokens': 2048,
+      'max_completion_tokens': 2048,
       'top_p': 0.9,
     };
 

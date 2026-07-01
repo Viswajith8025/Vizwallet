@@ -16,7 +16,7 @@ abstract final class GroqConfig {
 
   static const model = String.fromEnvironment(
     'GROQ_MODEL',
-    defaultValue: 'llama-3.3-70b-versatile',
+    defaultValue: 'openai/gpt-oss-120b',
   );
 
   static const baseUrl = 'https://api.groq.com/openai/v1';
