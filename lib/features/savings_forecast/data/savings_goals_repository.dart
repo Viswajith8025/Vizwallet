@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/database/app_database.dart';
-import 'package:rupee_track/core/database/daos/subscriptions_dao.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
 import 'package:rupee_track/features/activity_history/data/activity_log_service.dart';
 import 'package:rupee_track/features/activity_history/domain/activity_models.dart';

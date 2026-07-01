@@ -116,6 +116,6 @@ abstract final class JithuFallbackAdvisor {
 
     return 'I am in offline mode right now, so I cannot give a full AI answer. '
         'For money: you have ${formatPaise(summary.moneyLeftPaise)} left this cycle and can spend about ${formatPaise(safeSpend.remainingSafeSpendTodayPaise)} more today. '
-        'Rebuild the app with Groq configured, or ask a specific money question.';
+        'AI is offline right now. Ask a specific money question, or check your connection and try again.';
   }
 }

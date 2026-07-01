@@ -58,8 +58,7 @@ class SpendingTrendsRepository {
     required int salaryDay,
   }) async {
     final settings = await db.settingsDao.getSettings();
-    final salary = await db.salaryDao.getSalaryForMonth(anchorCycleKey);
-    final salaryPaise = salary?.amountPaise ?? 0;
+    final salaryPaise = await db.salaryDao.getEffectiveSalaryPaise(anchorCycleKey);
     final subMonthly = await db.subscriptionsDao.monthlyTotalPaise();
 
     late final PeriodSnapshot current;

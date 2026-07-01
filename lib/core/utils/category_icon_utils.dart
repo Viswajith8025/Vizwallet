@@ -13,6 +13,7 @@ IconData categoryIconFromName(String iconName) {
     'home' => Icons.home,
     'school' => Icons.school,
     'trending_up' => Icons.trending_up,
+    'savings' => Icons.savings_outlined,
     'family_restroom' => Icons.family_restroom,
     'account_balance' => Icons.account_balance,
     'payments' => Icons.payments,

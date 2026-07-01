@@ -2,25 +2,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/features/trends/domain/spending_trends_engine.dart';
 
-enum ExpenseDateFilterMode { today, pickDate, payCycle }
+enum ExpenseDateFilterMode { today, pickDate, dateRange, payCycle }
 
 class ExpenseDateFilter {
   const ExpenseDateFilter({
     this.mode = ExpenseDateFilterMode.today,
     this.pickedDate,
+    this.rangeStart,
+    this.rangeEnd,
   });
 
   final ExpenseDateFilterMode mode;
   final DateTime? pickedDate;
+  final DateTime? rangeStart;
+  final DateTime? rangeEnd;
 
   ExpenseDateFilter copyWith({
     ExpenseDateFilterMode? mode,
     DateTime? pickedDate,
+    DateTime? rangeStart,
+    DateTime? rangeEnd,
     bool clearPickedDate = false,
+    bool clearRange = false,
   }) {
     return ExpenseDateFilter(
       mode: mode ?? this.mode,
       pickedDate: clearPickedDate ? null : (pickedDate ?? this.pickedDate),
+      rangeStart: clearRange ? null : (rangeStart ?? this.rangeStart),
+      rangeEnd: clearRange ? null : (rangeEnd ?? this.rangeEnd),
     );
   }
 
@@ -31,6 +40,14 @@ class ExpenseDateFilter {
       case ExpenseDateFilterMode.pickDate:
         final day = pickedDate ?? DateTime.now();
         return istDayBoundsUtc(day);
+      case ExpenseDateFilterMode.dateRange:
+        final start = rangeStart ?? DateTime.now();
+        final end = rangeEnd ?? start;
+        final normalizedStart = start.isBefore(end) ? start : end;
+        final normalizedEnd = start.isBefore(end) ? end : start;
+        final startBounds = istDayBoundsUtc(normalizedStart);
+        final endBounds = istDayBoundsUtc(normalizedEnd);
+        return (startBounds.$1, endBounds.$2);
       case ExpenseDateFilterMode.payCycle:
         final cycleKey = currentCycleKey(salaryDay: salaryDay);
         final bounds = SpendingTrendsEngine.cycleBoundsUtc(
@@ -49,12 +66,35 @@ class ExpenseDateFilter {
       case ExpenseDateFilterMode.pickDate:
         final day = toIst(pickedDate ?? DateTime.now());
         return '${day.day} ${_monthShort(day.month)} ${day.year}';
+      case ExpenseDateFilterMode.dateRange:
+        return _rangeLabel();
       case ExpenseDateFilterMode.payCycle:
         return formatCycleLabelShort(
           currentCycleKey(salaryDay: salaryDay),
           salaryDay: salaryDay,
         );
     }
+  }
+
+  String _rangeLabel() {
+    final start = toIst(rangeStart ?? DateTime.now());
+    final end = toIst(rangeEnd ?? rangeStart ?? DateTime.now());
+    final sameYear = start.year == end.year;
+    final sameMonth = sameYear && start.month == end.month;
+    final sameDay = sameMonth && start.day == end.day;
+
+    if (sameDay) {
+      return '${start.day} ${_monthShort(start.month)} ${start.year}';
+    }
+    if (sameMonth) {
+      return '${start.day}–${end.day} ${_monthShort(end.month)} ${end.year}';
+    }
+    if (sameYear) {
+      return '${start.day} ${_monthShort(start.month)} – '
+          '${end.day} ${_monthShort(end.month)} ${end.year}';
+    }
+    return '${start.day} ${_monthShort(start.month)} ${start.year} – '
+        '${end.day} ${_monthShort(end.month)} ${end.year}';
   }
 
   static String _monthShort(int month) => const [
@@ -91,4 +131,14 @@ class ExpenseDateFilterNotifier extends Notifier<ExpenseDateFilter> {
         mode: ExpenseDateFilterMode.pickDate,
         pickedDate: date,
       );
+
+  void setDateRange({required DateTime start, required DateTime end}) {
+    final normalizedStart = start.isBefore(end) ? start : end;
+    final normalizedEnd = start.isBefore(end) ? end : start;
+    state = ExpenseDateFilter(
+      mode: ExpenseDateFilterMode.dateRange,
+      rangeStart: normalizedStart,
+      rangeEnd: normalizedEnd,
+    );
+  }
 }

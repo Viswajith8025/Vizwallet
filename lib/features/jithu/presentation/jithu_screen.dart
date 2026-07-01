@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rupee_track/core/config/groq_config.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/design_system/premium_app_bar.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
@@ -109,9 +108,7 @@ class _JithuScreenState extends ConsumerState<JithuScreen> {
     return Scaffold(
       appBar: PremiumAppBar(
         title: JithuBranding.displayName,
-        subtitle: GroqConfig.isConfigured
-            ? 'AI assistant · powered by Groq'
-            : 'Offline mode · add Groq API key',
+        subtitle: 'Your money assistant',
         leading: Padding(
           padding: const EdgeInsets.only(left: AppSpacing.sm),
           child: Center(

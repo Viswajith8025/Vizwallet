@@ -1,4 +1,3 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,7 +11,6 @@ import 'package:rupee_track/core/database/app_database.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/router/routes.dart';
-import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/core/widgets/money_text.dart';
 import 'package:rupee_track/core/widgets/summary_card.dart';
@@ -22,6 +20,7 @@ import 'package:rupee_track/features/custom_dashboard/domain/dashboard_layout_mo
 import 'package:rupee_track/features/custom_dashboard/presentation/widgets/dashboard_cycle_header.dart';
 import 'package:rupee_track/features/dashboard/data/dashboard_repository.dart';
 import 'package:rupee_track/features/dashboard/presentation/widgets/dashboard_hero.dart';
+import 'package:rupee_track/features/dashboard/presentation/widgets/expense_breakdown_chart.dart';
 import 'package:rupee_track/features/expenses/data/expense_repository.dart';
 import 'package:rupee_track/features/health_score/presentation/widgets/financial_health_card.dart';
 import 'package:rupee_track/features/monthly_report/data/monthly_report_repository.dart';
@@ -43,7 +42,8 @@ abstract final class DashboardWidgetRegistry {
       DashboardWidgetType.cycleHeader => const DashboardCycleHeader(),
       DashboardWidgetType.currentBalance => _BalanceWidget(),
       DashboardWidgetType.todaySpending => _TodaySpendingWidget(),
-      DashboardWidgetType.safeDailySpend => _SafeSpendWidget(),
+      DashboardWidgetType.safeDailySpend =>
+        _SafeSpendWidget(size: instance.size),
       DashboardWidgetType.budgetProgress => _BudgetProgressWidget(),
       DashboardWidgetType.budgetSetup => _BudgetSetupWidget(),
       DashboardWidgetType.budgetAlerts => const BudgetAlertsPanel(),
@@ -123,16 +123,26 @@ class _TodaySpendingWidget extends ConsumerWidget {
 }
 
 class _SafeSpendWidget extends ConsumerWidget {
+  const _SafeSpendWidget({required this.size});
+
+  final DashboardWidgetSize size;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(safeSpendProvider(_cycleKey(ref)));
+    final compact = size == DashboardWidgetSize.compact;
+    final expanded = size == DashboardWidgetSize.large;
     return async.when(
-      loading: () => const SkeletonCard(height: 140),
+      loading: () => SkeletonCard(height: compact ? 100 : 140),
       error: (_, __) => CompactWidgetError(
         message: "Couldn't load spending guide",
         onRetry: () => ref.invalidate(safeSpendProvider(_cycleKey(ref))),
       ),
-      data: (s) => SafeSpendCard(snapshot: s),
+      data: (s) => SafeSpendCard(
+        snapshot: s,
+        compact: compact,
+        expanded: expanded,
+      ),
     );
   }
 }
@@ -214,32 +224,58 @@ class _SummaryGridWidget extends ConsumerWidget {
             )
             .fold<int>(0, (sum, c) => sum + c.totalPaise);
 
+        final inflowPaise = summary.salaryPaise + summary.extraIncomePaise;
+        final spentShare = inflowPaise > 0
+            ? (summary.spentPaise / inflowPaise) * 100
+            : 0.0;
+        final foodShare = summary.spentPaise > 0
+            ? (foodPaise / summary.spentPaise) * 100
+            : 0.0;
+
+        String salarySubtitle() {
+          if (!summary.salaryEntered) return 'Tap to add this cycle';
+          if (summary.extraIncomePaise > 0) {
+            return '+${formatPaise(summary.extraIncomePaise)} extra income';
+          }
+          if (summary.carryOverPaise > 0) {
+            return '+${formatPaise(summary.carryOverPaise)} carried over';
+          }
+          return 'Net in-hand this cycle';
+        }
+
         return ResponsiveSummaryGrid(
-        childAspectRatio: 0.96,
+        childAspectRatio: 1.05,
         children: [
           SummaryCard(
             label: 'Salary',
             icon: Icons.payments_outlined,
-            value: MoneyText(summary.salaryPaise),
-            subtitle: summary.salaryEntered ? null : 'Tap to add',
+            value: MoneyText(inflowPaise > 0 ? inflowPaise : summary.salaryPaise),
+            subtitle: salarySubtitle(),
             onTap: () => context.push(AppRoutes.salary),
           ),
           SummaryCard(
             label: 'Spent',
             icon: Icons.trending_down,
             value: MoneyText(summary.spentPaise),
+            subtitle: inflowPaise > 0
+                ? '${spentShare.toStringAsFixed(0)}% of inflow · ${summary.daysLeftInCycle}d left'
+                : '${summary.daysLeftInCycle} days left in cycle',
             accentColor: theme.colorScheme.error,
           ),
           SummaryCard(
             label: 'Savings',
             icon: Icons.savings_outlined,
             value: MoneyText(summary.savingsPaise),
-            subtitle: formatPercent(summary.savingsPercent),
+            subtitle:
+                '${formatPercent(summary.savingsPercent)} saved · ${formatPaise(summary.moneyLeftPaise)} left',
           ),
           SummaryCard(
             label: 'Food',
             icon: Icons.restaurant_rounded,
             value: MoneyText(foodPaise),
+            subtitle: summary.spentPaise > 0
+                ? '${foodShare.toStringAsFixed(0)}% of spending this cycle'
+                : 'No food spend logged yet',
             accentColor: const Color(0xFFEF4444),
             onTap: () => context.push(AppRoutes.expenses),
           ),
@@ -274,53 +310,8 @@ class _CategoryChartWidget extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             PremiumCard(
-              child: Column(
-                children: [
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final chartHeight =
-                          AppResponsive.chartHeight(constraints.maxWidth);
-                      final radius = chartHeight * 0.27;
-                      final centerRadius = chartHeight * 0.24;
-                      return SizedBox(
-                        height: chartHeight,
-                        child: PieChart(
-                          PieChartData(
-                            sectionsSpace: 3,
-                            centerSpaceRadius: centerRadius,
-                            sections: summary.categoryBreakdown
-                                .take(6)
-                                .map(
-                                  (row) => PieChartSectionData(
-                                    value: row.totalPaise.toDouble(),
-                                    title: '',
-                                    color: Color(row.colorValue),
-                                    radius: radius,
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  ...summary.categoryBreakdown.take(5).map(
-                        (row) => PremiumRowTile(
-                          title: row.categoryName,
-                          leading: CircleAvatar(
-                            radius: 6,
-                            backgroundColor: Color(row.colorValue),
-                          ),
-                          trailing: Text(
-                            formatPaise(row.totalPaise),
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                ],
+              child: ExpenseBreakdownChart(
+                categories: summary.categoryBreakdown,
               ),
             ),
           ],

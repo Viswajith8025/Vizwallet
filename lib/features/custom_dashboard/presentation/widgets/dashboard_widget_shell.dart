@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
@@ -50,30 +52,54 @@ class DashboardWidgetShell extends ConsumerWidget {
       margin: EdgeInsets.only(bottom: padding),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.lg),
+        gradient: instance.glassEffect && !editMode
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.surface.withValues(alpha: 0.92),
+                  theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.72),
+                ],
+              )
+            : null,
         border: editMode
             ? Border.all(
                 color: theme.colorScheme.primary.withValues(alpha: 0.45),
                 width: 1.5,
               )
-            : (accent != null
-                ? Border.all(color: accent.withValues(alpha: 0.35))
-                : null),
+            : instance.glassEffect
+                ? Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.35),
+                    width: 1.5,
+                  )
+                : (accent != null
+                    ? Border.all(color: accent.withValues(alpha: 0.35))
+                    : null),
         boxShadow: instance.glassEffect
             ? [
                 BoxShadow(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.16),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
               ]
             : null,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        child: Opacity(
-          opacity: instance.transparency.clamp(0.4, 1.0),
-          child: child,
-        ),
+        child: instance.glassEffect && !editMode
+            ? BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Opacity(
+                  opacity: instance.transparency.clamp(0.5, 1.0),
+                  child: child,
+                ),
+              )
+            : Opacity(
+                opacity: instance.transparency.clamp(0.5, 1.0),
+                child: child,
+              ),
       ),
     );
 
@@ -81,36 +107,28 @@ class DashboardWidgetShell extends ConsumerWidget {
       return RepaintBoundary(child: decorated);
     }
 
-    return ReorderableDragStartListener(
-      key: ValueKey(instance.id),
-      index: ref.watch(dashboardLayoutProvider).visibleWidgets
-          .indexWhere((w) => w.id == instance.id),
-      child: GestureDetector(
-        onLongPress: () => showDashboardWidgetEditSheet(context, ref, instance),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            decorated,
-            Positioned(
-              top: 4,
-              right: 4,
-              child: Material(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(20),
-                child: InkWell(
-                  onTap: () =>
-                      showDashboardWidgetEditSheet(context, ref, instance),
-                  borderRadius: BorderRadius.circular(20),
-                  child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: Icon(Icons.drag_indicator, size: 18),
-                  ),
-                ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        decorated,
+        Positioned(
+          top: 4,
+          right: 4,
+          child: Material(
+            color: theme.colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(20),
+            child: InkWell(
+              onTap: () =>
+                  showDashboardWidgetEditSheet(context, ref, instance),
+              borderRadius: BorderRadius.circular(20),
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(Icons.drag_indicator, size: 18),
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

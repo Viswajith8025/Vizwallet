@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rupee_track/core/database/daos/subscriptions_dao.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
@@ -31,14 +33,43 @@ class SavingsForecastRepository {
     final cycleKey = _ref.read(selectedCycleKeyProvider);
     final salaryDay = _ref.read(salaryDayProvider);
 
-    await for (final _ in db.expensesDao.watchSpendingChanges()) {
+    Future<SavingsForecastReport> buildReport() async {
       final input = await _buildInput(cycleKey: cycleKey, salaryDay: salaryDay);
-      yield SavingsForecastEngine.build(
+      return SavingsForecastEngine.build(
         input: input,
         selectedPeriod: period,
         customHorizonMonths: customHorizonMonths,
         adjustments: adjustments,
       );
+    }
+
+    yield await buildReport();
+
+    final controller = StreamController<void>();
+    void ping([_]) {
+      if (!controller.isClosed) controller.add(null);
+    }
+
+    final subs = <StreamSubscription<dynamic>>[
+      db.expensesDao.watchSpendingChanges().listen(ping),
+      db.salaryDao.watchSalaryForMonth(cycleKey).listen(ping),
+      db.salaryDao.watchDeductionsForMonth(cycleKey).listen(ping),
+      db.salaryDao.watchExtraIncomeForMonth(cycleKey).listen(ping),
+      db.subscriptionsDao.watchAllSubscriptions().listen(ping),
+      db.savingsGoalsDao.watchActiveGoals().listen(ping),
+      db.loansDao.watchActiveLoans().listen(ping),
+      db.budgetDao.watchPlanForMonth(cycleKey).listen(ping),
+    ];
+
+    try {
+      await for (final _ in controller.stream) {
+        yield await buildReport();
+      }
+    } finally {
+      for (final sub in subs) {
+        await sub.cancel();
+      }
+      await controller.close();
     }
   }
 
@@ -61,8 +92,8 @@ class SavingsForecastRepository {
 
     for (final key in keys) {
       historicalSpent.add(await db.expensesDao.sumSpentForMonth(key));
-      final sal = await db.salaryDao.getSalaryForMonth(key);
-      historicalSalaries.add(sal?.amountPaise ?? 0);
+      final sal = await db.salaryDao.getTotalCycleInflowPaise(key);
+      historicalSalaries.add(sal);
 
       final breakdown = await db.expensesDao.categoryBreakdown(key);
       for (final row in breakdown) {
@@ -135,24 +166,33 @@ class SavingsForecastRepository {
     final budgetAdherence = MonthlyReportEngine.budgetOnTrackPercent(plan);
 
     final previousKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
-    final prevSalary = await db.salaryDao.getSalaryForMonth(previousKey);
+    final prevInflow =
+        await db.salaryDao.getTotalCycleInflowPaise(previousKey);
     final prevSpent = await db.expensesDao.sumSpentForMonth(previousKey);
     final carryOver = SalaryCycleEngine.carryOverBalance(
-      previousSalaryPaise: prevSalary?.amountPaise ?? 0,
+      previousSalaryPaise: prevInflow,
       previousSpentPaise: prevSpent,
     );
 
     final salary = summary.salaryPaise > 0 ? summary.salaryPaise : avgSalary;
-    final netSavings = salary - avgSpent;
-    final savingsRate = SavingsRateUtils.displayPercent(
-      salaryPaise: summary.salaryPaise,
-      spentPaise: summary.spentPaise,
-      carryOverPaise: carryOver,
-    );
+    final monthlyInflow = summary.salaryPaise + summary.extraIncomePaise;
+    final forecastIncomePaise =
+        monthlyInflow > 0 ? monthlyInflow : avgSalary;
+    final netSavings = forecastIncomePaise - avgSpent;
+    final inflowForRate =
+        monthlyInflow > 0 ? monthlyInflow : forecastIncomePaise;
+    final savingsRate = inflowForRate > 0
+        ? (summary.moneyLeftPaise / inflowForRate) * 100
+        : SavingsRateUtils.displayPercent(
+            salaryPaise: salary,
+            spentPaise: summary.spentPaise,
+            carryOverPaise: carryOver,
+          );
     final currentBalance = SalaryCycleEngine.effectiveMoneyLeft(
       salaryPaise: summary.salaryPaise,
       spentPaise: summary.spentPaise,
       carryOverPaise: carryOver,
+      extraIncomePaise: summary.extraIncomePaise,
     );
 
     final healthReport =
@@ -164,13 +204,13 @@ class SavingsForecastRepository {
         : _fallbackHealthScore(
             savingsRate: savingsRate,
             budgetAdherence: budgetAdherence,
-            subShare: salary > 0 ? subMonthly / salary : 0,
+            subShare: forecastIncomePaise > 0 ? subMonthly / forecastIncomePaise : 0,
           );
 
     return SavingsForecastInput(
       cycleKey: cycleKey,
       currentBalancePaise: currentBalance.clamp(-99999999999, 99999999999),
-      monthlySalaryPaise: salary,
+      monthlySalaryPaise: forecastIncomePaise,
       avgMonthlySpentPaise: avgSpent,
       avgMonthlyNetSavingsPaise: netSavings,
       savingsRatePercent: savingsRate,
@@ -247,6 +287,7 @@ class ActiveForecastAdjustmentsNotifier extends Notifier<ForecastAdjustments> {
 final savingsForecastReportProvider = StreamProvider<SavingsForecastReport>((ref) {
   final period = ref.watch(selectedForecastPeriodProvider);
   final adjustments = ref.watch(activeForecastAdjustmentsProvider);
+  ref.watch(selectedCycleKeyProvider);
   return ref.watch(savingsForecastRepositoryProvider).watchReport(
         period: period,
         adjustments: adjustments,

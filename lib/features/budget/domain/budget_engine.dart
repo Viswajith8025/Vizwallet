@@ -45,7 +45,8 @@ abstract final class BudgetEngine {
       final saved = amountByCategoryId[category.id];
       final average = avgSpendBySlug[category.slug] ?? 0;
       final allocated = saved ?? (average > 0 ? average : 0);
-      final bucketType = category.slug == 'investment'
+      final bucketType = category.slug == 'investment' ||
+              category.slug == 'jupiter_savings'
           ? BucketType.investment
           : category.countsTowardSpending
               ? BucketType.spending

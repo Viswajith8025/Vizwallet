@@ -100,6 +100,7 @@ class _QuickAddHubSheetState extends ConsumerState<QuickAddHubSheet> {
         categoryId: category.id,
         title: title,
         notes: _note,
+        rememberLabel: label.isEmpty,
       );
       ref.invalidate(quickAddContextProvider);
       if (!mounted) return;

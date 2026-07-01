@@ -76,7 +76,7 @@ class _AppManagementSettingsCardState
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Export, backup, or reset your local data. These actions cannot be undone without a backup.',
+            'Export, backup, or reset local data on this device. Your sign-in is not removed.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.45,
@@ -147,13 +147,13 @@ class _AppManagementSettingsCardState
           ),
           _ActionTile(
             icon: Icons.delete_forever_rounded,
-            title: 'Factory reset',
-            subtitle: 'Erase all local data and start fresh',
+            title: 'Reset all local data',
+            subtitle: 'Erase expenses, budgets, salary & more — keeps your account',
             enabled: !_busy,
             destructive: true,
             onTap: () => _run(
-              'Factory reset',
-              'This deletes your entire local database — expenses, budgets, goals, subscriptions, loans, and settings. Export a backup first if you need your data.',
+              'Reset local data',
+              'This deletes all finance data on this device — expenses, salary, budgets, goals, subscriptions, and loans.\n\nYour Viswallet sign-in and cloud profile stay intact. Export a backup first if you need your data.',
               service.factoryReset,
             ),
           ),

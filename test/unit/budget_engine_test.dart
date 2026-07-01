@@ -18,6 +18,15 @@ void main() {
       expect(allocations.length, defaultBudgetTemplates.length);
     });
 
+    test('manual setup seeds editable buckets from percentage template', () {
+      final allocations = BudgetEngine.fromPercentageTemplate(
+        salaryPaise: salary,
+        categorySlugToId: {'food': 1},
+      );
+      expect(allocations, isNotEmpty);
+      expect(allocations.first.displayName, isNotEmpty);
+    });
+
     test('fromCategories creates one line per category', () {
       final allocations = BudgetEngine.fromCategories(
         categories: const [

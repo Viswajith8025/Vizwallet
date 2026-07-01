@@ -62,21 +62,21 @@ class MonthlyReportRepository {
     final bounds = SalaryCycleEngine.cycleBounds(cycleKey, salaryDay: salaryDay);
     final dateFormat = DateFormat('d MMM yyyy');
 
-    final salary = await db.salaryDao.getSalaryForMonth(cycleKey);
-    final incomePaise = salary?.amountPaise ?? 0;
+    final incomePaise = await db.salaryDao.getTotalCycleInflowPaise(cycleKey);
     final expensesPaise = await db.expensesDao.sumSpentForMonth(cycleKey);
     final breakdown = await db.expensesDao.categoryBreakdown(cycleKey);
 
     final previousKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
-    final prevSalary = await db.salaryDao.getSalaryForMonth(previousKey);
     final prevSpent = await db.expensesDao.sumSpentForMonth(previousKey);
-    final prevIncome = prevSalary?.amountPaise ?? 0;
+    final prevIncome =
+        await db.salaryDao.getTotalCycleInflowPaise(previousKey);
 
     final prevPrevKey = previousCycleKey(previousKey, salaryDay: salaryDay);
-    final prevPrevSalary = await db.salaryDao.getSalaryForMonth(prevPrevKey);
+    final prevPrevIncome =
+        await db.salaryDao.getTotalCycleInflowPaise(prevPrevKey);
     final prevPrevSpent = await db.expensesDao.sumSpentForMonth(prevPrevKey);
     final prevCarryIntoPrevious = SalaryCycleEngine.carryOverBalance(
-      previousSalaryPaise: prevPrevSalary?.amountPaise ?? 0,
+      previousSalaryPaise: prevPrevIncome,
       previousSpentPaise: prevPrevSpent,
     );
 

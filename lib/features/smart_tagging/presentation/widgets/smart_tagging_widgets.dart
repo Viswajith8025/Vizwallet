@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/smart_tagging/data/tagging_repository.dart';
 import 'package:rupee_track/features/smart_tagging/domain/classification_models.dart';

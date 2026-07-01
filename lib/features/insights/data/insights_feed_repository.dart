@@ -184,19 +184,21 @@ class InsightsFeedRepository {
 
     final trackingStreak = _expenseTrackingStreak(trends.current.expenses);
 
-    final salary = await db.salaryDao.getSalaryForMonth(cycleKey);
+    final salaryPaise = await db.salaryDao.getEffectiveSalaryPaise(cycleKey);
     final spent = await db.expensesDao.sumSpentForMonth(cycleKey);
-    final salaryPaise = salary?.amountPaise ?? trends.salaryPaise;
+    final effectiveSalary =
+        salaryPaise > 0 ? salaryPaise : trends.salaryPaise;
 
     final previousKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
-    final prevSalary = await db.salaryDao.getSalaryForMonth(previousKey);
     final prevSpent = await db.expensesDao.sumSpentForMonth(previousKey);
+    final prevInflow =
+        await db.salaryDao.getTotalCycleInflowPaise(previousKey);
     final carryOver = SalaryCycleEngine.carryOverBalance(
-      previousSalaryPaise: prevSalary?.amountPaise ?? 0,
+      previousSalaryPaise: prevInflow,
       previousSpentPaise: prevSpent,
     );
     final savingsRate = SavingsRateUtils.displayPercent(
-      salaryPaise: salaryPaise,
+      salaryPaise: effectiveSalary,
       spentPaise: spent,
       carryOverPaise: carryOver,
     );

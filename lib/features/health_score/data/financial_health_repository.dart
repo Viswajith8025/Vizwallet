@@ -45,12 +45,12 @@ class FinancialHealthRepository {
     final db = await _ref.read(databaseProvider.future);
     final settings = await db.settingsDao.getSettings();
 
-    final salary = await db.salaryDao.getSalaryForMonth(cycleKey);
-    final salaryPaise = salary?.amountPaise ?? 0;
+    final salaryPaise = await db.salaryDao.getEffectiveSalaryPaise(cycleKey);
     final spent = await db.expensesDao.sumSpentForMonth(cycleKey);
 
     final previousKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
-    final prevSalary = await db.salaryDao.getSalaryForMonth(previousKey);
+    final prevSalaryPaise =
+        await db.salaryDao.getEffectiveSalaryPaise(previousKey);
     final prevSpent = await db.expensesDao.sumSpentForMonth(previousKey);
     final prevCarry = await _carryOver(db, previousKey, salaryDay);
 
@@ -114,9 +114,7 @@ class FinancialHealthRepository {
       }
     }
 
-    final prevSavings = (prevSalary?.amountPaise ?? 0) +
-        prevCarry -
-        prevSpent;
+    final prevSavings = prevSalaryPaise + prevCarry - prevSpent;
     final history = _historyStore.load();
     final prevScore = _historyStore.scoreForCycle(previousKey);
 
@@ -158,10 +156,10 @@ class FinancialHealthRepository {
     int salaryDay,
   ) async {
     final prevKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
-    final prevSalary = await db.salaryDao.getSalaryForMonth(prevKey);
+    final prevSalaryPaise = await db.salaryDao.getEffectiveSalaryPaise(prevKey);
     final prevSpent = await db.expensesDao.sumSpentForMonth(prevKey);
     return SalaryCycleEngine.carryOverBalance(
-      previousSalaryPaise: prevSalary?.amountPaise ?? 0,
+      previousSalaryPaise: prevSalaryPaise,
       previousSpentPaise: prevSpent,
     );
   }

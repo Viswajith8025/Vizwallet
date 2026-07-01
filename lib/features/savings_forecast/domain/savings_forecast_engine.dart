@@ -157,14 +157,14 @@ abstract final class SavingsForecastEngine {
         .clamp(0, 99999999999);
     final variableSpend = (baseVariableSpend +
             adjustments.spendingDeltaPaise +
-            adjustments.categoryReductionPaise)
+            adjustments.categoryReductionPaise -
+            adjustments.extraSavingsPaise)
         .clamp(0, 99999999999);
     final subscriptionSpend = (input.subscriptionMonthlyPaise -
             adjustments.subscriptionCancelPaise)
         .clamp(0, 99999999999);
     final goalContrib = input.goalContributionsMonthlyPaise +
-        adjustments.newGoalContributionPaise +
-        adjustments.extraSavingsPaise;
+        adjustments.newGoalContributionPaise;
     final loanPay = input.loanMonthlyPaise + adjustments.loanPaymentPaise;
 
     var netMonthlySum = 0;

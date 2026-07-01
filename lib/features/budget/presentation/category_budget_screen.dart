@@ -51,10 +51,11 @@ class CategoryBudgetScreen extends HookConsumerWidget {
         salaryController.text = paiseToRupees(salaryPaise).round().toString();
       } else {
         final dao = await ref.read(salaryDaoProvider.future);
-        final salary = await dao.getSalaryForMonth(cycleKey);
-        if (salary != null) {
+        final salary =
+            await dao.getTotalCycleInflowPaise(cycleKey);
+        if (salary > 0) {
           salaryController.text =
-              paiseToRupees(salary.amountPaise).round().toString();
+              paiseToRupees(salary).round().toString();
         }
       }
 

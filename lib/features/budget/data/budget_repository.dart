@@ -111,7 +111,11 @@ class BudgetRepository {
           salaryPaise: salaryPaise,
           categorySlugToId: slugToId,
         ),
-      AllocationMode.manual => manualInputs ?? [],
+      AllocationMode.manual => manualInputs ??
+          BudgetEngine.fromPercentageTemplate(
+            salaryPaise: salaryPaise,
+            categorySlugToId: slugToId,
+          ),
       AllocationMode.perCategory => await buildCategoryAllocations(
           monthKey: monthKey,
           salaryPaise: salaryPaise,

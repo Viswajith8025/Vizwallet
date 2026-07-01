@@ -6,11 +6,12 @@ import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:rupee_track/features/subscriptions/data/subscription_health_repository.dart';
+import 'package:rupee_track/features/subscriptions/domain/subscription_renewal_utils.dart';
 
 Future<void> showAddSubscriptionSheet(BuildContext context, WidgetRef ref) {
   return showPremiumBottomSheet<void>(
     context: context,
-    initialSize: 0.78,
+    initialSize: 0.82,
     child: const _AddSubscriptionSheet(),
   );
 }
@@ -27,7 +28,8 @@ class _AddSubscriptionSheetState extends ConsumerState<_AddSubscriptionSheet> {
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
   String _billingCycle = 'monthly';
-  DateTime? _renewalDate;
+  int _billingDay = DateTime.now().day;
+  DateTime? _yearlyRenewalDate;
   bool _saving = false;
 
   @override
@@ -37,14 +39,22 @@ class _AddSubscriptionSheetState extends ConsumerState<_AddSubscriptionSheet> {
     super.dispose();
   }
 
-  Future<void> _pickRenewalDate() async {
+  Future<void> _pickYearlyRenewalDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _renewalDate ?? DateTime.now().add(const Duration(days: 30)),
+      initialDate:
+          _yearlyRenewalDate ?? DateTime.now().add(const Duration(days: 30)),
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
     );
-    if (picked != null) setState(() => _renewalDate = picked);
+    if (picked != null) setState(() => _yearlyRenewalDate = picked);
+  }
+
+  DateTime? _resolveNextRenewal() {
+    if (_billingCycle == 'monthly') {
+      return SubscriptionRenewalUtils.nextRenewalOnDay(_billingDay);
+    }
+    return _yearlyRenewalDate?.toUtc();
   }
 
   Future<void> _save() async {
@@ -58,6 +68,10 @@ class _AddSubscriptionSheetState extends ConsumerState<_AddSubscriptionSheet> {
       _showError('Enter a valid amount');
       return;
     }
+    if (_billingCycle == 'yearly' && _yearlyRenewalDate == null) {
+      _showError('Pick the next yearly renewal date');
+      return;
+    }
 
     setState(() => _saving = true);
     try {
@@ -65,7 +79,7 @@ class _AddSubscriptionSheetState extends ConsumerState<_AddSubscriptionSheet> {
             name: name,
             amountPaise: amount,
             billingCycle: _billingCycle,
-            nextRenewalAt: _renewalDate?.toUtc(),
+            nextRenewalAt: _resolveNextRenewal(),
           );
       ref.invalidate(activeSubscriptionsProvider);
       ref.invalidate(subscriptionHealthReportProvider);
@@ -88,6 +102,7 @@ class _AddSubscriptionSheetState extends ConsumerState<_AddSubscriptionSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final nextMonthly = SubscriptionRenewalUtils.nextRenewalOnDay(_billingDay);
 
     return ListView(
       padding: AppResponsive.screenPadding(context, bottom: AppSpacing.xl),
@@ -98,7 +113,7 @@ class _AddSubscriptionSheetState extends ConsumerState<_AddSubscriptionSheet> {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Track recurring payments like streaming, mobile, or gym memberships.',
+          'Set when it charges — e.g. Spotify on the 5th every month.',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -117,7 +132,8 @@ class _AddSubscriptionSheetState extends ConsumerState<_AddSubscriptionSheet> {
           controller: _amountController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
-            labelText: _billingCycle == 'yearly' ? 'Yearly amount' : 'Monthly amount',
+            labelText:
+                _billingCycle == 'yearly' ? 'Yearly amount' : 'Monthly amount',
             prefixText: '₹ ',
           ),
         ),
@@ -135,15 +151,44 @@ class _AddSubscriptionSheetState extends ConsumerState<_AddSubscriptionSheet> {
           },
         ),
         const SizedBox(height: AppSpacing.md),
-        OutlinedButton.icon(
-          onPressed: _pickRenewalDate,
-          icon: const Icon(Icons.event_outlined),
-          label: Text(
-            _renewalDate == null
-                ? 'Next renewal date (optional)'
-                : 'Renews ${_renewalDate!.day}/${_renewalDate!.month}/${_renewalDate!.year}',
+        if (_billingCycle == 'monthly') ...[
+          Text('Charges on day', style: theme.textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.xs),
+          DropdownButtonFormField<int>(
+            value: _billingDay,
+            decoration: const InputDecoration(
+              labelText: 'Day of month',
+              hintText: 'e.g. 5 for Spotify on the 5th',
+            ),
+            items: List.generate(
+              31,
+              (i) => DropdownMenuItem(
+                value: i + 1,
+                child: Text('${i + 1}${_daySuffix(i + 1)} of each month'),
+              ),
+            ),
+            onChanged: (value) {
+              if (value != null) setState(() => _billingDay = value);
+            },
           ),
-        ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Next charge: ${nextMonthly.day}/${nextMonthly.month}/${nextMonthly.year}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ] else ...[
+          OutlinedButton.icon(
+            onPressed: _pickYearlyRenewalDate,
+            icon: const Icon(Icons.event_outlined),
+            label: Text(
+              _yearlyRenewalDate == null
+                  ? 'Next yearly renewal date'
+                  : 'Renews ${_yearlyRenewalDate!.day}/${_yearlyRenewalDate!.month}/${_yearlyRenewalDate!.year}',
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.xl),
         FilledButton(
           onPressed: _saving ? null : _save,
@@ -151,5 +196,15 @@ class _AddSubscriptionSheetState extends ConsumerState<_AddSubscriptionSheet> {
         ),
       ],
     );
+  }
+
+  String _daySuffix(int day) {
+    if (day >= 11 && day <= 13) return 'th';
+    return switch (day % 10) {
+      1 => 'st',
+      2 => 'nd',
+      3 => 'rd',
+      _ => 'th',
+    };
   }
 }

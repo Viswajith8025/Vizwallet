@@ -5,6 +5,7 @@ import 'package:rupee_track/core/design_system/app_scroll_behavior.dart';
 import 'package:rupee_track/core/design_system/context_banner.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
 import 'package:rupee_track/core/router/routes.dart';
+import 'package:rupee_track/features/salary/presentation/add_extra_income_sheet.dart';
 import 'package:rupee_track/features/quick_add/presentation/quick_add_hub_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,6 +44,12 @@ class DashboardQuickActionsBar extends ConsumerWidget {
               onTap: () => context.push(AppRoutes.salary),
             ),
             _QuickAction(
+              icon: Icons.volunteer_activism_outlined,
+              label: 'Extra cash',
+              color: const Color(0xFF10B981),
+              onTap: () => showAddExtraIncomeSheet(context, ref),
+            ),
+            _QuickAction(
               icon: Icons.calendar_month_outlined,
               label: 'Calendar',
               color: theme.colorScheme.secondary,
@@ -59,6 +66,18 @@ class DashboardQuickActionsBar extends ConsumerWidget {
               label: 'Subs',
               color: theme.colorScheme.tertiary,
               onTap: () => context.push(AppRoutes.subscriptions),
+            ),
+            _QuickAction(
+              icon: Icons.replay_circle_filled_outlined,
+              label: 'Borrowed',
+              color: const Color(0xFF7C4DFF),
+              onTap: () => context.push(AppRoutes.borrowed),
+            ),
+            _QuickAction(
+              icon: Icons.handshake_outlined,
+              label: 'Loans',
+              color: const Color(0xFFE65100),
+              onTap: () => context.push(AppRoutes.loans),
             ),
             _QuickAction(
               icon: Icons.flag_outlined,

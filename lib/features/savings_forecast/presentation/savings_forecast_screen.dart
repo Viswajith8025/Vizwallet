@@ -72,7 +72,10 @@ class SavingsForecastScreen extends ConsumerWidget {
                       .setPeriod(p),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                _HeroCard(summary: report.periodSummary),
+                _HeroCard(
+                  summary: report.periodSummary,
+                  currentBalancePaise: report.currentBalancePaise,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 _MetricsGrid(summary: report.periodSummary),
                 const SizedBox(height: AppSpacing.lg),
@@ -240,20 +243,30 @@ class _PeriodSelector extends StatelessWidget {
 }
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.summary});
+  const _HeroCard({
+    required this.summary,
+    required this.currentBalancePaise,
+  });
 
   final ForecastPeriodSummary summary;
+  final int currentBalancePaise;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final periodGain =
+        summary.projectedSavingsPaise - currentBalancePaise;
+    final gainLabel = periodGain >= 0
+        ? '+${formatPaise(periodGain)} over period'
+        : '${formatPaise(periodGain)} over period';
+
     return PremiumCard(
       accentColor: theme.colorScheme.primary,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Projected savings',
+            'Projected balance',
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -269,7 +282,7 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Net cash flow ${formatPaise(summary.netCashFlowPaise)} · '
+            '$gainLabel · Net cash flow ${formatPaise(summary.netCashFlowPaise)} · '
             'Emergency fund ${summary.emergencyFundMonths.toStringAsFixed(1)} mo',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,

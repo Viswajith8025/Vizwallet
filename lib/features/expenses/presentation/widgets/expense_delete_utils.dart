@@ -31,9 +31,12 @@ Future<void> deleteExpenseWithFeedback(
   WidgetRef ref,
   int expenseId, {
   bool popSheetFirst = false,
+  bool skipConfirm = false,
 }) async {
-  final confirmed = await confirmDeleteExpense(context);
-  if (!confirmed || !context.mounted) return;
+  if (!skipConfirm) {
+    final confirmed = await confirmDeleteExpense(context);
+    if (!confirmed || !context.mounted) return;
+  }
 
   final repo = ref.read(expenseRepositoryProvider);
   final activityId = await repo.deleteExpense(expenseId);
@@ -44,11 +47,16 @@ Future<void> deleteExpenseWithFeedback(
   }
 
   if (activityId != null) {
+    final messenger = ScaffoldMessenger.of(context);
     showPremiumSnackBar(
       context,
       message: 'Expense deleted',
       actionLabel: 'Undo',
-      onAction: () => repo.undoExpenseActivity(activityId),
+      duration: const Duration(seconds: 4),
+      onAction: () {
+        messenger.hideCurrentSnackBar();
+        repo.undoExpenseActivity(activityId);
+      },
     );
   }
 }

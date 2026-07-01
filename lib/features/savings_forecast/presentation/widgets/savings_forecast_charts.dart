@@ -24,18 +24,18 @@ class SavingsForecastCurveChart extends StatelessWidget {
     final display = points.length > 12
         ? [points.first, ...points.sublist(points.length - 11)]
         : points;
-    final maxY = display
-            .map((p) => p.balancePaise)
-            .reduce((a, b) => a > b ? a : b)
-            .toDouble() *
-        1.1;
+    final balances = display.map((p) => p.balancePaise).toList();
+    final minBalance = balances.reduce((a, b) => a < b ? a : b).toDouble();
+    final maxBalance = balances.reduce((a, b) => a > b ? a : b).toDouble();
+    final minY = minBalance < 0 ? minBalance * 1.1 : 0.0;
+    final maxY = maxBalance > 0 ? maxBalance * 1.1 : 1.0;
 
     return SizedBox(
       height: 180,
       child: LineChart(
         LineChartData(
-          minY: 0,
-          maxY: maxY.clamp(1, double.infinity),
+          minY: minY,
+          maxY: maxY.clamp(minY + 1, double.infinity),
           gridData: const FlGridData(show: false),
           titlesData: FlTitlesData(
             topTitles: const AxisTitles(),

@@ -8,6 +8,9 @@ void main() {
     const summary = CycleSummary(
       cycleKey: '2026-06',
       salaryPaise: 5000000,
+      grossSalaryPaise: 5000000,
+      salaryDeductionsPaise: 0,
+      extraIncomePaise: 0,
       spentPaise: 1200000,
       savingsPaise: 800000,
       savingsPercent: 16,

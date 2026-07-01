@@ -7,9 +7,16 @@ import 'package:rupee_track/core/design_system/premium_card.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
 
 class SafeSpendCard extends StatelessWidget {
-  const SafeSpendCard({required this.snapshot, super.key});
+  const SafeSpendCard({
+    required this.snapshot,
+    super.key,
+    this.compact = false,
+    this.expanded = false,
+  });
 
   final SafeSpendSnapshot snapshot;
+  final bool compact;
+  final bool expanded;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +63,10 @@ class SafeSpendCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         formatPaise(snapshot.safeDailyLimitPaise),
-                        style: theme.textTheme.headlineMedium?.copyWith(
+                        style: (compact
+                                ? theme.textTheme.titleLarge
+                                : theme.textTheme.headlineMedium)
+                            ?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: theme.colorScheme.primary,
                         ),
@@ -66,8 +76,8 @@ class SafeSpendCard extends StatelessWidget {
                 ),
                 ProgressRing(
                   progress: usage > 1 ? 1 : usage,
-                  size: 72,
-                  strokeWidth: 7,
+                  size: compact ? 56 : 72,
+                  strokeWidth: compact ? 6 : 7,
                   color: riskColor,
                   child: Text(
                     '${snapshot.todayUsagePercent.round()}%',
@@ -78,7 +88,7 @@ class SafeSpendCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: compact ? 12 : 16),
             Row(
               children: [
                 Expanded(
@@ -105,37 +115,40 @@ class SafeSpendCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    snapshot.headline,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (snapshot.recommendation != null) ...[
-                    const SizedBox(height: 6),
+            if (!compact) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(expanded ? 16 : 14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      snapshot.recommendation!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      snapshot.headline,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (snapshot.recommendation != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        snapshot.recommendation!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            if (snapshot.riskLevel != SafeSpendRiskLevel.noData) ...[
+            ],
+            if (!compact && snapshot.riskLevel != SafeSpendRiskLevel.noData) ...[
+              SizedBox(height: expanded ? 20 : 16),
               const SizedBox(height: 16),
               const Divider(height: 1),
               const SizedBox(height: 12),

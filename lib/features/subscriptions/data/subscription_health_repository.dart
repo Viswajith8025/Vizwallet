@@ -22,7 +22,7 @@ class SubscriptionHealthRepository {
     final categories = await db.categoriesDao.getActiveCategories();
     final categoryNames = {for (final c in categories) c.id: c.name};
     final categoryColors = {for (final c in categories) c.id: c.colorValue};
-    final salary = await db.salaryDao.getSalaryForMonth(cycleKey);
+    final salaryPaise = await db.salaryDao.getEffectiveSalaryPaise(cycleKey);
     final since = DateTime.now().subtract(const Duration(days: 365));
     final payments =
         await db.subscriptionsDao.listPaymentsSince(since.toUtc());
@@ -31,7 +31,7 @@ class SubscriptionHealthRepository {
       subscriptions: subs,
       categoryNames: categoryNames,
       categoryColors: categoryColors,
-      salaryPaise: salary?.amountPaise ?? 0,
+      salaryPaise: salaryPaise,
       payments: payments,
     );
   }
@@ -49,7 +49,7 @@ class SubscriptionHealthRepository {
         for (final c in categories) c.id: c.colorValue,
       };
 
-      final salary = await db.salaryDao.getSalaryForMonth(cycleKey);
+      final salaryPaise = await db.salaryDao.getEffectiveSalaryPaise(cycleKey);
       final since = DateTime.now().subtract(const Duration(days: 365));
       final payments =
           await db.subscriptionsDao.listPaymentsSince(since.toUtc());
@@ -58,7 +58,7 @@ class SubscriptionHealthRepository {
         subscriptions: subs,
         categoryNames: categoryNames,
         categoryColors: categoryColors,
-        salaryPaise: salary?.amountPaise ?? 0,
+        salaryPaise: salaryPaise,
         payments: payments,
       );
     }

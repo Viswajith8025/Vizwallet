@@ -354,17 +354,19 @@ class _MetricsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ResponsiveSummaryGrid(
-      childAspectRatio: 0.96,
+      childAspectRatio: 1.05,
       children: [
         SummaryCard(
           label: 'Daily average',
           icon: Icons.today_outlined,
           value: Text(formatPaise(report.current.avgDailyPaise)),
+          subtitle: 'Per day this cycle',
         ),
         SummaryCard(
           label: 'Weekly average',
           icon: Icons.date_range_outlined,
           value: Text(formatPaise(report.current.avgWeeklyPaise)),
+          subtitle: 'Per week this cycle',
         ),
         SummaryCard(
           label: 'Top category',

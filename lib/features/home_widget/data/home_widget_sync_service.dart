@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:rupee_track/core/providers/database_provider.dart';
-import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/providers/settings_provider.dart';
 import 'package:rupee_track/core/salary_cycle/salary_cycle_engine.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
@@ -59,16 +58,16 @@ class HomeWidgetSyncService {
     final salaryDay = settings.salaryDay;
     final cycleKey = currentCycleKey(salaryDay: salaryDay);
 
-    final salary = await db.salaryDao.getSalaryForMonth(cycleKey);
-    final salaryPaise = salary?.amountPaise ?? 0;
+    final salaryPaise = await db.salaryDao.getTotalCycleInflowPaise(cycleKey);
     final spentPaise = await db.expensesDao.sumSpentForMonth(cycleKey);
     final todaySpent = await db.expensesDao.sumSpentTodayInCycle(cycleKey);
 
     final previousKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
-    final prevSalary = await db.salaryDao.getSalaryForMonth(previousKey);
+    final prevSalaryPaise =
+        await db.salaryDao.getTotalCycleInflowPaise(previousKey);
     final prevSpent = await db.expensesDao.sumSpentForMonth(previousKey);
     final carryOver = SalaryCycleEngine.carryOverBalance(
-      previousSalaryPaise: prevSalary?.amountPaise ?? 0,
+      previousSalaryPaise: prevSalaryPaise,
       previousSpentPaise: prevSpent,
     );
 

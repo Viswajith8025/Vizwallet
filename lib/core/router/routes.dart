@@ -9,6 +9,7 @@ abstract final class AppRoutes {
   static const salary = '/salary';
   static const subscriptions = '/subscriptions';
   static const loans = '/loans';
+  static const borrowed = '/borrowed';
   static const settings = '/settings';
   static const budget = '/budget';
   static const budgetSetup = '/budget/setup';

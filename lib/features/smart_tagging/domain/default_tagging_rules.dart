@@ -99,6 +99,16 @@ const builtinMerchantRules = <MerchantRule>[
     categorySlug: 'health',
     tags: ['Medical'],
   ),
+  MerchantRule(
+    pattern: 'jupiter',
+    categorySlug: 'jupiter_savings',
+    tags: ['Savings', 'Digital Gold'],
+  ),
+  MerchantRule(
+    pattern: 'digital gold',
+    categorySlug: 'jupiter_savings',
+    tags: ['Savings', 'Digital Gold'],
+  ),
 ];
 
 /// Keyword → extra tags (and optional category hints).
@@ -127,6 +137,21 @@ const builtinKeywordRules = <KeywordTagRule>[
   KeywordTagRule(keyword: 'lunch', tags: ['Food'], categorySlug: 'food'),
   KeywordTagRule(keyword: 'dinner', tags: ['Food'], categorySlug: 'food'),
   KeywordTagRule(keyword: 'breakfast', tags: ['Food'], categorySlug: 'food'),
+  KeywordTagRule(
+    keyword: 'jupiter',
+    tags: ['Savings', 'Digital Gold'],
+    categorySlug: 'jupiter_savings',
+  ),
+  KeywordTagRule(
+    keyword: 'digital gold',
+    tags: ['Savings', 'Digital Gold'],
+    categorySlug: 'jupiter_savings',
+  ),
+  KeywordTagRule(
+    keyword: 'gold pot',
+    tags: ['Savings'],
+    categorySlug: 'jupiter_savings',
+  ),
 ];
 
 const suggestedSpendingTags = <String>[
@@ -139,6 +164,7 @@ const suggestedSpendingTags = <String>[
   'Shopping',
   'Transport',
   'Recharge',
+  'Savings',
   'Work',
   'Gift',
 ];

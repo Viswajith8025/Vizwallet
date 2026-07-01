@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rupee_track/core/design_system/design_tokens.dart';
+import 'package:rupee_track/core/design_system/premium_surfaces.dart';
 import 'package:rupee_track/core/design_system/responsive.dart';
 
 class PremiumBottomNav extends StatelessWidget {
@@ -18,6 +19,7 @@ class PremiumBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    const borderRadius = BorderRadius.all(Radius.circular(AppRadius.xl));
 
     return Container(
       margin: const EdgeInsets.fromLTRB(
@@ -27,40 +29,32 @@ class PremiumBottomNav extends StatelessWidget {
         AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            theme.cardColor,
-            Color.alphaBlend(
-              theme.colorScheme.primary.withValues(alpha: 0.04),
-              theme.cardColor,
-            ),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: theme.dividerColor),
+        borderRadius: borderRadius,
         boxShadow: AppShadows.navBar(isDark),
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xs,
-            vertical: AppSpacing.xs,
-          ),
-          child: Row(
-            children: List.generate(destinations.length, (index) {
-              final dest = destinations[index];
-              final selected = index == selectedIndex;
-              return Expanded(
-                child: _NavItem(
-                  destination: dest,
-                  selected: selected,
-                  onTap: () => onSelected(index),
-                ),
-              );
-            }),
+      child: PremiumSurfaces.glassNavBar(
+        context: context,
+        borderRadius: borderRadius,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: AppSpacing.xs,
+            ),
+            child: Row(
+              children: List.generate(destinations.length, (index) {
+                final dest = destinations[index];
+                final selected = index == selectedIndex;
+                return Expanded(
+                  child: _NavItem(
+                    destination: dest,
+                    selected: selected,
+                    onTap: () => onSelected(index),
+                  ),
+                );
+              }),
+            ),
           ),
         ),
       ),

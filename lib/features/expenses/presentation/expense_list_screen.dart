@@ -90,6 +90,11 @@ class ExpenseListScreen extends ConsumerWidget {
                   onSelected: (_) => _pickDate(context, ref, filter),
                 ),
                 PremiumFilterChip(
+                  label: 'Date range',
+                  selected: filter.mode == ExpenseDateFilterMode.dateRange,
+                  onSelected: (_) => _pickDateRange(context, ref, filter),
+                ),
+                PremiumFilterChip(
                   label: 'Pay cycle',
                   selected: filter.mode == ExpenseDateFilterMode.payCycle,
                   onSelected: (_) => ref
@@ -202,6 +207,7 @@ class ExpenseListScreen extends ConsumerWidget {
                         context,
                         ref,
                         expense.id,
+                        skipConfirm: true,
                       ),
                       child: tile,
                     );
@@ -227,6 +233,8 @@ class ExpenseListScreen extends ConsumerWidget {
           'Swipe delete is locked. Tap an expense to edit or delete.',
         ExpenseDateFilterMode.pickDate =>
           'Showing spending on ${filter.label(salaryDay: salaryDay)}. Tap a row to edit or delete.',
+        ExpenseDateFilterMode.dateRange =>
+          '${filter.label(salaryDay: salaryDay)}. Tap a row to edit or delete.',
         ExpenseDateFilterMode.payCycle =>
           'Pay cycle (${filter.label(salaryDay: salaryDay)}). Tap a row to edit or delete.',
       };
@@ -237,6 +245,8 @@ class ExpenseListScreen extends ConsumerWidget {
         'Swipe left on a row to delete, or tap to edit.',
       ExpenseDateFilterMode.pickDate =>
         'Showing spending on ${filter.label(salaryDay: salaryDay)}.',
+      ExpenseDateFilterMode.dateRange =>
+        'Showing spending from ${filter.label(salaryDay: salaryDay)}.',
       ExpenseDateFilterMode.payCycle =>
         'Showing this pay cycle (${filter.label(salaryDay: salaryDay)}). Swipe left to delete.',
     };
@@ -256,6 +266,32 @@ class ExpenseListScreen extends ConsumerWidget {
     );
     if (picked != null) {
       ref.read(expenseDateFilterProvider.notifier).setPickedDate(picked);
+    }
+  }
+
+  Future<void> _pickDateRange(
+    BuildContext context,
+    WidgetRef ref,
+    ExpenseDateFilter filter,
+  ) async {
+    final now = DateTime.now();
+    final initialStart = filter.rangeStart ?? now.subtract(const Duration(days: 6));
+    final initialEnd = filter.rangeEnd ?? now;
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: now.add(const Duration(days: 1)),
+      initialDateRange: DateTimeRange(
+        start: initialStart.isBefore(initialEnd) ? initialStart : initialEnd,
+        end: initialStart.isBefore(initialEnd) ? initialEnd : initialStart,
+      ),
+      helpText: 'Select date range',
+    );
+    if (range != null) {
+      ref.read(expenseDateFilterProvider.notifier).setDateRange(
+            start: range.start,
+            end: range.end,
+          );
     }
   }
 }

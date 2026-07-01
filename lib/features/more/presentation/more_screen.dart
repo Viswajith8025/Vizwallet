@@ -54,6 +54,24 @@ class MoreScreen extends StatelessWidget {
               ],
             ),
             _Section(
+              title: 'Borrow & lend',
+              subtitle: 'Money you gave others and money you owe',
+              children: [
+                PremiumMenuTile(
+                  icon: Icons.handshake_outlined,
+                  title: 'Loans',
+                  subtitle: 'Money you lent — mark returned to credit salary',
+                  onTap: () => context.push(AppRoutes.loans),
+                ),
+                PremiumMenuTile(
+                  icon: Icons.replay_circle_filled_outlined,
+                  title: 'Borrowed money',
+                  subtitle: 'What you borrowed — schedule pay-back and reminders',
+                  onTap: () => context.push(AppRoutes.borrowed),
+                ),
+              ],
+            ),
+            _Section(
               title: 'Plan ahead',
               subtitle: 'Budgets, forecasts, and reviews',
               children: [

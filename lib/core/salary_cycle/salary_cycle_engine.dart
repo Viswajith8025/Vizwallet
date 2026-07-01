@@ -271,6 +271,7 @@ abstract final class SalaryCycleEngine {
     required int salaryPaise,
     required int spentPaise,
     required int carryOverPaise,
+    int extraIncomePaise = 0,
   }) =>
-      salaryPaise + carryOverPaise - spentPaise;
+      salaryPaise + extraIncomePaise + carryOverPaise - spentPaise;
 }

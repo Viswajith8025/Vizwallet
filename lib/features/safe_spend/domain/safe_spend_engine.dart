@@ -11,6 +11,7 @@ abstract final class SafeSpendEngine {
     required int cycleSpentPaise,
     required int todaySpentPaise,
     required int salaryDay,
+    int extraIncomePaise = 0,
     DateTime? now,
   }) {
     final reference = now ?? DateTime.now();
@@ -27,9 +28,10 @@ abstract final class SafeSpendEngine {
       salaryPaise: salaryPaise,
       spentPaise: cycleSpentPaise,
       carryOverPaise: carryOverPaise,
+      extraIncomePaise: extraIncomePaise,
     );
 
-    if (salaryPaise <= 0) {
+    if (salaryPaise <= 0 && extraIncomePaise <= 0) {
       return _noDataSnapshot(
         cycleKey: cycleKey,
         daysRemaining: daysRemaining,

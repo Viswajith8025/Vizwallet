@@ -5,6 +5,7 @@ import 'package:rupee_track/core/database/daos/expenses_dao.dart';
 import 'package:rupee_track/core/salary_cycle/salary_cycle_engine.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/features/financial_calendar/domain/financial_calendar_models.dart';
+import 'package:rupee_track/features/loans/domain/loan_direction.dart';
 
 class FinancialCalendarRawData {
   const FinancialCalendarRawData({
@@ -103,10 +104,28 @@ abstract final class FinancialCalendarEngine {
     }
 
     for (final loan in raw.loans) {
+      if (LoanDirection.isLoan(loan.direction)) {
+        if (loan.expectedReturnAt != null) {
+          final dueDay = istDateOnly(loan.expectedReturnAt!);
+          events.add(
+            FinancialCalendarEvent(
+              id: 'loan-due-${loan.id}',
+              type: FinancialEventType.loan,
+              title: 'Loan return due · ${loan.personName}',
+              subtitle: loan.reason,
+              amountPaise: loan.balancePaise,
+              day: dueDay,
+              sourceId: loan.id,
+            ),
+          );
+        }
+        continue;
+      }
+
       final borrowedDay = istDateOnly(loan.borrowedAt);
       events.add(
         FinancialCalendarEvent(
-          id: 'loan-borrow-${loan.id}',
+          id: 'borrowed-${loan.id}',
           type: FinancialEventType.borrowedMoney,
           title: 'Borrowed from ${loan.personName}',
           subtitle: loan.reason,
@@ -119,9 +138,9 @@ abstract final class FinancialCalendarEngine {
         final dueDay = istDateOnly(loan.expectedReturnAt!);
         events.add(
           FinancialCalendarEvent(
-            id: 'loan-due-${loan.id}',
-            type: FinancialEventType.loan,
-            title: 'Loan due · ${loan.personName}',
+            id: 'payback-due-${loan.id}',
+            type: FinancialEventType.borrowedMoney,
+            title: 'Pay-back due · ${loan.personName}',
             subtitle: loan.reason,
             amountPaise: loan.balancePaise,
             day: dueDay,

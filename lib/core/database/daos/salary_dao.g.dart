@@ -6,4 +6,8 @@ part of 'salary_dao.dart';
 mixin _$SalaryDaoMixin on DatabaseAccessor<AppDatabase> {
   $MonthlySalaryTableTable get monthlySalaryTable =>
       attachedDatabase.monthlySalaryTable;
+  $SalaryDeductionsTableTable get salaryDeductionsTable =>
+      attachedDatabase.salaryDeductionsTable;
+  $CycleExtraIncomeTableTable get cycleExtraIncomeTable =>
+      attachedDatabase.cycleExtraIncomeTable;
 }

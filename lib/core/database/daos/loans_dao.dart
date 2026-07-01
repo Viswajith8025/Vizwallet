@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:rupee_track/core/database/app_database.dart';
 import 'package:rupee_track/core/database/tables.dart';
+import 'package:rupee_track/features/loans/domain/loan_direction.dart';
 
 part 'loans_dao.g.dart';
 
@@ -16,12 +17,63 @@ class LoansDao extends DatabaseAccessor<AppDatabase> with _$LoansDaoMixin {
         .watch();
   }
 
+  Stream<List<LoansTableData>> watchActiveLentLoans() {
+    return (select(loansTable)
+          ..where((t) => t.isDeleted.equals(false))
+          ..where((t) => t.direction.equals(LoanDirection.lentByMe))
+          ..where((t) => t.status.isNotIn(['returned', 'cancelled']))
+          ..orderBy([(t) => OrderingTerm.asc(t.expectedReturnAt)]))
+        .watch();
+  }
+
+  Stream<List<LoansTableData>> watchActiveBorrowedPaybacks() {
+    return (select(loansTable)
+          ..where((t) => t.isDeleted.equals(false))
+          ..where((t) => t.direction.equals(LoanDirection.borrowedByMe))
+          ..where((t) => t.status.isNotIn(['returned', 'cancelled']))
+          ..orderBy([(t) => OrderingTerm.asc(t.expectedReturnAt)]))
+        .watch();
+  }
+
+  Future<int> pendingLentTotal() async {
+    final sum = loansTable.balancePaise.sum();
+    final query = selectOnly(loansTable)
+      ..addColumns([sum])
+      ..where(loansTable.isDeleted.equals(false))
+      ..where(loansTable.direction.equals(LoanDirection.lentByMe))
+      ..where(loansTable.status.isNotIn(['returned', 'cancelled']));
+
+    final row = await query.getSingleOrNull();
+    return row?.read(sum) ?? 0;
+  }
+
+  Future<List<LoansTableData>> duePaybacks({DateTime? onOrBefore}) {
+    final cutoff = onOrBefore ?? DateTime.now().toUtc();
+    return (select(loansTable)
+          ..where((t) => t.isDeleted.equals(false))
+          ..where((t) => t.direction.equals(LoanDirection.borrowedByMe))
+          ..where((t) => t.status.isNotIn(['returned', 'cancelled']))
+          ..where((t) => t.expectedReturnAt.isSmallerOrEqualValue(cutoff)))
+        .get();
+  }
+
+  @Deprecated('Use watchActiveLentLoans')
+  Stream<List<LoansTableData>> watchActiveReceivables() =>
+      watchActiveLentLoans();
+
+  @Deprecated('Use pendingLentTotal')
+  Future<int> pendingReceivableTotal() => pendingLentTotal();
+
+  @Deprecated('Use duePaybacks')
+  Future<List<LoansTableData>> dueReceivables({DateTime? onOrBefore}) =>
+      duePaybacks(onOrBefore: onOrBefore);
+
   Future<int> pendingBorrowedTotal() async {
     final sum = loansTable.balancePaise.sum();
     final query = selectOnly(loansTable)
       ..addColumns([sum])
       ..where(loansTable.isDeleted.equals(false))
-      ..where(loansTable.direction.equals('borrowed_by_me'))
+      ..where(loansTable.direction.equals(LoanDirection.borrowedByMe))
       ..where(loansTable.status.isNotIn(['returned', 'cancelled']));
 
     final row = await query.getSingleOrNull();
@@ -32,7 +84,7 @@ class LoansDao extends DatabaseAccessor<AppDatabase> with _$LoansDaoMixin {
     final now = DateTime.now().toUtc();
     return (select(loansTable)
           ..where((t) => t.isDeleted.equals(false))
-          ..where((t) => t.direction.equals('borrowed_by_me'))
+          ..where((t) => t.direction.equals(LoanDirection.borrowedByMe))
           ..where((t) => t.balancePaise.isBiggerThanValue(0))
           ..where((t) => t.status.isNotIn(['returned', 'cancelled']))
           ..where((t) => t.expectedReturnAt.isSmallerThanValue(now)))

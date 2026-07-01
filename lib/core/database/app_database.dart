@@ -29,6 +29,8 @@ part 'app_database.g.dart';
   tables: [
     AppSettingsTable,
     MonthlySalaryTable,
+    SalaryDeductionsTable,
+    CycleExtraIncomeTable,
     CategoriesTable,
     ExpensesTable,
     SubscriptionsTable,
@@ -60,7 +62,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -125,6 +127,23 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 10) {
             await _migrateExpenseAmountThresholds();
+          }
+          if (from < 11) {
+            await m.createTable(salaryDeductionsTable);
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_salary_deductions_month '
+              'ON salary_deductions_table (month_key)',
+            );
+          }
+          if (from < 12) {
+            await m.createTable(cycleExtraIncomeTable);
+            await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_cycle_extra_income_month '
+              'ON cycle_extra_income_table (month_key)',
+            );
+          }
+          if (from < 13) {
+            await _ensureJupiterSavingsCategory();
           }
         },
         beforeOpen: (details) async {
@@ -243,6 +262,28 @@ class AppDatabase extends _$AppDatabase {
         );
       }
     }
+  }
+
+  Future<void> _ensureJupiterSavingsCategory() async {
+    final existing = await (select(categoriesTable)
+          ..where((t) => t.slug.equals('jupiter_savings')))
+        .getSingleOrNull();
+    if (existing != null) return;
+
+    final category = defaultCategories.firstWhere(
+      (c) => c.slug == 'jupiter_savings',
+    );
+    await into(categoriesTable).insert(
+      CategoriesTableCompanion.insert(
+        name: category.name,
+        slug: category.slug,
+        iconName: Value(category.iconName),
+        colorValue: Value(category.colorValue),
+        isSystem: const Value(true),
+        countsTowardSpending: Value(category.countsTowardSpending),
+        sortOrder: Value(category.sortOrder),
+      ),
+    );
   }
 
   Future<void> _migrateExpenseAmountThresholds() async {

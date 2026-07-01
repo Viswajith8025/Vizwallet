@@ -9,6 +9,7 @@ import 'package:rupee_track/features/expenses/presentation/expense_list_screen.d
 import 'package:rupee_track/features/expenses/presentation/quick_add_expense_screen.dart';
 import 'package:rupee_track/features/insights/presentation/insights_screen.dart';
 import 'package:rupee_track/features/jithu/presentation/jithu_screen.dart';
+import 'package:rupee_track/features/loans/presentation/borrowed_screen.dart';
 import 'package:rupee_track/features/loans/presentation/loans_screen.dart';
 import 'package:rupee_track/features/monthly_report/presentation/monthly_report_screen.dart';
 import 'package:rupee_track/features/monthly_report/presentation/widgets/monthly_report_listener.dart';
@@ -111,6 +112,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.loans,
         builder: (context, state) => const LoansScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.borrowed,
+        builder: (context, state) => const BorrowedScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

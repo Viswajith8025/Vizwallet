@@ -50,7 +50,7 @@ class _AddLoanSheetState extends ConsumerState<_AddLoanSheet> {
     final person = _personController.text.trim();
     final amount = rupeesToPaise(_amountController.text);
     if (person.isEmpty) {
-      _showError('Enter who you borrowed from');
+      _showError('Enter who you lent money to');
       return;
     }
     if (amount <= 0) {
@@ -68,11 +68,12 @@ class _AddLoanSheetState extends ConsumerState<_AddLoanSheet> {
                 : _reasonController.text.trim(),
             expectedReturnAt: _dueDate?.toUtc(),
           );
+      ref.invalidate(activeLentLoansProvider);
       ref.invalidate(activeLoansProvider);
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Added loan · ${formatPaise(amount)}')),
+        SnackBar(content: Text('Loan added · ${formatPaise(amount)}')),
       );
     } catch (e) {
       _showError('Could not save this loan. Please try again.');
@@ -93,12 +94,12 @@ class _AddLoanSheetState extends ConsumerState<_AddLoanSheet> {
       padding: AppResponsive.screenPadding(context, bottom: AppSpacing.xl),
       children: [
         Text(
-          'Track borrowed money',
+          'Add a loan',
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Record money you borrowed from someone. You can update repayments later.',
+          'Money you gave to someone else. Track when they should return it.',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -108,7 +109,7 @@ class _AddLoanSheetState extends ConsumerState<_AddLoanSheet> {
           controller: _personController,
           textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(
-            labelText: 'Borrowed from',
+            labelText: 'Lent to',
             hintText: 'Friend, family, colleague…',
           ),
         ),
@@ -127,7 +128,7 @@ class _AddLoanSheetState extends ConsumerState<_AddLoanSheet> {
           textCapitalization: TextCapitalization.sentences,
           decoration: const InputDecoration(
             labelText: 'Reason (optional)',
-            hintText: 'Rent advance, emergency…',
+            hintText: 'Helped with rent, emergency…',
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -136,7 +137,7 @@ class _AddLoanSheetState extends ConsumerState<_AddLoanSheet> {
           icon: const Icon(Icons.event_outlined),
           label: Text(
             _dueDate == null
-                ? 'Set return date (optional)'
+                ? 'Expected return date (optional)'
                 : 'Return by ${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}',
           ),
         ),

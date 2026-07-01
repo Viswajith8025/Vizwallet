@@ -48,6 +48,25 @@ void main() {
       expect(report.savingsCurve.length, 12);
     });
 
+    test('increase savings scenario increases projected savings', () {
+      final baseline = SavingsForecastEngine.build(
+        input: _input(),
+        selectedPeriod: ForecastPeriod.year1,
+        now: DateTime(2026, 6, 15),
+      );
+      final increased = SavingsForecastEngine.build(
+        input: _input(),
+        selectedPeriod: ForecastPeriod.year1,
+        adjustments: const ForecastAdjustments(extraSavingsPaise: 200000),
+        now: DateTime(2026, 6, 15),
+      );
+
+      expect(
+        increased.periodSummary.projectedSavingsPaise,
+        greaterThan(baseline.periodSummary.projectedSavingsPaise),
+      );
+    });
+
     test('reduce spending scenario increases projected savings', () {
       final baseline = SavingsForecastEngine.build(
         input: _input(),

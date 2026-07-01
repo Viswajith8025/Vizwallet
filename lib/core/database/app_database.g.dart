@@ -39,7 +39,7 @@ class $AppSettingsTableTable extends AppSettingsTable
       GeneratedColumn<int>('major_expense_threshold_paise', aliasedName, false,
           type: DriftSqlType.int,
           requiredDuringInsert: false,
-          defaultValue: const Constant(10000));
+          defaultValue: const Constant(50000));
   static const VerificationMeta _largeExpenseThresholdPaiseMeta =
       const VerificationMeta('largeExpenseThresholdPaise');
   @override
@@ -47,7 +47,7 @@ class $AppSettingsTableTable extends AppSettingsTable
       GeneratedColumn<int>('large_expense_threshold_paise', aliasedName, false,
           type: DriftSqlType.int,
           requiredDuringInsert: false,
-          defaultValue: const Constant(50000));
+          defaultValue: const Constant(200000));
   static const VerificationMeta _veryLargeExpenseThresholdPaiseMeta =
       const VerificationMeta('veryLargeExpenseThresholdPaise');
   @override
@@ -56,7 +56,7 @@ class $AppSettingsTableTable extends AppSettingsTable
           'very_large_expense_threshold_paise', aliasedName, false,
           type: DriftSqlType.int,
           requiredDuringInsert: false,
-          defaultValue: const Constant(100000));
+          defaultValue: const Constant(1000000));
   static const VerificationMeta _majorPurchaseThresholdPaiseMeta =
       const VerificationMeta('majorPurchaseThresholdPaise');
   @override
@@ -1072,6 +1072,695 @@ class MonthlySalaryTableCompanion
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SalaryDeductionsTableTable extends SalaryDeductionsTable
+    with TableInfo<$SalaryDeductionsTableTable, SalaryDeductionsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SalaryDeductionsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _monthKeyMeta =
+      const VerificationMeta('monthKey');
+  @override
+  late final GeneratedColumn<String> monthKey = GeneratedColumn<String>(
+      'month_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+      'label', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _amountPaiseMeta =
+      const VerificationMeta('amountPaise');
+  @override
+  late final GeneratedColumn<int> amountPaise = GeneratedColumn<int>(
+      'amount_paise', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, monthKey, type, label, amountPaise, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'salary_deductions_table';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<SalaryDeductionsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('month_key')) {
+      context.handle(_monthKeyMeta,
+          monthKey.isAcceptableOrUnknown(data['month_key']!, _monthKeyMeta));
+    } else if (isInserting) {
+      context.missing(_monthKeyMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+          _labelMeta, label.isAcceptableOrUnknown(data['label']!, _labelMeta));
+    }
+    if (data.containsKey('amount_paise')) {
+      context.handle(
+          _amountPaiseMeta,
+          amountPaise.isAcceptableOrUnknown(
+              data['amount_paise']!, _amountPaiseMeta));
+    } else if (isInserting) {
+      context.missing(_amountPaiseMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SalaryDeductionsTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SalaryDeductionsTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      monthKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}month_key'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      label: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}label']),
+      amountPaise: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}amount_paise'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $SalaryDeductionsTableTable createAlias(String alias) {
+    return $SalaryDeductionsTableTable(attachedDatabase, alias);
+  }
+}
+
+class SalaryDeductionsTableData extends DataClass
+    implements Insertable<SalaryDeductionsTableData> {
+  final int id;
+  final String monthKey;
+  final String type;
+  final String? label;
+  final int amountPaise;
+  final DateTime createdAt;
+  const SalaryDeductionsTableData(
+      {required this.id,
+      required this.monthKey,
+      required this.type,
+      this.label,
+      required this.amountPaise,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['month_key'] = Variable<String>(monthKey);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || label != null) {
+      map['label'] = Variable<String>(label);
+    }
+    map['amount_paise'] = Variable<int>(amountPaise);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SalaryDeductionsTableCompanion toCompanion(bool nullToAbsent) {
+    return SalaryDeductionsTableCompanion(
+      id: Value(id),
+      monthKey: Value(monthKey),
+      type: Value(type),
+      label:
+          label == null && nullToAbsent ? const Value.absent() : Value(label),
+      amountPaise: Value(amountPaise),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SalaryDeductionsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SalaryDeductionsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      monthKey: serializer.fromJson<String>(json['monthKey']),
+      type: serializer.fromJson<String>(json['type']),
+      label: serializer.fromJson<String?>(json['label']),
+      amountPaise: serializer.fromJson<int>(json['amountPaise']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'monthKey': serializer.toJson<String>(monthKey),
+      'type': serializer.toJson<String>(type),
+      'label': serializer.toJson<String?>(label),
+      'amountPaise': serializer.toJson<int>(amountPaise),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SalaryDeductionsTableData copyWith(
+          {int? id,
+          String? monthKey,
+          String? type,
+          Value<String?> label = const Value.absent(),
+          int? amountPaise,
+          DateTime? createdAt}) =>
+      SalaryDeductionsTableData(
+        id: id ?? this.id,
+        monthKey: monthKey ?? this.monthKey,
+        type: type ?? this.type,
+        label: label.present ? label.value : this.label,
+        amountPaise: amountPaise ?? this.amountPaise,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  SalaryDeductionsTableData copyWithCompanion(
+      SalaryDeductionsTableCompanion data) {
+    return SalaryDeductionsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      monthKey: data.monthKey.present ? data.monthKey.value : this.monthKey,
+      type: data.type.present ? data.type.value : this.type,
+      label: data.label.present ? data.label.value : this.label,
+      amountPaise:
+          data.amountPaise.present ? data.amountPaise.value : this.amountPaise,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalaryDeductionsTableData(')
+          ..write('id: $id, ')
+          ..write('monthKey: $monthKey, ')
+          ..write('type: $type, ')
+          ..write('label: $label, ')
+          ..write('amountPaise: $amountPaise, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, monthKey, type, label, amountPaise, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SalaryDeductionsTableData &&
+          other.id == this.id &&
+          other.monthKey == this.monthKey &&
+          other.type == this.type &&
+          other.label == this.label &&
+          other.amountPaise == this.amountPaise &&
+          other.createdAt == this.createdAt);
+}
+
+class SalaryDeductionsTableCompanion
+    extends UpdateCompanion<SalaryDeductionsTableData> {
+  final Value<int> id;
+  final Value<String> monthKey;
+  final Value<String> type;
+  final Value<String?> label;
+  final Value<int> amountPaise;
+  final Value<DateTime> createdAt;
+  const SalaryDeductionsTableCompanion({
+    this.id = const Value.absent(),
+    this.monthKey = const Value.absent(),
+    this.type = const Value.absent(),
+    this.label = const Value.absent(),
+    this.amountPaise = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  SalaryDeductionsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String monthKey,
+    required String type,
+    this.label = const Value.absent(),
+    required int amountPaise,
+    this.createdAt = const Value.absent(),
+  })  : monthKey = Value(monthKey),
+        type = Value(type),
+        amountPaise = Value(amountPaise);
+  static Insertable<SalaryDeductionsTableData> custom({
+    Expression<int>? id,
+    Expression<String>? monthKey,
+    Expression<String>? type,
+    Expression<String>? label,
+    Expression<int>? amountPaise,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (monthKey != null) 'month_key': monthKey,
+      if (type != null) 'type': type,
+      if (label != null) 'label': label,
+      if (amountPaise != null) 'amount_paise': amountPaise,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  SalaryDeductionsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? monthKey,
+      Value<String>? type,
+      Value<String?>? label,
+      Value<int>? amountPaise,
+      Value<DateTime>? createdAt}) {
+    return SalaryDeductionsTableCompanion(
+      id: id ?? this.id,
+      monthKey: monthKey ?? this.monthKey,
+      type: type ?? this.type,
+      label: label ?? this.label,
+      amountPaise: amountPaise ?? this.amountPaise,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (monthKey.present) {
+      map['month_key'] = Variable<String>(monthKey.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (amountPaise.present) {
+      map['amount_paise'] = Variable<int>(amountPaise.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SalaryDeductionsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('monthKey: $monthKey, ')
+          ..write('type: $type, ')
+          ..write('label: $label, ')
+          ..write('amountPaise: $amountPaise, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CycleExtraIncomeTableTable extends CycleExtraIncomeTable
+    with TableInfo<$CycleExtraIncomeTableTable, CycleExtraIncomeTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CycleExtraIncomeTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _monthKeyMeta =
+      const VerificationMeta('monthKey');
+  @override
+  late final GeneratedColumn<String> monthKey = GeneratedColumn<String>(
+      'month_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+      'label', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _amountPaiseMeta =
+      const VerificationMeta('amountPaise');
+  @override
+  late final GeneratedColumn<int> amountPaise = GeneratedColumn<int>(
+      'amount_paise', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _receivedAtMeta =
+      const VerificationMeta('receivedAt');
+  @override
+  late final GeneratedColumn<DateTime> receivedAt = GeneratedColumn<DateTime>(
+      'received_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, monthKey, label, amountPaise, receivedAt, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cycle_extra_income_table';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CycleExtraIncomeTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('month_key')) {
+      context.handle(_monthKeyMeta,
+          monthKey.isAcceptableOrUnknown(data['month_key']!, _monthKeyMeta));
+    } else if (isInserting) {
+      context.missing(_monthKeyMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+          _labelMeta, label.isAcceptableOrUnknown(data['label']!, _labelMeta));
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('amount_paise')) {
+      context.handle(
+          _amountPaiseMeta,
+          amountPaise.isAcceptableOrUnknown(
+              data['amount_paise']!, _amountPaiseMeta));
+    } else if (isInserting) {
+      context.missing(_amountPaiseMeta);
+    }
+    if (data.containsKey('received_at')) {
+      context.handle(
+          _receivedAtMeta,
+          receivedAt.isAcceptableOrUnknown(
+              data['received_at']!, _receivedAtMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CycleExtraIncomeTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CycleExtraIncomeTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      monthKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}month_key'])!,
+      label: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}label'])!,
+      amountPaise: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}amount_paise'])!,
+      receivedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}received_at']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $CycleExtraIncomeTableTable createAlias(String alias) {
+    return $CycleExtraIncomeTableTable(attachedDatabase, alias);
+  }
+}
+
+class CycleExtraIncomeTableData extends DataClass
+    implements Insertable<CycleExtraIncomeTableData> {
+  final int id;
+  final String monthKey;
+  final String label;
+  final int amountPaise;
+  final DateTime? receivedAt;
+  final DateTime createdAt;
+  const CycleExtraIncomeTableData(
+      {required this.id,
+      required this.monthKey,
+      required this.label,
+      required this.amountPaise,
+      this.receivedAt,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['month_key'] = Variable<String>(monthKey);
+    map['label'] = Variable<String>(label);
+    map['amount_paise'] = Variable<int>(amountPaise);
+    if (!nullToAbsent || receivedAt != null) {
+      map['received_at'] = Variable<DateTime>(receivedAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  CycleExtraIncomeTableCompanion toCompanion(bool nullToAbsent) {
+    return CycleExtraIncomeTableCompanion(
+      id: Value(id),
+      monthKey: Value(monthKey),
+      label: Value(label),
+      amountPaise: Value(amountPaise),
+      receivedAt: receivedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receivedAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory CycleExtraIncomeTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CycleExtraIncomeTableData(
+      id: serializer.fromJson<int>(json['id']),
+      monthKey: serializer.fromJson<String>(json['monthKey']),
+      label: serializer.fromJson<String>(json['label']),
+      amountPaise: serializer.fromJson<int>(json['amountPaise']),
+      receivedAt: serializer.fromJson<DateTime?>(json['receivedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'monthKey': serializer.toJson<String>(monthKey),
+      'label': serializer.toJson<String>(label),
+      'amountPaise': serializer.toJson<int>(amountPaise),
+      'receivedAt': serializer.toJson<DateTime?>(receivedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  CycleExtraIncomeTableData copyWith(
+          {int? id,
+          String? monthKey,
+          String? label,
+          int? amountPaise,
+          Value<DateTime?> receivedAt = const Value.absent(),
+          DateTime? createdAt}) =>
+      CycleExtraIncomeTableData(
+        id: id ?? this.id,
+        monthKey: monthKey ?? this.monthKey,
+        label: label ?? this.label,
+        amountPaise: amountPaise ?? this.amountPaise,
+        receivedAt: receivedAt.present ? receivedAt.value : this.receivedAt,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  CycleExtraIncomeTableData copyWithCompanion(
+      CycleExtraIncomeTableCompanion data) {
+    return CycleExtraIncomeTableData(
+      id: data.id.present ? data.id.value : this.id,
+      monthKey: data.monthKey.present ? data.monthKey.value : this.monthKey,
+      label: data.label.present ? data.label.value : this.label,
+      amountPaise:
+          data.amountPaise.present ? data.amountPaise.value : this.amountPaise,
+      receivedAt:
+          data.receivedAt.present ? data.receivedAt.value : this.receivedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CycleExtraIncomeTableData(')
+          ..write('id: $id, ')
+          ..write('monthKey: $monthKey, ')
+          ..write('label: $label, ')
+          ..write('amountPaise: $amountPaise, ')
+          ..write('receivedAt: $receivedAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, monthKey, label, amountPaise, receivedAt, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CycleExtraIncomeTableData &&
+          other.id == this.id &&
+          other.monthKey == this.monthKey &&
+          other.label == this.label &&
+          other.amountPaise == this.amountPaise &&
+          other.receivedAt == this.receivedAt &&
+          other.createdAt == this.createdAt);
+}
+
+class CycleExtraIncomeTableCompanion
+    extends UpdateCompanion<CycleExtraIncomeTableData> {
+  final Value<int> id;
+  final Value<String> monthKey;
+  final Value<String> label;
+  final Value<int> amountPaise;
+  final Value<DateTime?> receivedAt;
+  final Value<DateTime> createdAt;
+  const CycleExtraIncomeTableCompanion({
+    this.id = const Value.absent(),
+    this.monthKey = const Value.absent(),
+    this.label = const Value.absent(),
+    this.amountPaise = const Value.absent(),
+    this.receivedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  CycleExtraIncomeTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String monthKey,
+    required String label,
+    required int amountPaise,
+    this.receivedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  })  : monthKey = Value(monthKey),
+        label = Value(label),
+        amountPaise = Value(amountPaise);
+  static Insertable<CycleExtraIncomeTableData> custom({
+    Expression<int>? id,
+    Expression<String>? monthKey,
+    Expression<String>? label,
+    Expression<int>? amountPaise,
+    Expression<DateTime>? receivedAt,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (monthKey != null) 'month_key': monthKey,
+      if (label != null) 'label': label,
+      if (amountPaise != null) 'amount_paise': amountPaise,
+      if (receivedAt != null) 'received_at': receivedAt,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  CycleExtraIncomeTableCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? monthKey,
+      Value<String>? label,
+      Value<int>? amountPaise,
+      Value<DateTime?>? receivedAt,
+      Value<DateTime>? createdAt}) {
+    return CycleExtraIncomeTableCompanion(
+      id: id ?? this.id,
+      monthKey: monthKey ?? this.monthKey,
+      label: label ?? this.label,
+      amountPaise: amountPaise ?? this.amountPaise,
+      receivedAt: receivedAt ?? this.receivedAt,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (monthKey.present) {
+      map['month_key'] = Variable<String>(monthKey.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (amountPaise.present) {
+      map['amount_paise'] = Variable<int>(amountPaise.value);
+    }
+    if (receivedAt.present) {
+      map['received_at'] = Variable<DateTime>(receivedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CycleExtraIncomeTableCompanion(')
+          ..write('id: $id, ')
+          ..write('monthKey: $monthKey, ')
+          ..write('label: $label, ')
+          ..write('amountPaise: $amountPaise, ')
+          ..write('receivedAt: $receivedAt, ')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -7662,6 +8351,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $AppSettingsTableTable(this);
   late final $MonthlySalaryTableTable monthlySalaryTable =
       $MonthlySalaryTableTable(this);
+  late final $SalaryDeductionsTableTable salaryDeductionsTable =
+      $SalaryDeductionsTableTable(this);
+  late final $CycleExtraIncomeTableTable cycleExtraIncomeTable =
+      $CycleExtraIncomeTableTable(this);
   late final $CategoriesTableTable categoriesTable =
       $CategoriesTableTable(this);
   late final $ExpensesTableTable expensesTable = $ExpensesTableTable(this);
@@ -7707,6 +8400,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         appSettingsTable,
         monthlySalaryTable,
+        salaryDeductionsTable,
+        cycleExtraIncomeTable,
         categoriesTable,
         expensesTable,
         subscriptionsTable,
@@ -8225,6 +8920,384 @@ typedef $$MonthlySalaryTableTableProcessedTableManager = ProcessedTableManager<
     ),
     MonthlySalaryTableData,
     PrefetchHooks Function()>;
+typedef $$SalaryDeductionsTableTableCreateCompanionBuilder
+    = SalaryDeductionsTableCompanion Function({
+  Value<int> id,
+  required String monthKey,
+  required String type,
+  Value<String?> label,
+  required int amountPaise,
+  Value<DateTime> createdAt,
+});
+typedef $$SalaryDeductionsTableTableUpdateCompanionBuilder
+    = SalaryDeductionsTableCompanion Function({
+  Value<int> id,
+  Value<String> monthKey,
+  Value<String> type,
+  Value<String?> label,
+  Value<int> amountPaise,
+  Value<DateTime> createdAt,
+});
+
+class $$SalaryDeductionsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SalaryDeductionsTableTable> {
+  $$SalaryDeductionsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get monthKey => $composableBuilder(
+      column: $table.monthKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get label => $composableBuilder(
+      column: $table.label, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get amountPaise => $composableBuilder(
+      column: $table.amountPaise, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$SalaryDeductionsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SalaryDeductionsTableTable> {
+  $$SalaryDeductionsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get monthKey => $composableBuilder(
+      column: $table.monthKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get label => $composableBuilder(
+      column: $table.label, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get amountPaise => $composableBuilder(
+      column: $table.amountPaise, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$SalaryDeductionsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SalaryDeductionsTableTable> {
+  $$SalaryDeductionsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get monthKey =>
+      $composableBuilder(column: $table.monthKey, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<int> get amountPaise => $composableBuilder(
+      column: $table.amountPaise, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$SalaryDeductionsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SalaryDeductionsTableTable,
+    SalaryDeductionsTableData,
+    $$SalaryDeductionsTableTableFilterComposer,
+    $$SalaryDeductionsTableTableOrderingComposer,
+    $$SalaryDeductionsTableTableAnnotationComposer,
+    $$SalaryDeductionsTableTableCreateCompanionBuilder,
+    $$SalaryDeductionsTableTableUpdateCompanionBuilder,
+    (
+      SalaryDeductionsTableData,
+      BaseReferences<_$AppDatabase, $SalaryDeductionsTableTable,
+          SalaryDeductionsTableData>
+    ),
+    SalaryDeductionsTableData,
+    PrefetchHooks Function()> {
+  $$SalaryDeductionsTableTableTableManager(
+      _$AppDatabase db, $SalaryDeductionsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SalaryDeductionsTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SalaryDeductionsTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SalaryDeductionsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> monthKey = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String?> label = const Value.absent(),
+            Value<int> amountPaise = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              SalaryDeductionsTableCompanion(
+            id: id,
+            monthKey: monthKey,
+            type: type,
+            label: label,
+            amountPaise: amountPaise,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String monthKey,
+            required String type,
+            Value<String?> label = const Value.absent(),
+            required int amountPaise,
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              SalaryDeductionsTableCompanion.insert(
+            id: id,
+            monthKey: monthKey,
+            type: type,
+            label: label,
+            amountPaise: amountPaise,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$SalaryDeductionsTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $SalaryDeductionsTableTable,
+        SalaryDeductionsTableData,
+        $$SalaryDeductionsTableTableFilterComposer,
+        $$SalaryDeductionsTableTableOrderingComposer,
+        $$SalaryDeductionsTableTableAnnotationComposer,
+        $$SalaryDeductionsTableTableCreateCompanionBuilder,
+        $$SalaryDeductionsTableTableUpdateCompanionBuilder,
+        (
+          SalaryDeductionsTableData,
+          BaseReferences<_$AppDatabase, $SalaryDeductionsTableTable,
+              SalaryDeductionsTableData>
+        ),
+        SalaryDeductionsTableData,
+        PrefetchHooks Function()>;
+typedef $$CycleExtraIncomeTableTableCreateCompanionBuilder
+    = CycleExtraIncomeTableCompanion Function({
+  Value<int> id,
+  required String monthKey,
+  required String label,
+  required int amountPaise,
+  Value<DateTime?> receivedAt,
+  Value<DateTime> createdAt,
+});
+typedef $$CycleExtraIncomeTableTableUpdateCompanionBuilder
+    = CycleExtraIncomeTableCompanion Function({
+  Value<int> id,
+  Value<String> monthKey,
+  Value<String> label,
+  Value<int> amountPaise,
+  Value<DateTime?> receivedAt,
+  Value<DateTime> createdAt,
+});
+
+class $$CycleExtraIncomeTableTableFilterComposer
+    extends Composer<_$AppDatabase, $CycleExtraIncomeTableTable> {
+  $$CycleExtraIncomeTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get monthKey => $composableBuilder(
+      column: $table.monthKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get label => $composableBuilder(
+      column: $table.label, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get amountPaise => $composableBuilder(
+      column: $table.amountPaise, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get receivedAt => $composableBuilder(
+      column: $table.receivedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$CycleExtraIncomeTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $CycleExtraIncomeTableTable> {
+  $$CycleExtraIncomeTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get monthKey => $composableBuilder(
+      column: $table.monthKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get label => $composableBuilder(
+      column: $table.label, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get amountPaise => $composableBuilder(
+      column: $table.amountPaise, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get receivedAt => $composableBuilder(
+      column: $table.receivedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CycleExtraIncomeTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CycleExtraIncomeTableTable> {
+  $$CycleExtraIncomeTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get monthKey =>
+      $composableBuilder(column: $table.monthKey, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<int> get amountPaise => $composableBuilder(
+      column: $table.amountPaise, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get receivedAt => $composableBuilder(
+      column: $table.receivedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$CycleExtraIncomeTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CycleExtraIncomeTableTable,
+    CycleExtraIncomeTableData,
+    $$CycleExtraIncomeTableTableFilterComposer,
+    $$CycleExtraIncomeTableTableOrderingComposer,
+    $$CycleExtraIncomeTableTableAnnotationComposer,
+    $$CycleExtraIncomeTableTableCreateCompanionBuilder,
+    $$CycleExtraIncomeTableTableUpdateCompanionBuilder,
+    (
+      CycleExtraIncomeTableData,
+      BaseReferences<_$AppDatabase, $CycleExtraIncomeTableTable,
+          CycleExtraIncomeTableData>
+    ),
+    CycleExtraIncomeTableData,
+    PrefetchHooks Function()> {
+  $$CycleExtraIncomeTableTableTableManager(
+      _$AppDatabase db, $CycleExtraIncomeTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CycleExtraIncomeTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CycleExtraIncomeTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CycleExtraIncomeTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> monthKey = const Value.absent(),
+            Value<String> label = const Value.absent(),
+            Value<int> amountPaise = const Value.absent(),
+            Value<DateTime?> receivedAt = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              CycleExtraIncomeTableCompanion(
+            id: id,
+            monthKey: monthKey,
+            label: label,
+            amountPaise: amountPaise,
+            receivedAt: receivedAt,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String monthKey,
+            required String label,
+            required int amountPaise,
+            Value<DateTime?> receivedAt = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              CycleExtraIncomeTableCompanion.insert(
+            id: id,
+            monthKey: monthKey,
+            label: label,
+            amountPaise: amountPaise,
+            receivedAt: receivedAt,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CycleExtraIncomeTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $CycleExtraIncomeTableTable,
+        CycleExtraIncomeTableData,
+        $$CycleExtraIncomeTableTableFilterComposer,
+        $$CycleExtraIncomeTableTableOrderingComposer,
+        $$CycleExtraIncomeTableTableAnnotationComposer,
+        $$CycleExtraIncomeTableTableCreateCompanionBuilder,
+        $$CycleExtraIncomeTableTableUpdateCompanionBuilder,
+        (
+          CycleExtraIncomeTableData,
+          BaseReferences<_$AppDatabase, $CycleExtraIncomeTableTable,
+              CycleExtraIncomeTableData>
+        ),
+        CycleExtraIncomeTableData,
+        PrefetchHooks Function()>;
 typedef $$CategoriesTableTableCreateCompanionBuilder = CategoriesTableCompanion
     Function({
   Value<int> id,
@@ -12446,6 +13519,10 @@ class $AppDatabaseManager {
       $$AppSettingsTableTableTableManager(_db, _db.appSettingsTable);
   $$MonthlySalaryTableTableTableManager get monthlySalaryTable =>
       $$MonthlySalaryTableTableTableManager(_db, _db.monthlySalaryTable);
+  $$SalaryDeductionsTableTableTableManager get salaryDeductionsTable =>
+      $$SalaryDeductionsTableTableTableManager(_db, _db.salaryDeductionsTable);
+  $$CycleExtraIncomeTableTableTableManager get cycleExtraIncomeTable =>
+      $$CycleExtraIncomeTableTableTableManager(_db, _db.cycleExtraIncomeTable);
   $$CategoriesTableTableTableManager get categoriesTable =>
       $$CategoriesTableTableTableManager(_db, _db.categoriesTable);
   $$ExpensesTableTableTableManager get expensesTable =>

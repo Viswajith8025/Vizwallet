@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:rupee_track/core/providers/database_provider.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
 import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/utils/date_utils.dart';
@@ -32,6 +33,21 @@ class BudgetSetupScreen extends HookConsumerWidget {
     );
     final allocations = useState<List<BucketAllocationInput>>([]);
     final isLoadingAlloc = useState(false);
+
+    useEffect(() {
+      if (initialSalaryPaise != null) return null;
+      Future<void> prefillSalary() async {
+        if (salaryController.text.trim().isNotEmpty) return;
+        final dao = await ref.read(salaryDaoProvider.future);
+        final inflow = await dao.getTotalCycleInflowPaise(cycleKey);
+        if (inflow > 0) {
+          salaryController.text = paiseToRupees(inflow).round().toString();
+        }
+      }
+
+      prefillSalary();
+      return null;
+    }, [cycleKey]);
 
     Future<void> loadAllocations() async {
       final salary = rupeesToPaise(salaryController.text);
@@ -190,6 +206,22 @@ class BudgetSetupScreen extends HookConsumerWidget {
                         : () async {
                             final salary = rupeesToPaise(salaryController.text);
                             if (salary <= 0) return;
+                            final allocated = allocations.value.fold<int>(
+                              0,
+                              (s, b) => s + b.allocatedPaise + b.rolloverPaise,
+                            );
+                            if (allocated > salary) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Planned amounts cannot exceed your salary',
+                                    ),
+                                  ),
+                                );
+                              }
+                              return;
+                            }
                             isSaving.value = true;
                             try {
                               final aiNotes = mode.value == AllocationMode.aiSuggested

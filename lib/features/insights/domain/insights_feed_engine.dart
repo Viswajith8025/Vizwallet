@@ -1,7 +1,6 @@
 import 'package:rupee_track/core/router/routes.dart';
 import 'package:rupee_track/core/utils/money_utils.dart';
 import 'package:rupee_track/features/budget/domain/allocation_mode.dart';
-import 'package:rupee_track/features/budget/domain/bucket_status.dart';
 import 'package:rupee_track/features/insights/domain/insights_feed_models.dart';
 import 'package:rupee_track/features/safe_spend/domain/safe_spend_snapshot.dart';
 

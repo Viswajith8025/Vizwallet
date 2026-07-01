@@ -80,6 +80,8 @@ void showPremiumSnackBar(
               textColor: accent,
             )
           : null,
+      showCloseIcon: actionLabel != null,
+      closeIconColor: accent,
     ),
   );
 }

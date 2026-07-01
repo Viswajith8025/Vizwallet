@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rupee_track/core/branding/brand_colors.dart';
 
 /// Premium Viswallet mark — wallet card + integrated V + growth flow.
 ///

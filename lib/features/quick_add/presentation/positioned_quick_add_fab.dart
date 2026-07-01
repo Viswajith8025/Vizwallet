@@ -90,7 +90,7 @@ class _PositionedQuickAddFabState extends ConsumerState<PositionedQuickAddFab>
     setState(() {
       _offset = Offset(
         _dragOrigin.dx + delta.dx,
-        _dragOrigin.dy - delta.dy,
+        _dragOrigin.dy + delta.dy,
       );
       _clampOffset();
     });

@@ -16,19 +16,31 @@ Future<void> showDashboardWidgetEditSheet(
   return showPremiumBottomSheet<void>(
     context: context,
     initialSize: 0.72,
-    child: _DashboardWidgetEditSheet(instance: instance),
+    child: _DashboardWidgetEditSheet(instanceId: instance.id),
   );
 }
 
 class _DashboardWidgetEditSheet extends ConsumerWidget {
-  const _DashboardWidgetEditSheet({required this.instance});
+  const _DashboardWidgetEditSheet({required this.instanceId});
 
-  final DashboardWidgetInstance instance;
+  final String instanceId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final layout = ref.watch(dashboardLayoutProvider);
     final notifier = ref.read(dashboardLayoutProvider.notifier);
+    final instance = layout.widgets
+        .where((w) => w.id == instanceId)
+        .cast<DashboardWidgetInstance?>()
+        .firstOrNull;
+
+    if (instance == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) Navigator.pop(context);
+      });
+      return const SizedBox.shrink();
+    }
 
     return ListView(
       padding: AppResponsive.screenPadding(context, bottom: AppSpacing.xl),
@@ -60,46 +72,66 @@ class _DashboardWidgetEditSheet extends ConsumerWidget {
           selected: {instance.size},
           onSelectionChanged: (v) {
             notifier.updateWidget(instance.copyWith(size: v.first));
-            Navigator.pop(context);
           },
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xs),
+          child: Text(
+            _sizeHint(instance.size),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
         SwitchListTile(
+          contentPadding: EdgeInsets.zero,
           title: const Text('Pin to full width'),
+          subtitle: const Text('Use full row on wide screens'),
           value: instance.pinned,
-          onChanged: (_) {
-            notifier.togglePinned(instance.id);
-            Navigator.pop(context);
-          },
+          onChanged: (_) => notifier.togglePinned(instance.id),
         ),
         SwitchListTile(
+          contentPadding: EdgeInsets.zero,
           title: const Text('Collapsed'),
+          subtitle: const Text('Show only the widget title'),
           value: instance.collapsed,
-          onChanged: (_) {
-            notifier.toggleCollapsed(instance.id);
-            Navigator.pop(context);
-          },
+          onChanged: (_) => notifier.toggleCollapsed(instance.id),
         ),
         SwitchListTile(
+          contentPadding: EdgeInsets.zero,
           title: const Text('Glass effect'),
+          subtitle: const Text('Frosted border and glow'),
           value: instance.glassEffect,
           onChanged: (v) {
             notifier.updateWidget(instance.copyWith(glassEffect: v));
           },
         ),
-        ListTile(
-          title: const Text('Transparency'),
-          subtitle: Slider(
-            value: instance.transparency,
-            min: 0.5,
-            max: 1,
-            onChanged: (v) {
-              notifier.updateWidget(instance.copyWith(transparency: v));
-            },
+        const SizedBox(height: AppSpacing.md),
+        Text('Transparency', style: theme.textTheme.titleSmall),
+        const SizedBox(height: AppSpacing.xs),
+        Slider(
+          value: instance.transparency.clamp(0.5, 1.0),
+          min: 0.5,
+          max: 1,
+          divisions: 10,
+          label: '${(instance.transparency * 100).round()}%',
+          onChanged: (v) {
+            notifier.updateWidget(instance.copyWith(transparency: v));
+          },
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            '${(instance.transparency * 100).round()}% visible',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
-        const Divider(),
+        const Divider(height: AppSpacing.xl),
         ListTile(
+          contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.content_copy_outlined),
           title: const Text('Duplicate'),
           onTap: () {
@@ -108,6 +140,7 @@ class _DashboardWidgetEditSheet extends ConsumerWidget {
           },
         ),
         ListTile(
+          contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.visibility_off_outlined),
           title: const Text('Hide'),
           onTap: () {
@@ -116,6 +149,7 @@ class _DashboardWidgetEditSheet extends ConsumerWidget {
           },
         ),
         ListTile(
+          contentPadding: EdgeInsets.zero,
           leading: Icon(Icons.delete_outline, color: theme.colorScheme.error),
           title: Text('Remove', style: TextStyle(color: theme.colorScheme.error)),
           onTap: () {
@@ -125,6 +159,21 @@ class _DashboardWidgetEditSheet extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  String _sizeHint(DashboardWidgetSize size) => switch (size) {
+        DashboardWidgetSize.compact =>
+          'Smaller card · half width on tablets when not pinned',
+        DashboardWidgetSize.standard => 'Default layout',
+        DashboardWidgetSize.large => 'Full detail · more spacing',
+      };
+}
+
+extension _FirstOrNull<E> on Iterable<E> {
+  E? get firstOrNull {
+    final iterator = this.iterator;
+    if (iterator.moveNext()) return iterator.current;
+    return null;
   }
 }
 

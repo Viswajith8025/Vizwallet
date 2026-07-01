@@ -71,10 +71,8 @@ class QuickAddRepository {
       amountSuggestionsPaise: suggestionPaise.take(8).toList(),
       recentCategoryIds: recentCategories.map((e) => e.key).take(8).toList(),
       favoriteCategoryIds: store.favoriteCategoryIds,
-      recentMerchants: [
-        ...store.topMerchants(),
-        ...recent.map((r) => r.expense.title).take(5),
-      ].toSet().take(8).toList(),
+      // Only show labels the user saved without a custom merchant/label field.
+      recentMerchants: store.topMerchants(),
       recentNotes: notes.toSet().take(6).toList(),
       repeatTemplates: repeats,
     );
@@ -87,6 +85,7 @@ class QuickAddRepository {
     String paymentMethod = 'UPI',
     String? notes,
     List<String> tags = const [],
+    bool rememberLabel = true,
   }) async {
     final result = await _ref.read(expenseRepositoryProvider).addExpense(
           amountPaise: amountPaise,
@@ -96,7 +95,9 @@ class QuickAddRepository {
           notes: notes,
           tags: tags,
         );
-    await _ref.read(quickAddStoreProvider).recordMerchant(title);
+    if (rememberLabel) {
+      await _ref.read(quickAddStoreProvider).recordMerchant(title);
+    }
     return result;
   }
 
@@ -123,6 +124,7 @@ class QuickAddRepository {
       notes: notes,
       paymentMethod: paymentMethod,
       tags: classification.tags,
+      rememberLabel: false,
     );
   }
 
@@ -132,6 +134,7 @@ class QuickAddRepository {
       categoryId: template.categoryId,
       title: template.title,
       paymentMethod: template.paymentMethod,
+      rememberLabel: false,
     );
   }
 

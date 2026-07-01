@@ -34,6 +34,26 @@ class MonthlySalaryTable extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+/// Statutory or payroll cuts (PF, ESI, tax) for a salary cycle.
+class SalaryDeductionsTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get monthKey => text()();
+  TextColumn get type => text()();
+  TextColumn get label => text().nullable()();
+  IntColumn get amountPaise => integer()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// Money received outside salary (family, gifts, side cash) for a cycle.
+class CycleExtraIncomeTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get monthKey => text()();
+  TextColumn get label => text()();
+  IntColumn get amountPaise => integer()();
+  DateTimeColumn get receivedAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 class CategoriesTable extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();

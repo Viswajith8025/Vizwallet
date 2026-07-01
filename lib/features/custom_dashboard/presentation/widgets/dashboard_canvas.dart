@@ -5,7 +5,6 @@ import 'package:rupee_track/core/design_system/responsive.dart';
 import 'package:rupee_track/core/design_system/shell_bottom_inset.dart';
 import 'package:rupee_track/core/design_system/skeleton_loader.dart';
 import 'package:rupee_track/core/providers/salary_cycle_provider.dart';
-import 'package:rupee_track/core/utils/date_utils.dart';
 import 'package:rupee_track/core/widgets/error_state.dart';
 import 'package:rupee_track/features/custom_dashboard/data/dashboard_layout_repository.dart';
 import 'package:rupee_track/features/custom_dashboard/domain/dashboard_layout_models.dart';
@@ -13,6 +12,7 @@ import 'package:rupee_track/features/custom_dashboard/presentation/widgets/dashb
 import 'package:rupee_track/features/custom_dashboard/presentation/widgets/dashboard_widget_shell.dart';
 import 'package:rupee_track/features/dashboard/data/dashboard_repository.dart';
 import 'package:rupee_track/features/safe_spend/data/safe_spend_repository.dart';
+import 'package:rupee_track/features/loans/presentation/widgets/payback_home_panel.dart';
 
 class DashboardCanvas extends ConsumerWidget {
   const DashboardCanvas({super.key});
@@ -45,6 +45,7 @@ class DashboardCanvas extends ConsumerWidget {
                     visible: visible,
                     layout: layout,
                     editMode: true,
+                    showQuickActions: layout.quickActionsPinned,
                   ),
                 ),
               ),
@@ -120,7 +121,7 @@ class _EditModeBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Text(
-        'Drag widgets to reorder · Tap ⋮⋮ to edit',
+        'Hold a widget for 3 seconds, then drag to reorder · Tap ⋮⋮ to edit',
         style: theme.textTheme.labelMedium,
         textAlign: TextAlign.center,
       ),
@@ -161,6 +162,7 @@ class _SingleColumnBody extends ConsumerWidget {
               density: layout.density,
             ),
           ),
+          if (!editMode) const PaybackHomePanel(),
         ],
       ),
     );
@@ -219,6 +221,7 @@ class _TwoColumnBody extends ConsumerWidget {
               ),
             );
           }),
+          if (!editMode) const PaybackHomePanel(),
         ],
       ),
     );
@@ -253,49 +256,125 @@ class _ReorderableList extends ConsumerWidget {
     required this.visible,
     required this.layout,
     required this.editMode,
+    required this.showQuickActions,
   });
 
   final List<DashboardWidgetInstance> visible;
   final DashboardLayoutConfig layout;
   final bool editMode;
+  final bool showQuickActions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final headerCount = showQuickActions ? 1 : 0;
     return _dashboardScrollShell(
       context,
-      ReorderableListView.builder(
+      ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: _dashboardListPadding(context),
-        buildDefaultDragHandles: false,
-      proxyDecorator: (child, index, animation) {
-        return AnimatedBuilder(
-          animation: animation,
-          builder: (context, child) {
-            final scale = 1.0 + (animation.value * 0.03);
-            return Transform.scale(
-              scale: scale,
-              child: Material(
-                elevation: 6 * animation.value,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                child: child,
-              ),
+        itemCount: visible.length + headerCount,
+        itemBuilder: (context, index) {
+          if (showQuickActions && index == 0) {
+            return const Column(
+              children: [
+                DashboardQuickActionsBar(),
+                SizedBox(height: AppSpacing.sm),
+              ],
             );
-          },
-          child: child,
-        );
-      },
-      itemCount: visible.length,
-      onReorder: (old, newIdx) =>
-          ref.read(dashboardLayoutProvider.notifier).reorder(old, newIdx),
-      itemBuilder: (context, index) {
-        final w = visible[index];
-        return DashboardWidgetShell(
-          key: ValueKey(w.id),
-          instance: w,
-          editMode: editMode,
-          density: layout.density,
-        );
-      },
+          }
+          final widgetIndex = index - headerCount;
+          final w = visible[widgetIndex];
+          return _EditModeDraggableWidget(
+            key: ValueKey(w.id),
+            index: widgetIndex,
+            onReorder: (from, to) {
+              if (from == to) return;
+              final newIndex = from < to ? to + 1 : to;
+              ref.read(dashboardLayoutProvider.notifier).reorder(from, newIndex);
+            },
+            child: DashboardWidgetShell(
+              instance: w,
+              editMode: editMode,
+              density: layout.density,
+            ),
+          );
+        },
       ),
+    );
+  }
+}
+
+/// Long-press drag reorder that does not compete with list scrolling.
+class _EditModeDraggableWidget extends StatefulWidget {
+  const _EditModeDraggableWidget({
+    required this.index,
+    required this.onReorder,
+    required this.child,
+    super.key,
+  });
+
+  static const holdDuration = Duration(seconds: 3);
+
+  final int index;
+  final void Function(int from, int to) onReorder;
+  final Widget child;
+
+  @override
+  State<_EditModeDraggableWidget> createState() =>
+      _EditModeDraggableWidgetState();
+}
+
+class _EditModeDraggableWidgetState extends State<_EditModeDraggableWidget> {
+  bool _isDragTarget = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final width = MediaQuery.sizeOf(context).width -
+        AppSpacing.screenHorizontal * 2;
+
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (details) => details.data != widget.index,
+      onAcceptWithDetails: (details) {
+        widget.onReorder(details.data, widget.index);
+      },
+      onMove: (_) {
+        if (!_isDragTarget) setState(() => _isDragTarget = true);
+      },
+      onLeave: (_) {
+        if (_isDragTarget) setState(() => _isDragTarget = false);
+      },
+      builder: (context, candidateData, rejectedData) {
+        final highlighted = candidateData.isNotEmpty || _isDragTarget;
+        return AnimatedContainer(
+          duration: AppDurations.fast,
+          decoration: highlighted
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.65),
+                    width: 2,
+                  ),
+                )
+              : null,
+          child: LongPressDraggable<int>(
+            delay: _EditModeDraggableWidget.holdDuration,
+            data: widget.index,
+            hapticFeedbackOnStart: true,
+            feedback: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              clipBehavior: Clip.antiAlias,
+              child: SizedBox(width: width, child: widget.child),
+            ),
+            childWhenDragging: Opacity(
+              opacity: 0.35,
+              child: widget.child,
+            ),
+            child: widget.child,
+          ),
+        );
+      },
     );
   }
 }

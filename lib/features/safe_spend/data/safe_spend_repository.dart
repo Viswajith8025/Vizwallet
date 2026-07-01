@@ -19,28 +19,30 @@ class SafeSpendRepository {
     final db = await _ref.read(databaseProvider.future);
     final settings = await db.settingsDao.getSettings();
     final salaryDay = settings.salaryDay;
-    final salary = await db.salaryDao.getSalaryForMonth(cycleKey);
+    final breakdown = await db.salaryDao.getBreakdownForMonth(cycleKey);
     return _compute(
       db: db,
       cycleKey: cycleKey,
       salaryDay: salaryDay,
-      salaryPaise: salary?.amountPaise ?? 0,
+      salaryPaise: breakdown.netPaise,
+      extraIncomePaise: breakdown.extraIncomePaise,
     );
   }
 
-  /// Recomputes after every expense or salary change in the cycle.
   Stream<SafeSpendSnapshot> watchSafeSpend(String cycleKey) async* {
     final db = await _ref.read(databaseProvider.future);
     final settings = await db.settingsDao.getSettings();
     final salaryDay = settings.salaryDay;
 
-    await for (final salary in db.salaryDao.watchSalaryForMonth(cycleKey)) {
+    await for (final breakdown
+        in db.salaryDao.watchBreakdownForMonth(cycleKey)) {
       await for (final _ in db.expensesDao.watchExpensesForMonth(cycleKey)) {
         yield await _compute(
           db: db,
           cycleKey: cycleKey,
           salaryDay: salaryDay,
-          salaryPaise: salary?.amountPaise ?? 0,
+          salaryPaise: breakdown.netPaise,
+          extraIncomePaise: breakdown.extraIncomePaise,
         );
       }
     }
@@ -51,21 +53,24 @@ class SafeSpendRepository {
     required String cycleKey,
     required int salaryDay,
     required int salaryPaise,
+    required int extraIncomePaise,
   }) async {
     final cycleSpent = await db.expensesDao.sumSpentForMonth(cycleKey);
     final todaySpent = await db.expensesDao.sumSpentTodayInCycle(cycleKey);
 
     final previousKey = previousCycleKey(cycleKey, salaryDay: salaryDay);
-    final prevSalary = await db.salaryDao.getSalaryForMonth(previousKey);
+    final prevInflow =
+        await db.salaryDao.getTotalCycleInflowPaise(previousKey);
     final prevSpent = await db.expensesDao.sumSpentForMonth(previousKey);
     final carryOver = SalaryCycleEngine.carryOverBalance(
-      previousSalaryPaise: prevSalary?.amountPaise ?? 0,
+      previousSalaryPaise: prevInflow,
       previousSpentPaise: prevSpent,
     );
 
     return SafeSpendEngine.compute(
       cycleKey: cycleKey,
       salaryPaise: salaryPaise,
+      extraIncomePaise: extraIncomePaise,
       carryOverPaise: carryOver,
       cycleSpentPaise: cycleSpent,
       todaySpentPaise: todaySpent,

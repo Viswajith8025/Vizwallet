@@ -69,4 +69,45 @@ abstract final class PremiumSurfaces {
       ),
     );
   }
+
+  /// Frosted glass shell for floating bottom navigation.
+  static Widget glassNavBar({
+    required BuildContext context,
+    required BorderRadius borderRadius,
+    required Widget child,
+    double blurSigma = 20,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: borderRadius,
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.14)
+                  : Colors.white.withValues(alpha: 0.9),
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDark
+                  ? [
+                      const Color(0xFF1C1F2E).withValues(alpha: 0.62),
+                      const Color(0xFF12141C).withValues(alpha: 0.48),
+                    ]
+                  : [
+                      Colors.white.withValues(alpha: 0.78),
+                      Colors.white.withValues(alpha: 0.52),
+                    ],
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
 }
